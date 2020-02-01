@@ -9,6 +9,10 @@ def activation(Z):
     print("Relugra = ",grad)
 
 
+class A:
+    def __init__(self):
+        self.B = 10
+
 if __name__ == "__main__":
-    Z = np.random.randn(10, 10)
-    activation(Z)
+    a = A()
+    print(a.B)
