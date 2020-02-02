@@ -1,27 +1,12 @@
-import numpy as np
+
 import Activation
-
-
-class Layer(object):
-
-    def __init__(self, unit_number,  activation="relu"):
-        self.unit_number = unit_number
-
-    def init_params(self, input):
-        raise NotImplementedError
-
-    def forward(self, input):
-        raise NotImplementedError
-
-    def backward(self, pre_grad, pre_W):
-        raise NotImplementedError
+from Layers.Layer import Layer
 
 
 class Core(Layer):
 
     def __init__(self, unit_number,  activation="relu"):
         super().__init__(unit_number, activation)
-        self.activation = activation
 
     def forward(self, input):
         self.input = input
@@ -41,7 +26,6 @@ class Core(Layer):
         self.dW = 1. / pre_grad.shape[-1] * np.dot(self.dZ, self.input.T)
         self.db = np.mean(self.dZ, axis=1, keepdims=True)
         return self.dZ, self.dW, self.db
-
 
     def init_params(self,nx):
         self.W = np.random.randn(self.unit_number, nx) * 0.01

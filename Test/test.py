@@ -9,10 +9,9 @@ def activation(Z):
     print("Relugra = ",grad)
 
 
-class A:
-    def __init__(self):
-        self.B = 10
+def tt(*d):
+    print(d)
+
 
 if __name__ == "__main__":
-    a = A()
-    print(a.B)
+    print(tt(*(1,2,3)))
