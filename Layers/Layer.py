@@ -11,5 +11,5 @@ class Layer(object):
     def forward(self, input):
         raise NotImplementedError
 
-    def backward(self, pre_grad, pre_W):
+    def backward(self, pre_grad, pre_W=None):
         raise NotImplementedError

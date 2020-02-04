@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bddf8771-78f7-4e64-bf5c-20d8476cb952" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Layers/Pooling.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Layers/Convelution.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Convelution.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Layers/Core.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Layers/Layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Layer.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -30,8 +32,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Layers/Core.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="2" column="26" selection-start-line="2" selection-start-column="26" selection-end-line="2" selection-end-column="26" />
+            <state relative-caret-position="75">
+              <caret line="5" column="18" lean-forward="true" selection-start-line="5" selection-start-column="18" selection-end-line="5" selection-end-column="18" />
+              <folding>
+                <element signature="e#1#18#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -39,17 +44,17 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Layers/Layer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="1" column="20" selection-start-line="1" selection-start-column="20" selection-end-line="1" selection-end-column="20" />
+            <state>
+              <caret selection-end-column="18" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Layers/Convelution.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="182">
-              <caret line="29" column="49" selection-start-line="29" selection-start-column="49" selection-end-line="29" selection-end-column="49" />
+            <state relative-caret-position="265">
+              <caret line="87" column="22" lean-forward="true" selection-start-line="87" selection-start-column="22" selection-end-line="87" selection-end-column="22" />
               <folding>
                 <element signature="e#0#17#0" expanded="true" />
               </folding>
@@ -57,11 +62,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Layers/Pooling.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="675">
-              <caret line="45" column="45" selection-start-line="45" selection-start-column="45" selection-end-line="45" selection-end-column="45" />
+            <state relative-caret-position="572">
+              <caret line="52" column="39" selection-start-line="52" selection-start-column="39" selection-end-line="52" selection-end-column="39" />
               <folding>
                 <element signature="e#0#30#0" expanded="true" />
               </folding>
@@ -151,13 +156,13 @@
         <option value="$PROJECT_DIR$/Layers/CarCNN.py" />
         <option value="$PROJECT_DIR$/Test/CoreTest.py" />
         <option value="$PROJECT_DIR$/Model.py" />
-        <option value="$PROJECT_DIR$/Layers/Layer.py" />
-        <option value="$PROJECT_DIR$/Layers/Core.py" />
         <option value="$PROJECT_DIR$/Activation.py" />
         <option value="$PROJECT_DIR$/Test/test.py" />
         <option value="$PROJECT_DIR$/Layers/Padding.py" />
-        <option value="$PROJECT_DIR$/Layers/Convelution.py" />
         <option value="$PROJECT_DIR$/Layers/Pooling.py" />
+        <option value="$PROJECT_DIR$/Layers/Layer.py" />
+        <option value="$PROJECT_DIR$/Layers/Core.py" />
+        <option value="$PROJECT_DIR$/Layers/Convelution.py" />
       </list>
     </option>
   </component>
@@ -172,6 +177,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -193,7 +199,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -232,7 +237,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Pooling">
+  <component name="RunManager" selected="Python.Convelution">
     <configuration name="BUG" type="PythonConfigurationType" factoryName="Python">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -303,6 +308,9 @@
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Layers" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -371,8 +379,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.Pooling" />
         <item itemvalue="Python.Convelution" />
+        <item itemvalue="Python.Pooling" />
         <item itemvalue="Python.test" />
         <item itemvalue="Python.Model" />
       </list>
@@ -390,18 +398,19 @@
       <updated>1580538580758</updated>
       <workItem from="1580538587588" duration="20700000" />
       <workItem from="1580619813504" duration="16974000" />
-      <workItem from="1580727427613" duration="8125000" />
+      <workItem from="1580727427613" duration="8174000" />
+      <workItem from="1580789772923" duration="3901000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="45799000" />
+    <option name="totallyTimeSpent" value="49749000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1280" height="800" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.21728595" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.22051696" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -415,7 +424,7 @@
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.32854864" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5016155" side_tool="true" weight="0.2599681" />
-      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.49919224" weight="0.32854864" />
+      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.49919224" weight="0.32739726" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.32739726" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -430,7 +439,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/BUG$Pooling.coverage" NAME="Pooling Coverage Results" MODIFIED="1580736858172" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
-    <SUITE FILE_PATH="coverage/BUG$Convelution.coverage" NAME="Convelution Coverage Results" MODIFIED="1580652311893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
+    <SUITE FILE_PATH="coverage/BUG$Convelution.coverage" NAME="Convelution Coverage Results" MODIFIED="1580795089774" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1580566935492" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$test.coverage" NAME="test Coverage Results" MODIFIED="1580621457929" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
   </component>
@@ -468,17 +477,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Layers/Core.py">
+    <entry file="file://$PROJECT_DIR$/Layers/Padding.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="26" selection-start-line="2" selection-start-column="26" selection-end-line="2" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Layers/Layer.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="1" column="20" selection-start-line="1" selection-start-column="20" selection-end-line="1" selection-end-column="20" />
+        <state relative-caret-position="105">
+          <caret line="7" selection-start-line="7" selection-end-line="7" />
         </state>
       </provider>
     </entry>
@@ -523,29 +525,39 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Layers/Padding.py">
+    <entry file="file://$PROJECT_DIR$/Layers/Pooling.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" selection-start-line="7" selection-end-line="7" />
+        <state relative-caret-position="572">
+          <caret line="52" column="39" selection-start-line="52" selection-start-column="39" selection-end-line="52" selection-end-column="39" />
+          <folding>
+            <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Layers/Core.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="18" lean-forward="true" selection-start-line="5" selection-start-column="18" selection-end-line="5" selection-end-column="18" />
+          <folding>
+            <element signature="e#1#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Layers/Layer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-column="18" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Layers/Convelution.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="182">
-          <caret line="29" column="49" selection-start-line="29" selection-start-column="49" selection-end-line="29" selection-end-column="49" />
+        <state relative-caret-position="265">
+          <caret line="87" column="22" lean-forward="true" selection-start-line="87" selection-start-column="22" selection-end-line="87" selection-end-column="22" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Layers/Pooling.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="675">
-          <caret line="45" column="45" selection-start-line="45" selection-start-column="45" selection-end-line="45" selection-end-column="45" />
-          <folding>
-            <element signature="e#0#30#0" expanded="true" />
           </folding>
         </state>
       </provider>

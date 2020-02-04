@@ -1,7 +1,7 @@
 
 import Activation
 from Layers.Layer import Layer
-
+import numpy as np
 
 class Core(Layer):
 
