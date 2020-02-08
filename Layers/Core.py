@@ -1,40 +1,36 @@
-
 import Activation
 from Layers.Layer import Layer
 import numpy as np
+
 
 class Core(Layer):
 
     def __init__(self, unit_number,  activation="relu"):
         super().__init__(unit_number, activation)
+        print("Core Layer")
 
     def forward(self, input):
         self.input = input
-
+        if not self.hasParams:
+            self.init_params(input)
+            self.hasParams = True
         self.Z = np.dot(self.W, input) + self.b
-        A = Activation.get(self.Z, self.activation)
-        return A
+        self.A = Activation.get(self.Z, self.activation)
+        return self.A
 
-    def backward(self, pre_grad, pre_W = None, last=False):
-        if last:
-            self.dA = pre_grad
+    def backward(self, dZ):
+        if self.isLast:
+            self.dA = dZ
         else:
-            self.dA = np.dot(pre_W.T, pre_grad)
+            self.dA = np.dot(self.next_layer.W.T, dZ)
 
         self.dZ = Activation.get_grad(self.dA, self.Z, self.activation)
-
-        self.dW = 1. / pre_grad.shape[-1] * np.dot(self.dZ, self.input.T)
+        self.dW = 1. / dZ.shape[-1] * np.dot(self.dZ, self.input.T)
         self.db = np.mean(self.dZ, axis=1, keepdims=True)
         return self.dZ, self.dW, self.db
 
-    def init_params(self,nx):
-        self.W = np.random.randn(self.unit_number, nx) * 0.01
+    def init_params(self, input):
+        pre_unit = input.shape[0] if self.isFirst else self.pre_layer.unit_number
+        self.W = np.random.randn(self.unit_number, pre_unit)/ np.sqrt(pre_unit)
         self.b = np.zeros((self.unit_number, 1))
 
-    @property
-    def params(self):
-        return self.W, self.b
-
-    @property
-    def grads(self):
-        return self.dW, self.db

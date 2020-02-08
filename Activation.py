@@ -1,5 +1,8 @@
 import numpy as np
 
+from Layers.Core import Core
+
+
 def Relu(Z):
     return np.maximum(.0, Z)
 
@@ -38,6 +41,29 @@ def Leak_ReluGrad(Z):
     return res
 
 
+def SoftmaxStep(Z):
+    x = Z - np.max(Z, axis=1, keepdims=True)
+    exp_x = np.exp(x)
+    s = exp_x / np.sum(exp_x, axis=1, keepdims=True)
+    return s
+
+
+def SoftmaxGradStep(input=None):
+    return np.ones(input.shape)
+
+
+class Softmax(Core):
+    def __index__(self, unitNumber):
+        super().__init__(unitNumber, "Softmax")
+
+    def forward(self, input):
+        self.input = input
+        return super().forward(input)
+
+    def backward(self, dZ):
+        return super().backward(dZ if dZ else self.input)
+
+
 def get(Z, activation='relu'):
     if activation == 'sigmoid':
         A = Sigmoid(Z)
@@ -45,18 +71,26 @@ def get(Z, activation='relu'):
         A = TanH(Z)
     elif activation == 'leak_relu':
         A = Leak_Relu(Z)
-    else:
+    elif activation == 'Softmax':
+        A = SoftmaxStep(Z)
+    elif activation == 'relu':
         A = Relu(Z)
+    else:
+        A = Z
     return A
 
 
-def get_grad(dA,Z,activation='relu'):
+def get_grad(dA, Z, activation='relu'):
     if activation == 'sigmoid':
         dZ = dA * SigmoidGrad(Z)
     elif activation == 'tanh':
         dZ = dA * TanHGrad(Z)
     elif activation == 'leak_relu':
         dZ = dA * Leak_ReluGrad(Z)
-    else:
+    elif activation == 'Softmax':
+        dZ = dA * SoftmaxGradStep(Z)
+    elif activation == 'relu':
         dZ = dA * ReluGrad(Z)
+    else:
+        dZ = dA
     return dZ
