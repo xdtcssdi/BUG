@@ -2,21 +2,19 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bddf8771-78f7-4e64-bf5c-20d8476cb952" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Layers/Flatten.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/CNNTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Activation.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Layers/Convelution.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Convelution.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Layers/Core.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Padding.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Padding.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Layers/Flatten.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Flatten.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Layers/Pooling.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Pooling.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/Loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CNNTest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CoreTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test/FNN.ipynb" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dnn_app_utils_v2.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,13 +48,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="JupyterTrust" id="06d44508-92da-49fe-9181-7e6a1a0357c7" />
   <component name="ProjectId" id="1XVqEHyO5ukcdchsA7a6bOzU5H2" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
@@ -81,7 +84,29 @@
       <recent name="$PROJECT_DIR$/Test" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.BUG">
+  <component name="RunManager" selected="Python.CNNTest">
+    <configuration name="Activation" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="BUG" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Activation.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="true" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="BUG" type="PythonConfigurationType" factoryName="Python">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -170,28 +195,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Pooling" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="BUG" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Layers" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Layers/Pooling.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="true" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -241,16 +244,16 @@
       <item itemvalue="Python.CNNTest" />
       <item itemvalue="Python.Convelution" />
       <item itemvalue="Python.Loss" />
-      <item itemvalue="Python.Pooling" />
       <item itemvalue="Python.test" />
+      <item itemvalue="Python.Activation" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.CNNTest" />
-        <item itemvalue="Python.Loss" />
         <item itemvalue="Python.test" />
+        <item itemvalue="Python.Activation" />
+        <item itemvalue="Python.Loss" />
         <item itemvalue="Python.Convelution" />
-        <item itemvalue="Python.Pooling" />
       </list>
     </recent_temporary>
   </component>
@@ -275,7 +278,8 @@
       <workItem from="1581140733294" duration="100000" />
       <workItem from="1581141775716" duration="73000" />
       <workItem from="1581141872536" duration="60000" />
-      <workItem from="1581141956251" duration="14776000" />
+      <workItem from="1581141956251" duration="27536000" />
+      <workItem from="1581201427247" duration="11094000" />
     </task>
     <servers />
   </component>
@@ -291,39 +295,52 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
   <component name="WindowStateProjectService">
-    <state width="1238" height="163" key="GridCell.Tab.0.bottom" timestamp="1581158458401">
+    <state x="-219" y="25" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1581164984254">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="163" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581158458401" />
-    <state width="1238" height="163" key="GridCell.Tab.0.center" timestamp="1581158458400">
+    <state x="-219" y="25" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1280.800@0.0.1280.800" timestamp="1581164984254" />
+    <state width="1238" height="357" key="GridCell.Tab.0.bottom" timestamp="1581213410560">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="163" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1581158458400" />
-    <state width="1238" height="163" key="GridCell.Tab.0.left" timestamp="1581158458399">
+    <state width="1238" height="357" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581213410560" />
+    <state width="1238" height="357" key="GridCell.Tab.0.center" timestamp="1581213410558">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="163" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1581158458399" />
-    <state width="1238" height="163" key="GridCell.Tab.0.right" timestamp="1581158458400">
+    <state width="1238" height="357" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1581213410558" />
+    <state width="1238" height="357" key="GridCell.Tab.0.left" timestamp="1581213410557">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="163" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1581158458400" />
+    <state width="1238" height="357" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1581213410557" />
+    <state width="1238" height="357" key="GridCell.Tab.0.right" timestamp="1581213410559">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state width="1238" height="357" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1581213410559" />
     <state x="141" y="23" width="997" height="719" key="SettingsEditor" timestamp="1581141898100">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state x="141" y="23" width="997" height="719" key="SettingsEditor/0.23.1280.719@0.23.1280.719" timestamp="1581141898100" />
-    <state x="305" y="66" width="670" height="676" key="search.everywhere.popup" timestamp="1581145716801">
-      <screen x="0" y="23" width="1280" height="719" />
+    <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1581208200113">
+      <screen x="0" y="0" width="1280" height="800" />
     </state>
+    <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1581208200113" />
+    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup" timestamp="1581162429957">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup/0.0.1280.800@0.0.1280.800" timestamp="1581162429957" />
     <state x="305" y="66" width="670" height="676" key="search.everywhere.popup/0.23.1280.719@0.23.1280.719" timestamp="1581145716801" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/BUG$Loss.coverage" NAME="Loss Coverage Results" MODIFIED="1580903966538" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BUG$Pooling.coverage" NAME="Pooling Coverage Results" MODIFIED="1580736858172" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$Convelution.coverage" NAME="Convelution Coverage Results" MODIFIED="1580795089774" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
-    <SUITE FILE_PATH="coverage/BUG$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1581150313984" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BUG$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1581213410524" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BUG$Activation.coverage" NAME="Activation Coverage Results" MODIFIED="1581165529027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BUG$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1581158458358" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
-    <SUITE FILE_PATH="coverage/BUG$test.coverage" NAME="test Coverage Results" MODIFIED="1580801987103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BUG$test.coverage" NAME="test Coverage Results" MODIFIED="1581208072112" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
   </component>
   <component name="masterDetails">
     <states>

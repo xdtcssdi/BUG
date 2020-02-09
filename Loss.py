@@ -13,7 +13,9 @@ class CrossEntry:
 
 class SoftCategoricalCross_entropy:
     def forward(self, Y_train, Y_hat):
-        return -np.mean(Y_train * np.log(1 - Y_hat), axis=1)
+        cost = - Y_train * np.log(Y_hat) - (1 - Y_train) * np.log(1 - Y_hat)
+        J = np.mean(np.mean(cost, axis=1, keepdims=True), axis=0, keepdims=True)
+        return np.squeeze(J)
 
     def backward(self, Y_train, Y_hat):
         return Y_train - Y_hat

@@ -20,20 +20,7 @@ def f1():
     net.add(Core(5))
     net.add(Core(1, "sigmoid"))
     net.compile()
-
     net.train(X_train, Y_train, printLoss=True, learning_rate=0.0075, iterator=2500)
-    #
-
-    # print()
-    # for layer in net.layers:
-    #     print(layer.isLast, end=' ')
-    # print()
-    # for layer in net.layers:
-    #     print(layer.pre_layer, end=' ')
-    # print()
-    # for layer in net.layers:
-    #     print(layer.next_layer, end=' ')
-
 
 if __name__ == '__main__':
     f1()

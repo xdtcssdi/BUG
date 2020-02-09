@@ -1,8 +1,5 @@
 import numpy as np
 
-from Layers.Core import Core
-
-
 def Relu(Z):
     return np.maximum(.0, Z)
 
@@ -50,18 +47,6 @@ def SoftmaxStep(Z):
 
 def SoftmaxGradStep(input=None):
     return np.ones(input.shape)
-
-
-class Softmax(Core):
-    def __index__(self, unitNumber):
-        super().__init__(unitNumber, "Softmax")
-
-    def forward(self, input):
-        self.input = input
-        return super().forward(input)
-
-    def backward(self, dZ):
-        return super().backward(dZ if dZ else self.input)
 
 
 def get(Z, activation='relu'):
