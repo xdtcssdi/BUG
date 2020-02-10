@@ -17,3 +17,18 @@ def load_data():
     test_set_y_orig = test_set_y_orig.reshape((1, test_set_y_orig.shape[0]))
 
     return train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes
+
+
+def one_hot(labels, nb_classes=None):
+    classes = np.unique(labels)
+    if nb_classes is None:
+        nb_classes = classes.size
+    one_hot_labels = np.zeros((labels.shape[0], nb_classes))
+
+    for i, c in enumerate(classes):
+        one_hot_labels[labels == c, i] = 1
+    return one_hot_labels
+
+
+def unhot(one_hot_labels):
+    return np.argmax(one_hot_labels, axis=-1)
