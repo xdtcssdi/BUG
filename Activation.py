@@ -12,7 +12,7 @@ def ReluGrad(Z):
 
 
 def Sigmoid(Z):
-    return 1./(1+np.exp(-Z))
+    return .5 * (1 + np.tanh(.5 * Z))
 
 
 def SigmoidGrad(Z):
@@ -57,7 +57,7 @@ def get(Z, activation='relu'):
         A = TanH(Z)
     elif activation == 'leak_relu':
         A = Leak_Relu(Z)
-    elif activation == 'Softmax':
+    elif activation == 'softmax':
         A = SoftmaxStep(Z)
     elif activation == 'relu':
         A = Relu(Z)

@@ -7,15 +7,18 @@ class T:
         self.b = None
     def f(self):
         print(self.a)
-    @property
-    def params(self):
-        return self.a, self.b
+
+def predict(X_train, Y_train):
+    p = .0
+    for i in range(X_train.shape[0]):
+        t1 = X_train[i][0] > 0.5
+        t2 = Y_train[i][0]
+        if t1 == t2:
+            p += 1
+    print("accuracy: %.1f%%" % (p/X_train.shape[0]*100.))
+
 
 if __name__ == '__main__':
-    np.random.seed(1)
-    A_prev = np.random.randn(10, 4, 4, 3)
-    con = Convolution(8, (2, 2), stride=1, padding=2)
-    con.forward(A_prev)
-    con.backward(con.Z)
-    print(con.Z.shape)
-    print(con.dW.mean())
+    a1 = np.random.randn(209, 1)
+    a2 = np.random.randn(209, 20)
+    print((np.mean(a2,axis=1)).shape)

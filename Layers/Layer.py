@@ -20,12 +20,16 @@ class Layer(object):
         self.A = None
         self.isFirst = False
         self.isLast = False
-        self.hasParams = False
+        self.batchNormal = None
+        self.beta = None
+        self.gamma = None
+        self.dbeta = None
+        self.dgamma = None
 
     def init_params(self, nx):
         raise NotImplementedError
 
-    def forward(self, input):
+    def forward(self, input, mode='train'):
         raise NotImplementedError
 
     def backward(self, pre_grad):

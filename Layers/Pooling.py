@@ -16,7 +16,7 @@ class Pooling(Layer):
     def init_params(self, nx):
         pass
 
-    def forward(self, input):
+    def forward(self, input, mode='train'):
         self.input = input
         m, w, h, nc = input.shape
         n_w = int((w + 2*self.padding - self.filter_shape[0]) / self.stride + 1)

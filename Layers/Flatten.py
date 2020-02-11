@@ -12,7 +12,7 @@ class Flatten(Layer):
     def init_params(self, nx):
         pass
 
-    def forward(self, input):  # m,28,28,1
+    def forward(self, input, mode='train'):  # m,28,28,1
         self.input_shape = input.shape
         A = Activation.get(input.reshape(input.shape[0], -1), self.activation)
         self.unit_number = A.shape[-1]  # 展开后 (m, nx) 接全连接神经网络需要前一层的神经元数
