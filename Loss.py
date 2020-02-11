@@ -3,7 +3,6 @@ import numpy as np
 
 class CrossEntry:
     def forward(self, Y_train, Y_hat):
-
         cost = - Y_train * np.log(np.clip(Y_hat, 1e-8, 1.0)) - (1 - Y_train) * np.log(np.clip(1 - Y_hat, 1e-8, 1.0))
         J = np.mean(cost, axis=0, keepdims=True)
         return np.squeeze(J)

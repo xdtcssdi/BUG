@@ -11,7 +11,7 @@ from .Padding import *
 class Convolution(Layer):
 
     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
-        super(Convolution, self).__init__(0, activation)
+        super(Convolution, self).__init__(activation=activation)
         self.filter_count = filter_count  # 卷积核数量
         self.filter_shape = filter_shape  # 卷积核形状
         self.stride = stride  # 步长
@@ -24,43 +24,43 @@ class Convolution(Layer):
             kernel_shape = (self.filter_shape[0], self.filter_shape[1], pre_nc, self.filter_count)
             self.W = np.random.randn(*kernel_shape)  # W.shape == (f, f ,pre_nc, nc)
         if self.b is None:
-            b_shape = [1, ]*len(self.W.shape)
+            b_shape = [1, ] * self.W.ndim
             b_shape[-1] = self.filter_count
             self.b = np.random.randn(*tuple(b_shape))  # b.shape = (1, 1, 1, nc)
 
     # 没问题
-    def forward(self, input, mode='train'):
-        self.input = input
-        self.init_params(self.input.shape[-1])
-        n_w = int((self.input.shape[1] + 2 * self.padding - self.filter_shape[0]) / self.stride + 1)
-        n_h = int((self.input.shape[2] + 2 * self.padding - self.filter_shape[1]) / self.stride + 1)
-        self.Z = np.zeros((self.input.shape[0], n_w, n_h, self.filter_count))
+    def forward(self, A_pre, mode='train'):
+        self.A_pre = A_pre
+        self.init_params(A_pre.shape[-1])
+        n_w = int((A_pre.shape[1] + 2 * self.padding - self.filter_shape[0]) / self.stride + 1)
+        n_h = int((A_pre.shape[2] + 2 * self.padding - self.filter_shape[1]) / self.stride + 1)
+        Z = np.zeros((A_pre.shape[0], n_w, n_h, self.filter_count))
 
-        self.Z_pad = ZeroPad(self.input, self.padding) if self.padding > 0 else input
+        self.Z_pad = ZeroPad(A_pre, self.padding) if self.padding > 0 else A_pre
 
-        for i in range(self.input.shape[0]):
+        for i in range(A_pre.shape[0]):
             a_prev_pad = self.Z_pad[i]
-            for w in range(self.Z.shape[1]):
-                for h in range(self.Z.shape[2]):
+            for w in range(Z.shape[1]):
+                for h in range(Z.shape[2]):
                     for nc in range(self.filter_count):
                         hs = w * self.stride
                         he = hs + self.filter_shape[0]
                         vs = h * self.stride
                         ve = vs + self.filter_shape[1]
                         a_slice = a_prev_pad[hs:he, vs:ve, :]
-                        self.Z[i, w, h, nc] = np.sum(a_slice * self.W[:, :, :, nc] + self.b[:, :, :, nc])
-        self.Zhat = self.batchNormal.forward(self.Z, mode) if self.batchNormal else self.Z
-        self.A = Activation.get(self.Zhat, self.activation)
-        return self.A
+                        Z[i, w, h, nc] = np.sum(a_slice * self.W[:, :, :, nc] + self.b[:, :, :, nc])
+        Zhat = self.batchNormal.forward(Z, mode) if self.batchNormal else Z
+        return Activation.get(Zhat, self.activation)
 
     # 没问题
     def backward(self, dZ):
+        if self.batchNormal:
+            dZ = self.batchNormal.backward(dZ)
         dZ_pad = np.zeros_like(self.Z_pad)
         m, n_w, n_h, nc = dZ.shape
         self.dW = np.zeros_like(self.W)
         self.db = np.zeros_like(self.b)
-        self.dA = np.zeros_like(self.input)
-        self.dZ_pad = np.zeros_like(self.Z)
+        dA = np.zeros_like(self.A_pre)
 
         if self.padding > 0:
             for i in range(m):
@@ -77,7 +77,7 @@ class Convolution(Layer):
                             da_pre[hs:he, vs:ve, :] += self.W[:, :, :, c] * dZ[i, w, h, c]
                             self.dW[:, :, :, c] += a_slice * dZ[i, w, h, c]
                             self.db[:, :, :, c] += dZ[i, w, h, c]
-                self.dA[i] = da_pre[self.padding:-self.padding, self.padding:-self.padding, :]
+                dA[i] = da_pre[self.padding:-self.padding, self.padding:-self.padding, :]
         else:
             for i in range(m):
                 a_pre = self.Z_pad[i]
@@ -93,10 +93,8 @@ class Convolution(Layer):
                             da_pre[hs:he, vs:ve, :] += self.W[:, :, :, c] * dZ[i, w, h, c]
                             self.dW[:, :, :, c] += a_slice * dZ[i, w, h, c]
                             self.db[:, :, :, c] += dZ[i, w, h, c]
-                self.dA[i] = da_pre
-        if self.batchNormal:
-            self.dA = self.batchNormal.backward(self.dA)
-        return Activation.get_grad(self.dA, self.input, self.activation)
+                dA[i] = da_pre
+        return Activation.get_grad(dA, self.A_pre, self.activation)
 
     @property
     def params(self):

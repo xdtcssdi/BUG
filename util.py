@@ -1,5 +1,5 @@
-import numpy as np
 import h5py
+import numpy as np
 
 
 def load_data():
@@ -19,6 +19,7 @@ def load_data():
     return train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes
 
 
+#  shape = (m, )
 def one_hot(labels, nb_classes=None):
     classes = np.unique(labels)
     if nb_classes is None:

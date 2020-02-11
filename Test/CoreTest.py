@@ -1,6 +1,4 @@
-from Activation import *
 from Layers.Core import Core
-from Loss import *
 from Model import Model
 from util import *
 
@@ -15,9 +13,9 @@ def f1():
     Y_test = test_set_y_orig.T
     # 创建网络架构
     net = Model()
-    net.add(Core(20, batchNormal=True))
+    net.add(Core(20, batchNormal=False))
     net.add(Core(7))
-    #net.add(Core(5))
+    # net.add(Core(5))
     net.add(Core(1, "sigmoid"))
     net.compile()
     net.train(X_train, Y_train, X_test, Y_test, normalizing_inputs=False, batch_size=100,
@@ -37,8 +35,8 @@ def f2():
 
     # 创建网络架构
     net = Model()
-    net.add(Core(31, batchNormal=True))
-    net.add(Core(20, batchNormal=True))
+    #net.add(Core(31, batchNormal=False))
+    net.add(Core(20, batchNormal=False))
     net.add(Core(7, batchNormal=False))
     net.add(Core(5, batchNormal=False))
     net.add(Core(1, "sigmoid"))
@@ -49,5 +47,4 @@ def f2():
 
 
 if __name__ == '__main__':
-    f2()
-
+    f1()

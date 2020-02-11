@@ -15,18 +15,18 @@ class BatchNormal:
     def init_params(self, nx):
         pass
 
-    def forward(self, input, mode='train', momentum=0.9):
-        if len(input.shape) == 4:
-            return self.fourDims_batchnorm_forward(input, mode, momentum)
-        elif len(input.shape) == 2:
-            return self.twoDims_batchnormal_forward(input, mode, momentum)
+    def forward(self, A_pre, mode='train', momentum=0.9):
+        if A_pre.ndim == 4:
+            return self.fourDims_batchnorm_forward(A_pre, mode, momentum)
+        elif A_pre.ndim == 2:
+            return self.twoDims_batchnormal_forward(A_pre, mode, momentum)
         else:
             raise ValueError
 
     def backward(self, pre_grad):
-        if len(pre_grad.shape) == 4:
+        if pre_grad.ndim == 4:
             return self.fourDims_batchnorm_backward(pre_grad)
-        elif len(pre_grad.shape) == 2:
+        elif pre_grad.ndim == 2:
             return self.twoDims_batchnormal_backward(pre_grad)
         else:
             raise ValueError
@@ -39,11 +39,11 @@ class BatchNormal:
     def grads(self):
         return self.dgamma, self.dbeta
 
-    def fourDims_batchnorm_forward(self, x, mode='train', momentum=0.9):
-        N, W, H, C = x.shape
-        x_flat = x.reshape(-1, C)
+    def fourDims_batchnorm_forward(self, A_pre, mode='train', momentum=0.9):
+        N, W, H, C = A_pre.shape
+        x_flat = A_pre.reshape(-1, C)
         out_flat = self.twoDims_batchnormal_forward(x_flat, mode, momentum)
-        out = out_flat.reshape(x.shape)
+        out = out_flat.reshape(A_pre.shape)
         return out
 
     def fourDims_batchnorm_backward(self, dout):
@@ -53,18 +53,18 @@ class BatchNormal:
         dx = dx_flat.reshape(dout.shape)
         return dx
 
-    def twoDims_batchnormal_forward(self, input, mode='train', momentum=0.9):
+    def twoDims_batchnormal_forward(self, A_pre, mode='train', momentum=0.9):
         if mode == 'train':
             if self.beta is None:
-                self.beta = np.zeros((input.shape[-1],))
+                self.beta = np.zeros((A_pre.shape[-1],))
                 self.gamma = np.ones_like(self.beta)
-            mean = np.mean(input, axis=0)
-            xmu = input - mean
+            mean = np.mean(A_pre, axis=0)
+            xmu = A_pre - mean
             var = np.mean(xmu ** 2, axis=0)
 
             if self.running_mean is None:
-                self.running_mean = np.zeros(input.shape[-1], dtype=input.dtype)
-                self.running_var = np.zeros(input.shape[-1], dtype=input.dtype)
+                self.running_mean = np.zeros(A_pre.shape[-1], dtype=A_pre.dtype)
+                self.running_var = np.zeros(A_pre.shape[-1], dtype=A_pre.dtype)
             self.running_mean = momentum * self.running_mean + (1 - momentum) * mean
             self.running_var = momentum * self.running_var + (1 - momentum) * var
 
@@ -76,7 +76,7 @@ class BatchNormal:
             self.caches = (xhat, xmu, ivar, self.sqrtvar)
         elif mode == 'test':
             scale = self.gamma / self.sqrtvar
-            out = input * scale + (self.beta - self.running_mean * scale)
+            out = A_pre * scale + (self.beta - self.running_mean * scale)
         else:
             raise ValueError
         return out

@@ -1,6 +1,5 @@
 import sys
 import time
-import numpy as np
 
 sys.path.append('./Layers/')
 from Loss import *
@@ -15,8 +14,8 @@ class Model(object):
 
     def __init__(self):
         self.layers = []
-        self.costs = []
-        self.cost = None
+        self.costs = []  # every batch cost
+        self.cost = None  # 损失函数类
 
     def add(self, layer):
         assert (isinstance(layer, Layer))
@@ -50,21 +49,21 @@ class Model(object):
 
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
 
-        X_train = X_train.astype(np.float64)
-        Y_train = Y_train.astype(np.float64)
-        X_test = X_test.astype(np.float64)
-        Y_test = Y_test.astype(np.float64)
+        X_train = X_train.astype(np.float32)
+        Y_train = Y_train.astype(np.float32)
+        X_test = X_test.astype(np.float32)
+        Y_test = Y_test.astype(np.float32)
 
         #  Normalizing inputs
         if normalizing_inputs:
-            if len(X_train.shape) == 2:
+            if X_train.ndim == 2:
                 u = np.mean(X_train, axis=0)
                 var = np.mean(X_train ** 2, axis=0)
                 X_train -= u
                 X_train /= var
                 X_test -= u
                 X_test /= var
-            elif len(X_train.shape) > 2:
+            elif X_train.ndim > 2:
                 X_train /= 255.0
                 X_test /= 255.0
             else:
@@ -171,7 +170,7 @@ class Model(object):
         return max_index
 
     def compile(self):
-        for i in range(1, len(self.layers)):
+        for i in range(1, self.getLayerNumber()):
             self.layers[i].pre_layer = self.layers[i - 1]
             self.layers[i - 1].next_layer = self.layers[i]
         self.layers[0].isFirst = True

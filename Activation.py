@@ -17,16 +17,15 @@ def Sigmoid(Z):
 
 def SigmoidGrad(Z):
     tmp = Sigmoid(Z)
-    return tmp * (1-tmp)
+    return tmp * (1 - tmp)
 
 
 def TanH(Z):
-    return (np.exp(Z) - np.exp(-Z))/(np.exp(Z) + np.exp(-Z))
+    return np.tanh(Z)
 
 
 def TanHGrad(Z):
-    tmp = TanH(Z)
-    return 1-tmp**2
+    return 1 - TanH(Z) ** 2
 
 
 def Leak_Relu(Z):
@@ -46,8 +45,8 @@ def SoftmaxStep(Z):
     return s
 
 
-def SoftmaxGradStep(input=None):
-    return np.ones(input.shape)
+def SoftmaxGradStep(Z):
+    return np.ones(Z.shape, dtype=np.float32)
 
 
 def get(Z, activation='relu'):

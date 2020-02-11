@@ -1,12 +1,12 @@
-from .Layer import Layer
 import numpy as np
 
+from .Layer import Layer
 from .Padding import ZeroPad
 
 
 class Pooling(Layer):
     def __init__(self, filter_shape, padding=0, stride=1, mode='max'):
-        super(Pooling, self).__init__(0)
+        super().__init__()
         self.filter_shape = filter_shape
         self.padding = padding
         self.stride = stride
@@ -16,15 +16,13 @@ class Pooling(Layer):
     def init_params(self, nx):
         pass
 
-    def forward(self, input, mode='train'):
-        self.input = input
-        m, w, h, nc = input.shape
-        n_w = int((w + 2*self.padding - self.filter_shape[0]) / self.stride + 1)
-        n_h = int((h + 2*self.padding - self.filter_shape[1]) / self.stride + 1)
-        self.A_shape = (m, n_w, n_h, nc)
-        A = np.zeros(self.A_shape)
+    def forward(self, A_pre, mode='train'):
+        m, w, h, nc = A_pre.shape
+        n_w = int((w + 2 * self.padding - self.filter_shape[0]) / self.stride + 1)
+        n_h = int((h + 2 * self.padding - self.filter_shape[1]) / self.stride + 1)
+        A = np.zeros((m, n_w, n_h, nc))
 
-        self.A_pad = ZeroPad(input, self.padding) if self.padding > 0 else input
+        self.A_pad = ZeroPad(A_pre, self.padding) if self.padding > 0 else A_pre
 
         if self.mode == 'max':
             for i in range(m):
@@ -82,8 +80,9 @@ class Pooling(Layer):
         return dA[:, self.padding:-self.padding, self.padding:-self.padding, :] if self.padding > 0 else dA
 
     def maxPooling_backward(self, z, grad):  # input: Z:matrix, grad is real return matrix
-        assert (len(z.shape) == 2)
+        assert (z.ndim == 2)
         return (z == np.max(z)) * grad
 
     def averagePooling_backward(self, a):  # input : a is real return matrix
-        return np.ones((self.filter_shape[0], self.filter_shape[1])) * (a/(self.filter_shape[0]*self.filter_shape[1]))
+        return np.ones((self.filter_shape[0], self.filter_shape[1])) * (
+                    a / (self.filter_shape[0] * self.filter_shape[1]))
