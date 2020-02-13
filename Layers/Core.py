@@ -10,7 +10,7 @@ class Core(Layer):
     def __init__(self, unit_number, activation="relu", batchNormal=False):
         super(Core, self).__init__(unit_number, activation)
         self.batchNormal = BatchNormal() if batchNormal else None
-
+        self.name = 'Core'
     def forward(self, A_pre, mode='train'):
         self.A_pre = A_pre
         self.init_params(A_pre)

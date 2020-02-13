@@ -1,6 +1,8 @@
 import sys
 import time
 
+from Layers import Pooling
+
 sys.path.append('./Layers/')
 from Loss import *
 from Layers.Layer import *
@@ -104,7 +106,9 @@ class Model(object):
                 # 前向传播
                 pre_A = x_train
                 for layer in self.layers:
+                    #print(layer.name + " forward")
                     pre_A = layer.forward(pre_A, mode)
+                    #print(pre_A.mean())
 
                 # 损失计算
                 loss = self.cost.forward(y_train, pre_A)
@@ -115,8 +119,10 @@ class Model(object):
 
                 # 损失函数对最后一层Z的导数
                 pre_grad = self.cost.backward(y_train, pre_A)
-                for i in reversed(range(self.getLayerNumber())):
-                    pre_grad = self.layers[i].backward(pre_grad)
+                for layer in reversed(self.layers):
+                    #print(layer.name + " backward")
+                    pre_grad = layer.backward(pre_grad)
+                    #print(pre_grad.mean())
                 # -----------
 
                 # 更新参数
@@ -133,10 +139,11 @@ class Model(object):
                 if it % tms == 0:
                     cost = np.mean(in_cost)
                     print("iteration %d cost = %f" % (it, cost))
+                    print("iteration %d cost = %f" % (it, cost), file=log)
+                    log.flush()
                     self.costs.append(cost)
-
-        if printOneTime:
-            print("consumer : ", time.time() - start)
+                    if printOneTime:
+                        print("consumer : ", (time.time() - start) / tms)
         # 预测
         self.predict1(X_test, Y_test)
 

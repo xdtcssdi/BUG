@@ -10,6 +10,7 @@ class Flatten(Layer):
         super(Flatten, self).__init__(activation=activation)
         self.out_dims = out_dims
         self.input_shape = None
+        self.name = 'Flatten'
 
     def init_params(self, nx):
         pass

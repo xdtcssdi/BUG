@@ -9,11 +9,13 @@ class Layer(object):
         self.b = None
         self.dW = None
         self.db = None
+        self.dZ = None
         self.isFirst = False
         self.isLast = False
         self.batchNormal = None
         self.A_pre = None
         self.Z = None
+        self.name = 'layer'
 
     def init_params(self, nx):
         raise NotImplementedError
