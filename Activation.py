@@ -40,14 +40,17 @@ def Leak_ReluGrad(Z):
 
 
 def SoftmaxStep(Z):
-    x = Z - np.max(Z, axis=1, keepdims=True)
-    exp_x = np.exp(x)
-    s = exp_x / np.sum(exp_x, axis=1, keepdims=True)
-    return s
+    shift_scores = Z - np.max(Z, axis=1).reshape(-1, 1)                    #在每行中10个数都减去该行中最大的数字
+    A = np.exp(shift_scores) / np.sum(np.exp(shift_scores), axis=1).reshape(-1, 1)
+    return A
 
 
 def SoftmaxGradStep(Z):
-    return np.ones(Z.shape, dtype=np.float32)
+    N = Z.shape[0]
+    dscores = SoftmaxStep(Z)
+    dscores[range(N), list(Z)] -= 1
+    dscores /= N
+    return dscores
 
 
 def get(Z, activation='relu'):

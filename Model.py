@@ -90,10 +90,10 @@ class Model(object):
         else:
             self.cost = CrossEntry()
 
-        start = 0
         if printOneTime:
             start = time.time()
         for it in range(iterator):
+            start = 0
             in_cost = []
 
             # mini-batch
@@ -106,9 +106,9 @@ class Model(object):
                 # 前向传播
                 pre_A = x_train
                 for layer in self.layers:
-                    #print(layer.name + " forward")
+                    #print(layer.name + " forward", end=': ')
                     pre_A = layer.forward(pre_A, mode)
-                    #print(pre_A.mean())
+                    #print(pre_A.shape)
 
                 # 损失计算
                 loss = self.cost.forward(y_train, pre_A)
@@ -120,9 +120,9 @@ class Model(object):
                 # 损失函数对最后一层Z的导数
                 pre_grad = self.cost.backward(y_train, pre_A)
                 for layer in reversed(self.layers):
-                    #print(layer.name + " backward")
+                    #print(layer.name + " backward", end=': ')
                     pre_grad = layer.backward(pre_grad)
-                    #print(pre_grad.mean())
+                    #print(pre_grad.shape)
                 # -----------
 
                 # 更新参数
