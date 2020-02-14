@@ -64,8 +64,10 @@ def get(Z, activation='relu'):
         A = SoftmaxStep(Z)
     elif activation == 'relu':
         A = Relu(Z)
-    else:
+    elif activation is None:
         A = Z
+    else:
+        raise ValueError
     return A
 
 

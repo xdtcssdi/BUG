@@ -6,7 +6,7 @@ from .Layer import Layer
 
 class Flatten(Layer):
 
-    def __init__(self, out_dims=2, activation='None'):
+    def __init__(self, out_dims=2, activation=None):
         super(Flatten, self).__init__(activation=activation)
         self.out_dims = out_dims
         self.input_shape = None

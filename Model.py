@@ -140,6 +140,10 @@ class Model(object):
                     cost = np.mean(in_cost)
                     print("iteration %d cost = %f" % (it, cost))
                     print("iteration %d cost = %f" % (it, cost), file=log)
+                    print("predict_train :", end=' ')
+                    self.predict(X_train, Y_train)
+                    print("predict_test :", end=' ')
+                    self.predict(X_test, Y_test)
                     log.flush()
                     self.costs.append(cost)
                     if printOneTime:
@@ -150,14 +154,15 @@ class Model(object):
     def predict(self, X_train, Y_train):
         A = X_train
         for layer in self.layers:
-            A = layer.forward(A)
+            A = layer.forward(A, mode='test')
         p = .0
+        res = A == Y_train
         for i in range(X_train.shape[0]):
             t1 = self.returnMaxIdx(A[i])
             t2 = self.returnMaxIdx(Y_train[i])
             if t1 == t2:
                 p += 1
-        print("accuracy: %f%%" % (p / X_train.shape[0] * 100.))
+        print("accuracy: %f%%" % (p * 1.0 / X_train.shape[0] * 100.))
 
     def predict1(self, X_train, Y_train):
         A = X_train
@@ -169,7 +174,7 @@ class Model(object):
             t2 = Y_train[i][0]
             if t1 == t2:
                 p += 1
-        print("accuracy: %f%%" % (p / X_train.shape[0] * 100.))
+        print("accuracy: %f%%" % (p * 1.0 / X_train.shape[0] * 100.))
 
     def returnMaxIdx(self, a):
         list_a = a.tolist()
