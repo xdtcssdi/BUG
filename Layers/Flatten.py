@@ -2,7 +2,7 @@ import numpy as np
 
 import Activation
 from .Layer import Layer
-
+import gc
 
 class Flatten(Layer):
 
@@ -22,6 +22,5 @@ class Flatten(Layer):
         return A
 
     def backward(self, dZ):
-        #print(dZ.shape)
         dA = np.dot(dZ, self.next_layer.W.T)
         return dA.reshape(self.input_shape)

@@ -13,9 +13,9 @@ def f1():
     Y_test = test_set_y_orig.T
     # 创建网络架构
     net = Model()
-    net.add(Core(20, batchNormal=False))
+    #net.add(Core(20))
     net.add(Core(7))
-    # net.add(Core(5))
+    #net.add(Core(5))
     net.add(Core(1, "sigmoid"))
     net.compile()
     net.train(X_train, Y_train, X_test, Y_test, normalizing_inputs=False, batch_size=100,
@@ -35,16 +35,15 @@ def f2():
 
     # 创建网络架构
     net = Model()
-    #net.add(Core(31, batchNormal=False))
-    net.add(Core(20, batchNormal=False))
+    net.add(Core(20, batchNormal=True))
     net.add(Core(7, batchNormal=False))
     net.add(Core(5, batchNormal=False))
     net.add(Core(1, "sigmoid"))
     net.compile()
-    net.train(X_train, Y_train, X_test, Y_test, normalizing_inputs=False, batch_size=64,
+    net.train(X_train, Y_train, X_test, Y_test, normalizing_inputs=False, batch_size=128, printOneTime=False,
               testing_percentage=0, validation_percentage=0,
-              printLoss=True, learning_rate=0.0075, iterator=2500)
+              printLoss=True, learning_rate=0.0075, iterator=2500, optimize='Adam')
 
 
 if __name__ == '__main__':
-    f1()
+    f2()

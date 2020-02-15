@@ -40,23 +40,19 @@ class BatchNormal:
         return self.dgamma, self.dbeta
 
     def fourDims_batchnorm_forward(self, A_pre, mode='train', momentum=0.9):
-        # print(A_pre.shape)
         x = A_pre.transpose(0, 2, 3, 1)
         N, H, W, C = x.shape
         x_flat = x.reshape(N * H * W, C)
         out_flat = self.twoDims_batchnormal_forward(x_flat, mode, momentum)
         out = out_flat.reshape(x.shape).transpose(0, 3, 1, 2)
-        # print(out.shape)
         return out
 
     def fourDims_batchnorm_backward(self, dout):
-        # print(dout.shape)
         x = dout.transpose(0, 2, 3, 1)
         N, H, W, C = x.shape
         dout_flat = dout.reshape(N * H * W, C)
         dx_flat = self.twoDims_batchnormal_backward(dout_flat)
         dx = dx_flat.reshape(x.shape).transpose(0, 3, 1, 2)
-        # print(dx.shape)
         return dx
 
     def twoDims_batchnormal_forward(self, A_pre, mode='train', momentum=0.9):
@@ -89,6 +85,7 @@ class BatchNormal:
 
     def twoDims_batchnormal_backward(self, pre_grad):
         xhat, xmu, ivar, sqrtvar = self.caches
+        del self.caches
         m, nx = pre_grad.shape
         self.dbeta = np.sum(pre_grad, axis=0)
         dgammax = pre_grad
@@ -98,10 +95,10 @@ class BatchNormal:
         dxmu1 = dxhat * ivar
         dsqrtvar = -1. / (sqrtvar ** 2) * divar
         dvar = 0.5 * ivar * dsqrtvar
-        dsq = 1. / m * np.ones_like(pre_grad) * dvar
+        dsq = np.divide(1., m) * np.ones_like(pre_grad) * dvar
         dxmu2 = 2 * dsq * xmu
         dx1 = dxmu1 + dxmu2
         dmu = -1 * np.sum(dx1, axis=0)
-        dx2 = 1. / m * np.ones_like(pre_grad) * dmu
+        dx2 = np.divide(1., m) * np.ones_like(pre_grad) * dmu
         dx = dx1 + dx2
         return dx

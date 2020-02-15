@@ -109,6 +109,7 @@ class Pooling(Layer):
         x_split = A_pre.reshape(N * C, 1, H, W)
         x_cols = im2col_indices(x_split, self.filter_shape[0], self.filter_shape[1], padding=self.padding,
                                 stride=self.stride)
+        print(x_cols)
         x_cols_argmax = np.argmax(x_cols, axis=0)
         x_cols_max = x_cols[x_cols_argmax, np.arange(x_cols.shape[1])]
         out = x_cols_max.reshape(out_height, out_width, N, C).transpose(2, 3, 0, 1)
@@ -117,6 +118,7 @@ class Pooling(Layer):
 
     def backward(self, dZ):
         x, x_cols, x_cols_argmax = self.cache
+        del self.cache
         N, C, H, W = x.shape
 
         dout_reshaped = dZ.transpose(2, 3, 0, 1).flatten()

@@ -8,7 +8,7 @@ import Activation
 from .Layer import Layer
 from .Padding import *
 from .im2col import *
-
+import gc
 
 class ConvolutionForloop(Layer):
 
@@ -156,7 +156,9 @@ class Convolution(Layer):
         self.dW = dout_reshaped.dot(self.X_col.T).reshape(self.W.shape)
         dx_cols = self.W.reshape(num_filters, -1).T.dot(dout_reshaped)
         dx = col2im_indices(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
-        return Activation.get_grad(dx, self.A_pre, self.activation)
+        dZ = Activation.get_grad(dx, self.A_pre, self.activation)
+        del self.A_pre, self.X_col
+        return dZ
 
     @property
     def params(self):

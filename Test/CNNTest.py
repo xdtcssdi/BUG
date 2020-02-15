@@ -4,7 +4,7 @@ from Layers.Flatten import Flatten
 from Layers.Pooling import Pooling
 from Model import Model
 from util import *
-
+import gc
 
 def f4():
 
@@ -109,7 +109,7 @@ def ss():
     net.compile()
     net.train(X_train, Y_train, X_test, Y_test, batch_size=100, learning_rate=0.01,
               validation_percentage=0, testing_percentage=0,
-              printLoss=True, lossMode='SoftmaxCrossEntry', tms=1, log=open("log.txt", 'w+'), )
+              printLoss=True, lossMode='SoftmaxCrossEntry', tms=1, log=open("log.txt", 'w+'), optimize='Adam')
 
 
 if __name__ == '__main__':

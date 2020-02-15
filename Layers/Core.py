@@ -5,7 +5,7 @@ import numpy as np
 import Activation
 from .Layer import Layer
 from .Normalization import BatchNormal
-
+import gc
 
 class Core(Layer):
 
@@ -26,9 +26,9 @@ class Core(Layer):
         if self.batchNormal:
             dA = self.batchNormal.backward(dA)
         dZ = Activation.get_grad(dA, self.Z, self.activation)
-        self.dW = 1. / dZ.shape[0] * np.dot(self.A_pre.T, dZ)
+
+        self.dW = np.divide(1., dZ.shape[0]) * np.dot(self.A_pre.T, dZ)
         self.db = np.mean(dZ, axis=0, keepdims=True)
-        #print(dZ.shape)
         return dZ
 
     def init_params(self, A_pre):
