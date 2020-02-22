@@ -1,6 +1,6 @@
-from Model import Model
-from function import *
-from Layers import *
+from BUG.Model import Model
+from BUG.function import *
+from BUG.Layers import *
 
 def f4():
 
@@ -21,10 +21,10 @@ def f4():
     net.add(Core(1, activation="sigmoid"))
     net.compile()
     net.summary()
-    # log_file = open("log.txt", 'w+')
-    # net.train(X_train, Y_train, X_test, Y_test, batch_size=30, learning_rate=0.0075,
-    #           validation_percentage=0, testing_percentage=0,
-    #           printLoss=True, lossMode='CrossEntry', log=log_file, iterator=20, optimize='Adam')
+    log_file = open("log.txt", 'w+')
+    net.train(X_train, Y_train, X_test, Y_test, batch_size=30, learning_rate=0.0075,
+              validation_percentage=0, testing_percentage=0,
+              printLoss=True, lossMode='CrossEntry', log=log_file, iterator=20, optimize='Adam')
 
 
 def f3():

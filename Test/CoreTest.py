@@ -1,5 +1,5 @@
-from function import *
-from Model import Model
+from BUG.function import *
+from BUG.Model import Model
 
 def f1():
     np.random.seed(1)

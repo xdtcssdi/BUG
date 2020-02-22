@@ -2,11 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bddf8771-78f7-4e64-bf5c-20d8476cb952" name="Default Changelist" comment="format2">
-      <change beforePath="$PROJECT_DIR$/.idea/BUG.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/BUG.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Layers/Convolution.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Convolution.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Layers/Core.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Layers/Flatten.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Flatten.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CNNTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CoreTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/function/Activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/function/Activation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/function/Optimize.py" beforeDir="false" afterPath="$PROJECT_DIR$/function/Optimize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/function/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/function/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +46,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="JsFlowSettings">
     <service-enabled>true</service-enabled>
@@ -368,6 +374,17 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="format" />
@@ -406,25 +423,25 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="211" y="26" width="833" height="719" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1582353504546" />
-    <state width="1238" height="234" key="GridCell.Tab.0.bottom" timestamp="1581841342447">
+    <state width="1238" height="234" key="GridCell.Tab.0.bottom" timestamp="1582359178345">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581841342447" />
+    <state width="1238" height="234" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1582359178345" />
     <state width="1238" height="213" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1581508814056" />
-    <state width="1238" height="234" key="GridCell.Tab.0.center" timestamp="1581841342446">
+    <state width="1238" height="234" key="GridCell.Tab.0.center" timestamp="1582359178341">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1581841342446" />
+    <state width="1238" height="234" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1582359178341" />
     <state width="1238" height="213" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1581508814055" />
-    <state width="1238" height="234" key="GridCell.Tab.0.left" timestamp="1581841342445">
+    <state width="1238" height="234" key="GridCell.Tab.0.left" timestamp="1582359178339">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1581841342445" />
+    <state width="1238" height="234" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1582359178339" />
     <state width="1238" height="213" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1581508814054" />
-    <state width="1238" height="234" key="GridCell.Tab.0.right" timestamp="1581841342446">
+    <state width="1238" height="234" key="GridCell.Tab.0.right" timestamp="1582359178343">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1581841342446" />
+    <state width="1238" height="234" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1582359178343" />
     <state width="1238" height="213" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1581508814055" />
     <state width="1238" height="203" key="GridCell.Tab.1.bottom" timestamp="1581829608277">
       <screen x="0" y="0" width="1280" height="800" />
@@ -482,9 +499,9 @@
     <SUITE FILE_PATH="coverage/BUG$Pooling.coverage" NAME="Pooling Coverage Results" MODIFIED="1580736858172" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$Convelution.coverage" NAME="Convelution Coverage Results" MODIFIED="1580795089774" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$cnn_mnist.coverage" NAME="cnn-mnist Coverage Results" MODIFIED="1581323473756" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BUG$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1581830769408" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BUG$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1582358625423" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BUG$Activation.coverage" NAME="Activation Coverage Results" MODIFIED="1581165529027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BUG$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1581829990702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
+    <SUITE FILE_PATH="coverage/BUG$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1582358208640" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$test.coverage" NAME="test Coverage Results" MODIFIED="1581830114443" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
   </component>
   <component name="masterDetails">

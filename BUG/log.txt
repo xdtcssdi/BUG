@@ -1,0 +1,1 @@
+iteration 0 cost = 6422.654865
