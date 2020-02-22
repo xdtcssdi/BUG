@@ -1,6 +1,7 @@
-from BUG.Model import Model
+from BUG import Model
 from BUG.function import *
-from BUG.Layers import *
+from BUG.Layers import Layer, Core, Convolution, Pooling, Flatten
+
 
 def f4():
 

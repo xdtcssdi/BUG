@@ -1,62 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="bddf8771-78f7-4e64-bf5c-20d8476cb952" name="Default Changelist" comment="format2">
+    <list default="true" id="04fab398-9740-49c7-b523-6c13644078ee" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/未命名.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/BUG.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/BUG.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Convolution.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Convolution.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Core.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Flatten.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Flatten.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model/Model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Layers/Convolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Layers/Core.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Layers/Flatten.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Layers/Layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Layers/Layer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Layers/Pooling.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Layers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Layers/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Model/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Model/Model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/function/Optimize.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/Optimize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/function/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/function/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/log.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CNNTest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Test/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CoreTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/function/Activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/function/Activation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/function/Optimize.py" beforeDir="false" afterPath="$PROJECT_DIR$/function/Optimize.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/function/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/function/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="DatabaseView">
-    <option name="SHOW_INTERMEDIATE" value="true" />
-    <option name="GROUP_DATA_SOURCES" value="true" />
-    <option name="GROUP_SCHEMA" value="true" />
-    <option name="GROUP_CONTENTS" value="false" />
-    <option name="SORT_POSITIONED" value="false" />
-    <option name="SHOW_EMPTY_GROUPS" value="false" />
-    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
-    <option name="HIDDEN_KINDS">
-      <set />
-    </option>
-    <expand />
-    <select />
-  </component>
-  <component name="FavoritesManager">
-    <favorites_list name="BUG" />
-  </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Jupyter Notebook" />
-        <option value="Setup Script" />
-        <option value="Python Script" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-    <option name="RESET_MODE" value="HARD" />
-  </component>
-  <component name="JsFlowSettings">
-    <service-enabled>true</service-enabled>
-    <exe-path />
-    <other-services-enabled>true</other-services-enabled>
-    <auto-save>true</auto-save>
   </component>
   <component name="JupyterTrust" id="06d44508-92da-49fe-9181-7e6a1a0357c7" />
-  <component name="ProjectId" id="1XVqEHyO5ukcdchsA7a6bOzU5H2" />
-  <component name="ProjectLevelVcsManager">
+  <component name="ProjectId" id="1Y9eXQGxJJeFJvRhqoavQHswfj9" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
@@ -66,59 +42,12 @@
   </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
-    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/datasets" />
-    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
-    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="http.proxy" />
-  </component>
-  <component name="PyConsoleOptionsProvider">
-    <option name="myPythonConsoleState">
-      <console-settings is-module-sdk="true">
-        <option name="myUseModuleSdk" value="true" />
-      </console-settings>
-    </option>
-  </component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/datasets" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/Test" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/function" />
-      <recent name="$PROJECT_DIR$/Model" />
-      <recent name="$PROJECT_DIR$/Layers" />
-      <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/datasets/cifar-10-python" />
-    </key>
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
   <component name="RunManager" selected="Python.CNNTest">
-    <configuration name="Activation" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="BUG" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/function/Activation.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="true" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="BUG" type="PythonConfigurationType" factoryName="Python">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -127,7 +56,7 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="$USER_HOME$/NumpyDL/venv/bin/python" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Layers" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Test" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
@@ -135,101 +64,13 @@
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Test/CoreTest.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="true" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="CNNTest" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="BUG" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="$USER_HOME$/NumpyDL/venv/bin/python" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Test" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Test/CNNTest.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="true" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Loss" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="BUG" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/function/Loss.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="true" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <module name="BUG" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="cnn-mnist" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="BUG" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/cnn-mnist.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="true" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="CNNTest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -242,10 +83,10 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Test/test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Test/CNNTest.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
       <option name="INPUT_FILE" value="" />
@@ -254,18 +95,10 @@
     <list>
       <item itemvalue="Python.BUG" />
       <item itemvalue="Python.CNNTest" />
-      <item itemvalue="Python.Loss" />
-      <item itemvalue="Python.test" />
-      <item itemvalue="Python.Activation" />
-      <item itemvalue="Python.cnn-mnist" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.CNNTest" />
-        <item itemvalue="Python.test" />
-        <item itemvalue="Python.cnn-mnist" />
-        <item itemvalue="Python.Activation" />
-        <item itemvalue="Python.Loss" />
       </list>
     </recent_temporary>
   </component>
@@ -274,249 +107,57 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="bddf8771-78f7-4e64-bf5c-20d8476cb952" name="Default Changelist" comment="" />
-      <created>1580538580758</created>
+      <changelist id="04fab398-9740-49c7-b523-6c13644078ee" name="Default Changelist" comment="" />
+      <created>1582359276870</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1580538580758</updated>
-      <workItem from="1580538587588" duration="20700000" />
-      <workItem from="1580619813504" duration="16974000" />
-      <workItem from="1580727427613" duration="8174000" />
-      <workItem from="1580789772923" duration="4910000" />
-      <workItem from="1580796285648" duration="3189000" />
-      <workItem from="1580800275232" duration="1895000" />
-      <workItem from="1580901920938" duration="11133000" />
-      <workItem from="1581140047716" duration="178000" />
-      <workItem from="1581140733294" duration="100000" />
-      <workItem from="1581141775716" duration="73000" />
-      <workItem from="1581141872536" duration="60000" />
-      <workItem from="1581141956251" duration="27536000" />
-      <workItem from="1581201427247" duration="35697000" />
-      <workItem from="1581300770254" duration="19804000" />
-      <workItem from="1581324986119" duration="16139000" />
-      <workItem from="1581381697967" duration="27304000" />
-      <workItem from="1581431389932" duration="1151000" />
-      <workItem from="1581490480711" duration="16802000" />
-      <workItem from="1581575534660" duration="8501000" />
-      <workItem from="1581591715074" duration="3184000" />
-      <workItem from="1581663851380" duration="21703000" />
-      <workItem from="1581741392139" duration="16222000" />
-      <workItem from="1581818265136" duration="6128000" />
-      <workItem from="1582038600294" duration="140000" />
-      <workItem from="1582349681643" duration="3779000" />
+      <updated>1582359276870</updated>
+      <workItem from="1582359282265" duration="183000" />
+      <workItem from="1582359665443" duration="2174000" />
     </task>
-    <task id="LOCAL-00001" summary="format">
-      <created>1581422192383</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1581422192383</updated>
-    </task>
-    <task id="LOCAL-00002" summary="梯度爆炸">
-      <created>1581584868731</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1581584868732</updated>
-    </task>
-    <task id="LOCAL-00003" summary="f4通过测试">
-      <created>1581677633539</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1581677633539</updated>
-    </task>
-    <task id="LOCAL-00004" summary="for upload google drive">
-      <created>1581695930198</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1581695930198</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Optimize &gt; Adam momentum gd sgd">
-      <created>1581769800629</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1581769800629</updated>
-    </task>
-    <task id="LOCAL-00006" summary="format2">
-      <created>1582350084736</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1582350084736</updated>
-    </task>
-    <task id="LOCAL-00007" summary="import1">
-      <created>1582351535695</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1582351535695</updated>
-    </task>
-    <task id="LOCAL-00008" summary="import 2">
-      <created>1582352297122</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1582352297122</updated>
-    </task>
-    <task id="LOCAL-00009" summary="import3">
-      <created>1582353504919</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1582353504919</updated>
-    </task>
-    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="format" />
-    <MESSAGE value="梯度爆炸" />
-    <MESSAGE value="f4通过测试" />
-    <MESSAGE value="for upload google drive" />
-    <MESSAGE value="Optimize &gt; Adam momentum gd sgd" />
-    <MESSAGE value="format2" />
-    <MESSAGE value="import1" />
-    <MESSAGE value="import 2" />
-    <MESSAGE value="import3" />
-    <option name="LAST_COMMIT_MESSAGE" value="import3" />
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/BUG" />
+    </ignored-roots>
   </component>
   <component name="WindowStateProjectService">
-    <state x="195" y="36" key="#CNNTest" timestamp="1581313297473">
+    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1582359730872">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="195" y="36" key="#CNNTest/0.0.1280.800@0.0.1280.800" timestamp="1581313297473" />
-    <state x="240" y="65" key="#Inspections" timestamp="1581431425365">
+    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1280.800@0.0.1280.800" timestamp="1582359730872" />
+    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1582361025956">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="240" y="65" key="#Inspections/0.0.1280.800@0.0.1280.800" timestamp="1581431425365" />
-    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1581323467108">
+    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1582361025956" />
+    <state width="1238" height="212" key="GridCell.Tab.0.bottom" timestamp="1582361860730">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1280.800@0.0.1280.800" timestamp="1581323467108" />
-    <state x="453" y="123" key="#com.intellij.ide.util.MemberChooser" timestamp="1581385248863">
+    <state width="1238" height="212" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1582361860730" />
+    <state width="1238" height="212" key="GridCell.Tab.0.center" timestamp="1582361860729">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="453" y="123" key="#com.intellij.ide.util.MemberChooser/0.0.1280.800@0.0.1280.800" timestamp="1581385248863" />
-    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1581579844388">
+    <state width="1238" height="212" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1582361860729" />
+    <state width="1238" height="212" key="GridCell.Tab.0.left" timestamp="1582361860728">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1581579844388" />
-    <state x="211" y="26" width="833" height="719" key="CommitChangelistDialog2" timestamp="1582353504546">
+    <state width="1238" height="212" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1582361860728" />
+    <state width="1238" height="212" key="GridCell.Tab.0.right" timestamp="1582361860730">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="211" y="26" width="833" height="719" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1582353504546" />
-    <state width="1238" height="234" key="GridCell.Tab.0.bottom" timestamp="1582359178345">
+    <state width="1238" height="212" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1582361860730" />
+    <state x="141" y="39" key="SettingsEditor" timestamp="1582359688509">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1582359178345" />
-    <state width="1238" height="213" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1581508814056" />
-    <state width="1238" height="234" key="GridCell.Tab.0.center" timestamp="1582359178341">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1582359178341" />
-    <state width="1238" height="213" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1581508814055" />
-    <state width="1238" height="234" key="GridCell.Tab.0.left" timestamp="1582359178339">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1582359178339" />
-    <state width="1238" height="213" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1581508814054" />
-    <state width="1238" height="234" key="GridCell.Tab.0.right" timestamp="1582359178343">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="234" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1582359178343" />
-    <state width="1238" height="213" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1581508814055" />
-    <state width="1238" height="203" key="GridCell.Tab.1.bottom" timestamp="1581829608277">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="203" key="GridCell.Tab.1.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581829608277" />
-    <state width="1238" height="203" key="GridCell.Tab.1.center" timestamp="1581829608276">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="203" key="GridCell.Tab.1.center/0.0.1280.800@0.0.1280.800" timestamp="1581829608276" />
-    <state width="1238" height="203" key="GridCell.Tab.1.left" timestamp="1581829608275">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="203" key="GridCell.Tab.1.left/0.0.1280.800@0.0.1280.800" timestamp="1581829608275" />
-    <state width="1238" height="203" key="GridCell.Tab.1.right" timestamp="1581829608276">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="203" key="GridCell.Tab.1.right/0.0.1280.800@0.0.1280.800" timestamp="1581829608276" />
-    <state x="463" y="118" key="RollbackChangesDialog" timestamp="1581243147572">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state x="463" y="118" key="RollbackChangesDialog/0.0.1280.800@0.0.1280.800" timestamp="1581243147572" />
-    <state x="0" y="23" width="997" height="722" key="SettingsEditor" timestamp="1582350128005">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state x="0" y="23" width="997" height="722" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1582350128005" />
-    <state x="141" y="23" width="997" height="719" key="SettingsEditor/0.23.1280.719@0.23.1280.719" timestamp="1581141898100" />
-    <state width="500" height="445" key="SwitcherDM" timestamp="1581584742854">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="500" height="445" key="SwitcherDM/0.0.1280.800@0.0.1280.800" timestamp="1581584742854" />
-    <state x="44" y="101" key="Vcs.Push.Dialog.v2" timestamp="1582353506314">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state x="44" y="101" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1582353506314" />
-    <state x="423" y="324" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1582349781391">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state x="423" y="324" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1280.800@0.0.1280.800" timestamp="1582349781391" />
-    <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1581827456752">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1581827456752" />
-    <state x="449" y="301" key="git4idea.ui.GitResetDialog" timestamp="1581239804546">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state x="449" y="301" key="git4idea.ui.GitResetDialog/0.0.1280.800@0.0.1280.800" timestamp="1581239804546" />
-    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup" timestamp="1581753698391">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup/0.0.1280.800@0.0.1280.800" timestamp="1581753698391" />
-    <state x="305" y="66" width="670" height="676" key="search.everywhere.popup/0.23.1280.719@0.23.1280.719" timestamp="1581495828015" />
+    <state x="141" y="39" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1582359688509" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/BUG$Loss.coverage" NAME="Loss Coverage Results" MODIFIED="1580903966538" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BUG$Pooling.coverage" NAME="Pooling Coverage Results" MODIFIED="1580736858172" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
-    <SUITE FILE_PATH="coverage/BUG$Convelution.coverage" NAME="Convelution Coverage Results" MODIFIED="1580795089774" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
-    <SUITE FILE_PATH="coverage/BUG$cnn_mnist.coverage" NAME="cnn-mnist Coverage Results" MODIFIED="1581323473756" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BUG$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1582358625423" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
-    <SUITE FILE_PATH="coverage/BUG$Activation.coverage" NAME="Activation Coverage Results" MODIFIED="1581165529027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BUG$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1582358208640" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
-    <SUITE FILE_PATH="coverage/BUG$test.coverage" NAME="test Coverage Results" MODIFIED="1581830114443" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
-  </component>
-  <component name="masterDetails">
-    <states>
-      <state key="ScopeChooserConfigurable.UI">
-        <settings>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-    </states>
+    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1582361860719" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BS$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1582361717405" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
   </component>
 </project>

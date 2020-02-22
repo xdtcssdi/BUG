@@ -1,7 +1,7 @@
 import sys
 
 from BUG.function import *
-from BUG.Layers import Layer
+from BUG.Layers import *
 import gc
 from tqdm import trange
 

@@ -1,8 +1,5 @@
 import gc
-
-import numpy as np
-
-from BUG.Layers import Core, Convolution
+from BUG.Layers import Core, Convolution, np
 
 
 class Momentum:
@@ -49,7 +46,7 @@ class Adam:
         self.s = {}
         for i in range(len(layers)):
             layer = self.layers[i]
-            if isinstance(layer, Core) or isinstance(layer, Convolution):
+            if isinstance(layer, (Core, Convolution)):
                 self.v['V_dW' + str(i)] = np.zeros(layer.W.shape)
                 self.v['V_db' + str(i)] = np.zeros(layer.b.shape)
                 self.s['S_dW' + str(i)] = np.zeros(layer.W.shape)
