@@ -1,12 +1,12 @@
 import sys
 
-import Optimize
+from function import Optimize
 
 sys.path.append('./Layers/')
-from Loss import *
+from function.Loss import *
 from Layers.Layer import *
 import gc
-from tqdm import tqdm, trange
+from tqdm import trange
 
 np.set_printoptions(threshold=np.inf)
 
@@ -92,12 +92,11 @@ class Model(object):
             self.cost = CrossEntry()
 
         costs = []
-        
+
         #  mini_batch
         with trange(iterator) as tr:
             for it in tr:
-
-                tr.set_description("第%d代:" % (it+1))
+                tr.set_description("第%d代:" % (it + 1))
                 cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
                 tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.predict1(X_test, Y_test))
                 costs.append(cost)

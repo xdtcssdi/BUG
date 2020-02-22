@@ -1,6 +1,6 @@
 from Layers.Core import Core
 from Model import Model
-from util import *
+from function.util import *
 
 
 def f1():

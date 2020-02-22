@@ -1,6 +1,4 @@
-import numpy as np
-
-from .Activation import *
+from function.Activation import *
 from .Layer import Layer
 
 

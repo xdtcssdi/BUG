@@ -3,8 +3,8 @@ from Layers.Core import Core
 from Layers.Flatten import Flatten
 from Layers.Pooling import Pooling
 from Model import Model
-from util import *
-import gc
+from function.util import *
+
 
 def f4():
 

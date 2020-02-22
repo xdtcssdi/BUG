@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 import os
 import pickle
+
 def load_data():
     train_dataset = h5py.File('../datasets/train_catvnoncat.h5', "r")
     train_set_x_orig = np.array(train_dataset["train_set_x"][:])  # your train set features

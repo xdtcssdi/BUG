@@ -1,6 +1,6 @@
 import math
 
-from .Activation import *
+from function.Activation import *
 from .Layer import Layer
 from .Normalization import BatchNormal
 
