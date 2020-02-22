@@ -15,7 +15,7 @@ def f4():
     Y_test = test_set_y_orig.reshape((-1, 1))
 
     net = Model()
-    net.add(Convolution(filter_count=6, filter_shape=(5, 5), batchNormal=False))
+    net.add(Convolution(filter_count=6, filter_shape=(5, 5), batchNormal=True))
     net.add(Pooling(filter_shape=(2, 2), stride=2, mode='average'))
     # net.add(Convolution(filter_count=16, filter_shape=(5, 5), batchNormal=False))
     # net.add(Pooling(filter_shape=(2, 2), stride=2, mode='average'))
@@ -25,9 +25,9 @@ def f4():
     net.add(Core(1, activation="sigmoid"))
     net.compile()
     log_file = open("log.txt", 'w+')
-    net.train(X_train, Y_train, X_test, Y_test, batch_size=100, learning_rate=0.0075,
+    net.train(X_train, Y_train, X_test, Y_test, batch_size=30, learning_rate=0.0075,
               validation_percentage=0, testing_percentage=0,
-              printLoss=True, lossMode='CrossEntry', tms=10, log=log_file, )
+              printLoss=True, lossMode='CrossEntry', log=log_file, iterator=20, optimize='Adam')
 
 
 def f3():
@@ -60,7 +60,7 @@ def f3():
     net.compile()
     log_file = open("log.txt", 'w+')
     net.train(X_train, Y_train, X_test, Y_test, batch_size=64, learning_rate=0.0075, validation_percentage=0, testing_percentage=0,
-              printLoss=True, lossMode='SoftmaxCrossEntry', tms=1, log=log_file, )
+              printLoss=True, lossMode='SoftmaxCrossEntry', log=log_file, )
 
 
 def LeNet5():
@@ -87,8 +87,7 @@ def LeNet5():
     net.train(X_train, Y_train, X_test, Y_test,
               batch_size=64, learning_rate=0.0075, printOneTime=True,
               validation_percentage=0, testing_percentage=0,
-              printLoss=True, lossMode='SoftmaxCrossEntry',
-              tms=1, log=log_file)
+              printLoss=True, lossMode='SoftmaxCrossEntry', log=log_file)
 
 
 def ss():
@@ -101,18 +100,18 @@ def ss():
     net = Model()
     net.add(Convolution(filter_count=8, filter_shape=(4, 4), batchNormal=True))
     net.add(Pooling(filter_shape=(2, 2), stride=1, mode='average'))
-    net.add(Convolution(filter_count=16, filter_shape=(2, 2), batchNormal=True))
-    net.add(Pooling(filter_shape=(2, 2), stride=1, mode='average'))
+    # net.add(Convolution(filter_count=16, filter_shape=(2, 2), batchNormal=True))
+    # net.add(Pooling(filter_shape=(2, 2), stride=1, mode='average'))
     net.add(Flatten())
-    net.add(Core(13))
+    # net.add(Core(13))
     net.add(Core(len(classes), activation="softmax"))
     net.compile()
-    net.train(X_train, Y_train, X_test, Y_test, batch_size=100, learning_rate=0.01,
+    net.train(X_train, Y_train, X_test, Y_test, batch_size=12, learning_rate=0.01,
               validation_percentage=0, testing_percentage=0,
-              printLoss=True, lossMode='SoftmaxCrossEntry', tms=1, log=open("log.txt", 'w+'), optimize='Adam')
+              printLoss=True, lossMode='SoftmaxCrossEntry', log=open("log.txt", 'w+'), optimize='Adam')
 
 
 if __name__ == '__main__':
     np.random.seed(1)
-    ss()
+    f4()
 

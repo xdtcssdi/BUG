@@ -88,12 +88,12 @@ class PoolingForloop(Layer):
 
 
 class Pooling(Layer):
-    def __init__(self, filter_shape, padding=0, stride=1, mode='max'):
+    def __init__(self, filter_shape, paddingMode='same', stride=1, mode='max'):
         super(Pooling, self).__init__()
         self.filter_shape = filter_shape
         self.name = 'Pooling'
-        self.padding = padding
         self.stride = stride
+        self.padding = 0 if paddingMode == 'valid' else (filter_shape[0] - 1) // 2
         self.mode = mode
         assert (self.mode in ['max', 'average'])
 
@@ -109,7 +109,6 @@ class Pooling(Layer):
         x_split = A_pre.reshape(N * C, 1, H, W)
         x_cols = im2col_indices(x_split, self.filter_shape[0], self.filter_shape[1], padding=self.padding,
                                 stride=self.stride)
-        print(x_cols)
         x_cols_argmax = np.argmax(x_cols, axis=0)
         x_cols_max = x_cols[x_cols_argmax, np.arange(x_cols.shape[1])]
         out = x_cols_max.reshape(out_height, out_width, N, C).transpose(2, 3, 0, 1)

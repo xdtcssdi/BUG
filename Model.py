@@ -6,6 +6,7 @@ sys.path.append('./Layers/')
 from Loss import *
 from Layers.Layer import *
 import gc
+from tqdm import tqdm, trange
 
 np.set_printoptions(threshold=np.inf)
 
@@ -42,20 +43,7 @@ class Model(object):
 
         return X_train, Y_train, X_test, Y_test, X_valid, Y_valid
 
-    def train(self, X_train, Y_train, X_test, Y_test, batch_size, normalizing_inputs=True, testing_percentage=0.2,
-              validation_percentage=0.2, learning_rate=0.075, iterator=2000,
-              printLoss=False, lossMode='CrossEntry', tms=100, shuffle=True,
-              printOneTime=False, log=sys.stdout, optimize='BGD',
-              mode='train'):
-        t = 0
-        print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
-
-        X_train = X_train.astype(np.float32)
-        Y_train = Y_train.astype(np.float32)
-        X_test = X_test.astype(np.float32)
-        Y_test = Y_test.astype(np.float32)
-
-        #  Normalizing inputs
+    def normalizing_inputs(self, X_train, X_test, normalizing_inputs=True):
         if normalizing_inputs:
             if X_train.ndim == 2:
                 u = np.mean(X_train, axis=0)
@@ -65,10 +53,24 @@ class Model(object):
                 X_test -= u
                 X_test /= var
             elif X_train.ndim > 2:
-                X_train /= 255.0
-                X_test /= 255.0
+                np.divide(X_train, 255.0, out=X_train, casting="unsafe")
+                np.divide(X_test, 255.0, out=X_test, casting="unsafe")
             else:
                 raise ValueError
+
+    def train(self, X_train, Y_train, X_test, Y_test, batch_size, normalizing_inputs=True, testing_percentage=0.2,
+              validation_percentage=0.2, learning_rate=0.075, iterator=2000,
+              printLoss=False, lossMode='CrossEntry', shuffle=True,
+              printOneTime=False, log=sys.stdout, optimize='BGD',
+              mode='train'):
+        assert not isinstance(X_train, np.float)
+        assert not isinstance(X_test, np.float)
+        t = 0
+
+        print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
+
+        #  Normalizing inputs
+        self.normalizing_inputs(X_train, X_test, normalizing_inputs)
         #  Normalizing inputs
 
         #  shuffle start
@@ -90,27 +92,15 @@ class Model(object):
             self.cost = CrossEntry()
 
         costs = []
-        for it in range(iterator):
+        
+        #  mini_batch
+        with trange(iterator) as tr:
+            for it in tr:
 
-            #  mini_batch
-            cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
-            costs.append(cost)
-
-            #  打印损失
-            if printLoss:
-                if it % tms == 0:
-                    if log is not sys.stdout:
-                        print("iteration %d cost = %f" % (it, cost), file=log)
-                    print("iteration %d cost = %f" % (it, cost))
-                    log.flush()
-
-                    print("predict_train :", end=' ')
-                    self.predict1(X_train, Y_train)
-                    print("predict_test :", end=' ')
-                    self.predict1(X_test, Y_test)
-
-        # 预测
-        self.predict1(X_test, Y_test)
+                tr.set_description("第%d代:" % (it+1))
+                cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
+                tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.predict1(X_test, Y_test))
+                costs.append(cost)
 
     def predict(self, X_train, Y_train):
         A = X_train
@@ -122,7 +112,7 @@ class Model(object):
             t2 = self.returnMaxIdx(Y_train[i])
             if t1 == t2:
                 p += 1
-        print("accuracy: %f%%" % (p * 1.0 / X_train.shape[0] * 100.))
+        return p * 1.0 / X_train.shape[0]
 
     def predict1(self, A, Y_train):
         for layer in self.layers:
@@ -133,7 +123,7 @@ class Model(object):
             t2 = Y_train[i][0]
             if t1 == t2:
                 p += 1
-        print("accuracy: %f%%" % (p * 1.0 / A.shape[0] * 100.))
+        return p * 1.0 / A.shape[0]
 
     def returnMaxIdx(self, a):
         list_a = a.tolist()
@@ -187,15 +177,18 @@ class Model(object):
         # mini-batch
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
-        for b in range(num_complete):
-            bs = b * batch_size
-            be = (b + 1) * batch_size
-            x_train = X_train[bs:be]
-            y_train = Y_train[bs:be]
-            cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize)
+        with trange(num_complete) as tr:
+            for b in tr:
+                bs = b * batch_size
+                be = (b + 1) * batch_size
+                x_train = X_train[bs:be]
+                y_train = Y_train[bs:be]
+                cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize)
+                tr.set_postfix(loss=cost, acc=self.predict1(x_train, y_train))
+                in_cost.append(cost)
+            cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
+                                   mode, learning_rate, t, optimize)
+            tr.set_postfix(loss=cost, acc=self.predict1(x_train, y_train))
             in_cost.append(cost)
-        cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
-                               mode, learning_rate, t, optimize)
 
-        in_cost.append(cost)
         return np.mean(in_cost)

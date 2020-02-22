@@ -12,12 +12,12 @@ import gc
 
 class ConvolutionForloop(Layer):
 
-    def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
+    def __init__(self, filter_count, filter_shape, stride=1, paddingMode='same', activation='relu', batchNormal=False):
         super(ConvolutionForloop, self).__init__(activation=activation)
         self.filter_count = filter_count  # 卷积核数量
         self.filter_shape = filter_shape  # 卷积核形状
         self.stride = stride  # 步长
-        self.padding = padding  # pad
+        self.padding = 0 if paddingMode == 'valid' else (filter_shape[0] - 1) // 2
         self.Z_pad = None
         self.batchNormal = BatchNormal() if batchNormal else None
 
