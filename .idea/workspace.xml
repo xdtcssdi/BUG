@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="bddf8771-78f7-4e64-bf5c-20d8476cb952" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Layers/Normalization.py" afterDir="false" />
+    <list default="true" id="bddf8771-78f7-4e64-bf5c-20d8476cb952" name="Default Changelist" comment="format2">
+      <change beforePath="$PROJECT_DIR$/.idea/BUG.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/BUG.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Activation.py" beforeDir="false" afterPath="$PROJECT_DIR$/Activation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Convolution.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Convolution.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Core.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Core.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Flatten.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Flatten.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Layers/Pooling.py" beforeDir="false" afterPath="$PROJECT_DIR$/Layers/Pooling.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CNNTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/CoreTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,12 +33,20 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="Jupyter Notebook" />
+        <option value="Setup Script" />
         <option value="Python Script" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JsFlowSettings">
+    <service-enabled>true</service-enabled>
+    <exe-path />
+    <other-services-enabled>true</other-services-enabled>
+    <auto-save>true</auto-save>
   </component>
   <component name="JupyterTrust" id="06d44508-92da-49fe-9181-7e6a1a0357c7" />
   <component name="ProjectId" id="1XVqEHyO5ukcdchsA7a6bOzU5H2" />
@@ -64,10 +64,10 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/datasets" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="settings.github" />
+    <property name="settings.editor.selected.configurable" value="http.proxy" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -77,12 +77,17 @@
     </option>
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/Test" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/datasets" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/Test" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/function" />
+      <recent name="$PROJECT_DIR$/Model" />
+      <recent name="$PROJECT_DIR$/Layers" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/datasets/cifar-10-python" />
     </key>
   </component>
   <component name="RunManager" selected="Python.CNNTest">
@@ -99,7 +104,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Activation.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/function/Activation.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="true" />
@@ -165,7 +170,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Loss.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/function/Loss.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="true" />
@@ -283,31 +288,108 @@
       <workItem from="1581201427247" duration="35697000" />
       <workItem from="1581300770254" duration="19804000" />
       <workItem from="1581324986119" duration="16139000" />
-      <workItem from="1581381697967" duration="20765000" />
+      <workItem from="1581381697967" duration="27304000" />
+      <workItem from="1581431389932" duration="1151000" />
+      <workItem from="1581490480711" duration="16802000" />
+      <workItem from="1581575534660" duration="8501000" />
+      <workItem from="1581591715074" duration="3184000" />
+      <workItem from="1581663851380" duration="21703000" />
+      <workItem from="1581741392139" duration="16222000" />
+      <workItem from="1581818265136" duration="6128000" />
+      <workItem from="1582038600294" duration="140000" />
+      <workItem from="1582349681643" duration="3779000" />
     </task>
+    <task id="LOCAL-00001" summary="format">
+      <created>1581422192383</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1581422192383</updated>
+    </task>
+    <task id="LOCAL-00002" summary="梯度爆炸">
+      <created>1581584868731</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1581584868732</updated>
+    </task>
+    <task id="LOCAL-00003" summary="f4通过测试">
+      <created>1581677633539</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1581677633539</updated>
+    </task>
+    <task id="LOCAL-00004" summary="for upload google drive">
+      <created>1581695930198</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1581695930198</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Optimize &gt; Adam momentum gd sgd">
+      <created>1581769800629</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1581769800629</updated>
+    </task>
+    <task id="LOCAL-00006" summary="format2">
+      <created>1582350084736</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1582350084736</updated>
+    </task>
+    <task id="LOCAL-00007" summary="import1">
+      <created>1582351535695</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1582351535695</updated>
+    </task>
+    <task id="LOCAL-00008" summary="import 2">
+      <created>1582352297122</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1582352297122</updated>
+    </task>
+    <task id="LOCAL-00009" summary="import3">
+      <created>1582353504919</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1582353504919</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
-  </component>
-  <component name="TodoView">
-    <todo-panel id="selected-file">
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-    <todo-panel id="all">
-      <are-packages-shown value="true" />
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <option name="LAST_COMMIT_MESSAGE" value="" />
+    <MESSAGE value="format" />
+    <MESSAGE value="梯度爆炸" />
+    <MESSAGE value="f4通过测试" />
+    <MESSAGE value="for upload google drive" />
+    <MESSAGE value="Optimize &gt; Adam momentum gd sgd" />
+    <MESSAGE value="format2" />
+    <MESSAGE value="import1" />
+    <MESSAGE value="import 2" />
+    <MESSAGE value="import3" />
+    <option name="LAST_COMMIT_MESSAGE" value="import3" />
   </component>
   <component name="WindowStateProjectService">
     <state x="195" y="36" key="#CNNTest" timestamp="1581313297473">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="195" y="36" key="#CNNTest/0.0.1280.800@0.0.1280.800" timestamp="1581313297473" />
+    <state x="240" y="65" key="#Inspections" timestamp="1581431425365">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="240" y="65" key="#Inspections/0.0.1280.800@0.0.1280.800" timestamp="1581431425365" />
     <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1581323467108">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
@@ -316,82 +398,94 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="453" y="123" key="#com.intellij.ide.util.MemberChooser/0.0.1280.800@0.0.1280.800" timestamp="1581385248863" />
-    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1581315927212">
+    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1581579844388">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1581315927211" />
-    <state x="223" y="2" key="CommitChangelistDialog2" timestamp="1581323675668">
+    <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1581579844388" />
+    <state x="211" y="26" width="833" height="719" key="CommitChangelistDialog2" timestamp="1582353504546">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="223" y="2" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1581323675668" />
-    <state width="1238" height="246" key="GridCell.Tab.0.bottom" timestamp="1581411978082">
+    <state x="211" y="26" width="833" height="719" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1582353504546" />
+    <state width="1238" height="234" key="GridCell.Tab.0.bottom" timestamp="1581841342447">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="246" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581411978082" />
-    <state width="1238" height="246" key="GridCell.Tab.0.center" timestamp="1581411978080">
+    <state width="1238" height="234" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581841342447" />
+    <state width="1238" height="213" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1581508814056" />
+    <state width="1238" height="234" key="GridCell.Tab.0.center" timestamp="1581841342446">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="246" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1581411978080" />
-    <state width="1238" height="246" key="GridCell.Tab.0.left" timestamp="1581411978079">
+    <state width="1238" height="234" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1581841342446" />
+    <state width="1238" height="213" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1581508814055" />
+    <state width="1238" height="234" key="GridCell.Tab.0.left" timestamp="1581841342445">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="246" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1581411978079" />
-    <state width="1238" height="246" key="GridCell.Tab.0.right" timestamp="1581411978081">
+    <state width="1238" height="234" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1581841342445" />
+    <state width="1238" height="213" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1581508814054" />
+    <state width="1238" height="234" key="GridCell.Tab.0.right" timestamp="1581841342446">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="246" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1581411978081" />
-    <state width="1238" height="204" key="GridCell.Tab.1.bottom" timestamp="1581399736733">
+    <state width="1238" height="234" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1581841342446" />
+    <state width="1238" height="213" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1581508814055" />
+    <state width="1238" height="203" key="GridCell.Tab.1.bottom" timestamp="1581829608277">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="204" key="GridCell.Tab.1.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581399736733" />
-    <state width="1238" height="204" key="GridCell.Tab.1.center" timestamp="1581399736731">
+    <state width="1238" height="203" key="GridCell.Tab.1.bottom/0.0.1280.800@0.0.1280.800" timestamp="1581829608277" />
+    <state width="1238" height="203" key="GridCell.Tab.1.center" timestamp="1581829608276">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="204" key="GridCell.Tab.1.center/0.0.1280.800@0.0.1280.800" timestamp="1581399736731" />
-    <state width="1238" height="204" key="GridCell.Tab.1.left" timestamp="1581399736731">
+    <state width="1238" height="203" key="GridCell.Tab.1.center/0.0.1280.800@0.0.1280.800" timestamp="1581829608276" />
+    <state width="1238" height="203" key="GridCell.Tab.1.left" timestamp="1581829608275">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="204" key="GridCell.Tab.1.left/0.0.1280.800@0.0.1280.800" timestamp="1581399736731" />
-    <state width="1238" height="204" key="GridCell.Tab.1.right" timestamp="1581399736732">
+    <state width="1238" height="203" key="GridCell.Tab.1.left/0.0.1280.800@0.0.1280.800" timestamp="1581829608275" />
+    <state width="1238" height="203" key="GridCell.Tab.1.right" timestamp="1581829608276">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="204" key="GridCell.Tab.1.right/0.0.1280.800@0.0.1280.800" timestamp="1581399736732" />
+    <state width="1238" height="203" key="GridCell.Tab.1.right/0.0.1280.800@0.0.1280.800" timestamp="1581829608276" />
     <state x="463" y="118" key="RollbackChangesDialog" timestamp="1581243147572">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="463" y="118" key="RollbackChangesDialog/0.0.1280.800@0.0.1280.800" timestamp="1581243147572" />
-    <state x="-158" y="0" width="997" height="719" key="SettingsEditor" timestamp="1581323836392">
+    <state x="0" y="23" width="997" height="722" key="SettingsEditor" timestamp="1582350128005">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="-158" y="0" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1581323836392" />
+    <state x="0" y="23" width="997" height="722" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1582350128005" />
     <state x="141" y="23" width="997" height="719" key="SettingsEditor/0.23.1280.719@0.23.1280.719" timestamp="1581141898100" />
-    <state x="75" y="101" key="Vcs.Push.Dialog.v2" timestamp="1581323846813">
+    <state width="500" height="445" key="SwitcherDM" timestamp="1581584742854">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="75" y="101" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1581323846813" />
-    <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1581411861245">
+    <state width="500" height="445" key="SwitcherDM/0.0.1280.800@0.0.1280.800" timestamp="1581584742854" />
+    <state x="44" y="101" key="Vcs.Push.Dialog.v2" timestamp="1582353506314">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1581411861245" />
+    <state x="44" y="101" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1582353506314" />
+    <state x="423" y="324" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1582349781391">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="423" y="324" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1280.800@0.0.1280.800" timestamp="1582349781391" />
+    <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1581827456752">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1581827456752" />
     <state x="449" y="301" key="git4idea.ui.GitResetDialog" timestamp="1581239804546">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="449" y="301" key="git4idea.ui.GitResetDialog/0.0.1280.800@0.0.1280.800" timestamp="1581239804546" />
-    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup" timestamp="1581387077229">
+    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup" timestamp="1581753698391">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup/0.0.1280.800@0.0.1280.800" timestamp="1581387077229" />
-    <state x="305" y="66" width="670" height="676" key="search.everywhere.popup/0.23.1280.719@0.23.1280.719" timestamp="1581145716801" />
+    <state x="305" y="48" width="670" height="753" key="search.everywhere.popup/0.0.1280.800@0.0.1280.800" timestamp="1581753698391" />
+    <state x="305" y="66" width="670" height="676" key="search.everywhere.popup/0.23.1280.719@0.23.1280.719" timestamp="1581495828015" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/BUG$Loss.coverage" NAME="Loss Coverage Results" MODIFIED="1580903966538" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BUG$Pooling.coverage" NAME="Pooling Coverage Results" MODIFIED="1580736858172" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$Convelution.coverage" NAME="Convelution Coverage Results" MODIFIED="1580795089774" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
     <SUITE FILE_PATH="coverage/BUG$cnn_mnist.coverage" NAME="cnn-mnist Coverage Results" MODIFIED="1581323473756" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BUG$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1581411978039" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BUG$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1581830769408" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BUG$Activation.coverage" NAME="Activation Coverage Results" MODIFIED="1581165529027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BUG$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1581409023390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
-    <SUITE FILE_PATH="coverage/BUG$test.coverage" NAME="test Coverage Results" MODIFIED="1581390054870" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BUG$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1581829990702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Layers" />
+    <SUITE FILE_PATH="coverage/BUG$test.coverage" NAME="test Coverage Results" MODIFIED="1581830114443" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
   </component>
   <component name="masterDetails">
     <states>
