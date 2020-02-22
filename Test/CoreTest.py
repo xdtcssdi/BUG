@@ -1,7 +1,5 @@
-from Layers.Core import Core
+from function import *
 from Model import Model
-from function.util import *
-
 
 def f1():
     np.random.seed(1)

@@ -1,6 +1,7 @@
 import math
+import numpy as np
 
-from function.Activation import *
+from function.Activation import Activation
 from .Layer import Layer
 from .Normalization import BatchNormal
 
@@ -17,13 +18,13 @@ class Core(Layer):
         self.init_params(A_pre)
         self.Z = np.dot(A_pre, self.W) + self.b
         Zhat = self.batchNormal.forward(self.Z) if self.batchNormal else self.Z
-        return get(Zhat, self.activation)
+        return Activation.get(Zhat, self.activation)
 
     def backward(self, dZ):
         dA = dZ if self.isLast else np.dot(dZ, self.next_layer.W.T)
         if self.batchNormal:
             dA = self.batchNormal.backward(dA)
-        dZ = get_grad(dA, self.Z, self.activation)
+        dZ = Activation.get_grad(dA, self.Z, self.activation)
 
         self.dW = np.divide(1., dZ.shape[0]) * np.dot(self.A_pre.T, dZ)
         self.db = np.mean(dZ, axis=0, keepdims=True)

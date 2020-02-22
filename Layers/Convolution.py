@@ -1,6 +1,6 @@
 import math
 
-from function.Activation import *
+from function.Activation import Activation
 from .Normalization import BatchNormal
 from .Layer import Layer
 from .Padding import *
@@ -49,7 +49,7 @@ class ConvolutionForloop(Layer):
                         a_slice = a_prev_pad[hs:he, vs:ve, :]
                         Z[i, w, h, nc] = np.sum(a_slice * self.W[:, :, :, nc] + self.b[:, :, :, nc])
         Zhat = self.batchNormal.forward(Z, mode) if self.batchNormal else Z
-        return get(Zhat, self.activation)
+        return Activation.get(Zhat, self.activation)
 
     # 没问题
     def backward(self, dZ):
@@ -93,7 +93,7 @@ class ConvolutionForloop(Layer):
                             self.dW[:, :, :, c] += a_slice * dZ[i, w, h, c]
                             self.db[:, :, :, c] += dZ[i, w, h, c]
                 dA[i] = da_pre
-        return get_grad(dA, self.A_pre, self.activation)
+        return Activation.get_grad(dA, self.A_pre, self.activation)
 
     @property
     def params(self):
@@ -141,7 +141,7 @@ class Convolution(Layer):
         self.A_pre = A_pre
         output_data = self.conv(A_pre, self.W, self.b, self.stride, self.padding)
         Z = self.batchNormal.forward(output_data, mode) if self.batchNormal else output_data
-        return get(Z, self.activation)
+        return Activation.get(Z, self.activation)
 
     # 没问题
     def backward(self, dZ):
@@ -153,7 +153,7 @@ class Convolution(Layer):
         self.dW = dout_reshaped.dot(self.X_col.T).reshape(self.W.shape)
         dx_cols = self.W.reshape(num_filters, -1).T.dot(dout_reshaped)
         dx = col2im_indices(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
-        dZ = get_grad(dx, self.A_pre, self.activation)
+        dZ = Activation.get_grad(dx, self.A_pre, self.activation)
         del self.A_pre, self.X_col
         return dZ
 

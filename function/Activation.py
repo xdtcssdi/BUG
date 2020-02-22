@@ -53,35 +53,37 @@ def SoftmaxGradStep(Z):
     return dscores
 
 
-def get(Z, activation='relu'):
-    if activation == 'sigmoid':
-        A = Sigmoid(Z)
-    elif activation == 'tanh':
-        A = TanH(Z)
-    elif activation == 'leak_relu':
-        A = Leak_Relu(Z)
-    elif activation == 'softmax':
-        A = SoftmaxStep(Z)
-    elif activation == 'relu':
-        A = Relu(Z)
-    elif activation is None:
-        A = Z
-    else:
-        raise ValueError
-    return A
+class Activation:
+
+    def get(Z, activation='relu'):
+        if activation == 'sigmoid':
+            A = Sigmoid(Z)
+        elif activation == 'tanh':
+            A = TanH(Z)
+        elif activation == 'leak_relu':
+            A = Leak_Relu(Z)
+        elif activation == 'softmax':
+            A = SoftmaxStep(Z)
+        elif activation == 'relu':
+            A = Relu(Z)
+        elif activation is None:
+            A = Z
+        else:
+            raise ValueError
+        return A
 
 
-def get_grad(dA, Z, activation='relu'):
-    if activation == 'sigmoid':
-        dZ = dA * SigmoidGrad(Z)
-    elif activation == 'tanh':
-        dZ = dA * TanHGrad(Z)
-    elif activation == 'leak_relu':
-        dZ = dA * Leak_ReluGrad(Z)
-    elif activation == 'Softmax':
-        dZ = dA * SoftmaxGradStep(Z)
-    elif activation == 'relu':
-        dZ = dA * ReluGrad(Z)
-    else:
-        dZ = dA
-    return dZ
+    def get_grad(dA, Z, activation='relu'):
+        if activation == 'sigmoid':
+            dZ = dA * SigmoidGrad(Z)
+        elif activation == 'tanh':
+            dZ = dA * TanHGrad(Z)
+        elif activation == 'leak_relu':
+            dZ = dA * Leak_ReluGrad(Z)
+        elif activation == 'Softmax':
+            dZ = dA * SoftmaxGradStep(Z)
+        elif activation == 'relu':
+            dZ = dA * ReluGrad(Z)
+        else:
+            dZ = dA
+        return dZ

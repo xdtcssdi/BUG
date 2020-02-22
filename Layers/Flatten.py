@@ -1,5 +1,6 @@
-from function.Activation import *
+from function.Activation import Activation
 from .Layer import Layer
+import numpy as np
 
 
 class Flatten(Layer):
@@ -15,7 +16,7 @@ class Flatten(Layer):
 
     def forward(self, A_pre, mode='train'):  # m,1,28,28
         self.input_shape = A_pre.shape
-        A = get(A_pre.reshape(A_pre.shape[0], -1), self.activation)
+        A = Activation.get(A_pre.reshape(A_pre.shape[0], -1), self.activation)
         self.unit_number = A.shape[-1]  # 展开后 (m, nx) 接全连接神经网络需要前一层的神经元数
         return A
 

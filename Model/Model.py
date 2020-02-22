@@ -1,10 +1,7 @@
 import sys
 
-from function import Optimize
-
-sys.path.append('./Layers/')
-from function.Loss import *
-from Layers.Layer import *
+from function import *
+from Layers import Layer
 import gc
 from tqdm import trange
 
@@ -191,3 +188,17 @@ class Model(object):
             in_cost.append(cost)
 
         return np.mean(in_cost)
+
+    def summary(self):
+        for i in range(0, len(self.layers)-1):
+            layer = self.layers[i]
+            if isinstance(layer, Core) or isinstance(layer, Convolution):
+                print(layer.name + ' -> ' + layer.activation + ' -> ', end='')
+            else:
+                print(layer.name + ' -> ', end='')
+        layer = self.layers[-1]
+        if isinstance(layer, Core) or isinstance(layer, Convolution):
+            print(layer.name + ' -> ' + layer.activation + ' -> ', end='')
+        else:
+            print(layer.name + ' -> ', end='')
+        print('y_hat')
