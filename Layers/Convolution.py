@@ -1,10 +1,10 @@
 import math
+
+from .Activation import *
 from .Normalization import BatchNormal
-from Activation import *
 from .Layer import Layer
 from .Padding import *
 from .im2col import *
-import gc
 
 
 class ConvolutionForloop(Layer):

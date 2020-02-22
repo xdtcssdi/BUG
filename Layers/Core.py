@@ -1,11 +1,8 @@
 import math
 
-import numpy as np
-
-from Activation import *
+from .Activation import *
 from .Layer import Layer
 from .Normalization import BatchNormal
-import gc
 
 
 class Core(Layer):

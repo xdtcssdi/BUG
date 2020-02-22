@@ -4,6 +4,3 @@ from .Flatten import Flatten
 from .Layer import Layer
 from .Padding import *
 from .Pooling import Pooling
-import sys
-sys.path.append("..")
-import Activation
