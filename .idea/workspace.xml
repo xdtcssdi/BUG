@@ -2,18 +2,39 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="04fab398-9740-49c7-b523-6c13644078ee" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/Layers/Layer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/Layers/Normalization.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/Layers/Padding.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/Layers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/Layers/im2col.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/Model/Model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/Model/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/batches.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/data_batch_1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/data_batch_2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/data_batch_3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/data_batch_4" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/data_batch_5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/readme.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/cifar-10-python/test_batch" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/t10k-images-idx3-ubyte.gz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/t10k-labels-idx1-ubyte.gz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/test_catvnoncat.h5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/test_signs.h5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/train-images-idx3-ubyte.gz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/train-labels-idx1-ubyte.gz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/train_catvnoncat.h5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/datasets/train_signs.h5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/function/Activation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/function/Loss.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/function/Optimize.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/function/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/function/util.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/BUG_GPU/setup.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/Layers/Layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Layers/Layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/Layers/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Layers/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/Model/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Model/Model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/Model/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Model/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/function/Optimize.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/Optimize.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/function/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/function/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/util.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CoreTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Test/log.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CoreTest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,11 +68,14 @@
     <property name="settings.editor.selected.configurable" value="tasks.servers" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.BUG">
+  <component name="RunManager" selected="Python.CNNTest">
     <configuration name="BUG" type="PythonConfigurationType" factoryName="Python">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -171,8 +195,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.CoreTest (1)" />
         <item itemvalue="Python.CNNTest" />
+        <item itemvalue="Python.CoreTest (1)" />
         <item itemvalue="Python.CoreTest" />
         <item itemvalue="Python.test" />
       </list>
@@ -190,7 +214,7 @@
       <updated>1582359276870</updated>
       <workItem from="1582359282265" duration="183000" />
       <workItem from="1582359665443" duration="6382000" />
-      <workItem from="1582432542173" duration="13356000" />
+      <workItem from="1582432542173" duration="15146000" />
     </task>
     <servers />
   </component>
@@ -223,33 +247,41 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1582361025956" />
-    <state width="1238" height="274" key="GridCell.Tab.0.bottom" timestamp="1582444118055">
+    <state width="1238" height="274" key="GridCell.Tab.0.bottom" timestamp="1582447169542">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="274" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1582444118055" />
+    <state width="1238" height="274" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1582447169542" />
     <state width="1209" height="227" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1582438208456" />
-    <state width="1238" height="274" key="GridCell.Tab.0.center" timestamp="1582444118053">
+    <state width="1238" height="274" key="GridCell.Tab.0.center" timestamp="1582447169541">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="274" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1582444118053" />
+    <state width="1238" height="274" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1582447169541" />
     <state width="1209" height="227" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1582438208455" />
-    <state width="1238" height="274" key="GridCell.Tab.0.left" timestamp="1582444118053">
+    <state width="1238" height="274" key="GridCell.Tab.0.left" timestamp="1582447169540">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="274" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1582444118053" />
+    <state width="1238" height="274" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1582447169540" />
     <state width="1209" height="227" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1582438208455" />
-    <state width="1238" height="274" key="GridCell.Tab.0.right" timestamp="1582444118054">
+    <state width="1238" height="274" key="GridCell.Tab.0.right" timestamp="1582447169541">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="274" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1582444118054" />
+    <state width="1238" height="274" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1582447169541" />
     <state width="1209" height="227" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1582438208455" />
     <state x="141" y="39" key="SettingsEditor" timestamp="1582362688529">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="141" y="39" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1582362688529" />
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2" timestamp="1582446155816">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1582446155816" />
+    <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1582448652037">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1582448652037" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1582443853735" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1582447169531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$CoreTest.coverage" NAME="CoreTest Coverage Results" MODIFIED="1582440256036" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$test.coverage" NAME="test Coverage Results" MODIFIED="1582434188869" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1582444069203" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />

@@ -1,7 +1,7 @@
-from BUG.Layers.Layer import Convolution, Pooling, Flatten, Core
-from BUG.Model.Model import Model
-from BUG.function.util import one_hot, load_dataset
-import numpy as np
+from BUG_GPU.Layers.Layer import Convolution, Pooling, Flatten, Core
+from BUG_GPU.Model.Model import Model
+from BUG_GPU.function.util import one_hot, load_dataset
+import cupy as cp
 
 
 def ss():
@@ -27,6 +27,6 @@ def ss():
 
 
 if __name__ == '__main__':
-    np.random.seed(1)
+    cp.random.seed(1)
     ss()
 
