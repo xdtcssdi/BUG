@@ -6,7 +6,7 @@ import cupy as cp
 from BUG_GPU.Layers.Layer import Layer, Core, Convolution
 from BUG_GPU.function import Optimize
 from BUG_GPU.function.Loss import SoftCategoricalCross_entropy, CrossEntry
-
+import numpy as np
 
 class Model(object):
 
