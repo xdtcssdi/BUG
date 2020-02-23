@@ -1,29 +1,33 @@
-import cupy as cp
+import numpy as cp
 
-from BUG_GPU.Layers.Layer import Core
-from BUG_GPU.Model.Model import Model
-from BUG_GPU.function.util import load_data
-
+from BUG.Layers.Layer import Core, Flatten
+from BUG.Model.Model import Model
+from BUG.function.util import load_data, one_hot
+from tensorflow import keras
 
 def f2():
     cp.random.seed(1)
     # 数据预处理
-    train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes = load_data()
-    X_train = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).astype(cp.float64)
-    Y_train = train_set_y_orig.T
 
-    X_test = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).astype(cp.float64)
-    Y_test = test_set_y_orig.T
+    fashion_mnist = keras.datasets.fashion_mnist
+
+    (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+
+    train_images = train_images.reshape(train_images.shape[0], -1) / 255.
+    test_images = test_images.reshape(test_images.shape[0], -1) / 255.
+    train_labels = one_hot(train_labels)
+    test_labels = one_hot(test_labels)
 
     # 创建网络架构
     net = Model()
-    #net.add(Core(20, batchNormal=True))
-    net.add(Core(7, batchNormal=False))
+
+    net.add(Core(128, batchNormal=True))
+    net.add(Core(64, batchNormal=True))
     #net.add(Core(5, batchNormal=False))
-    net.add(Core(1, "sigmoid"))
+    net.add(Core(10, "softmax"))
     net.compile()
-    net.train(X_train, Y_train, X_test, Y_test, batch_size=12,
-              testing_percentage=0, validation_percentage=0,
+    net.train(train_images, train_labels, test_images, test_labels, batch_size=6000,
+              testing_percentage=0, validation_percentage=0, lossMode='SoftmaxCrossEntry',normalizing_inputs=True,
               learning_rate=0.0075, iterator=2500, optimize='Adam')
 
 

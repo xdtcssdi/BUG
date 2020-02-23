@@ -20,7 +20,8 @@ class SoftCategoricalCross_entropy:
 
     def forward(self, targets, outputs):
         outputs = np.clip(outputs, self.epsilon, 1 - self.epsilon)
-        return np.mean(-np.sum(targets * np.log(outputs), axis=0))
+        J = np.mean(-np.sum(targets * np.log(outputs), axis=1, keepdims=True), axis=0)
+        return np.squeeze(J)
 
     def backward(self, targets, outputs):
         outputs = np.clip(outputs, self.epsilon, 1 - self.epsilon)
