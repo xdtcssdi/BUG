@@ -1,5 +1,4 @@
 import cupy as cp
-cp.seterr(divide='ignore',invalid='ignore')
 
 
 def Relu(Z):

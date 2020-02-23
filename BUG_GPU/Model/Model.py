@@ -7,8 +7,6 @@ from BUG_GPU.Layers.Layer import Layer, Core, Convolution
 from BUG_GPU.function import Optimize
 from BUG_GPU.function.Loss import SoftCategoricalCross_entropy, CrossEntry
 
-cp.set_printoptions(threshold=cp.inf)
-
 
 class Model(object):
 

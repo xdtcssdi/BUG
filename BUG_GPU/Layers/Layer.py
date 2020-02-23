@@ -4,8 +4,8 @@ from BUG_GPU.Layers.Normalization import BatchNormal
 from BUG_GPU.Layers.Padding import ZeroPad
 import cupy as cp
 
-from BUG.Layers.im2col import col2im_indices, im2col_indices
-from BUG.function.Activation import ac_get_grad, ac_get
+from BUG_GPU.Layers.im2col import col2im_indices, im2col_indices
+from BUG_GPU.function.Activation import ac_get_grad, ac_get
 
 
 class Layer(object):
