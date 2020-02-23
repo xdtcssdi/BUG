@@ -1,6 +1,8 @@
-from BUG.function import *
-from BUG.Model import Model
-from BUG.Layers import Core
+import numpy as np
+
+from BUG.Layers.Layer import Core
+from BUG.Model.Model import Model
+from BUG.function.util import load_data
 
 
 def f2():
@@ -15,14 +17,14 @@ def f2():
 
     # 创建网络架构
     net = Model()
-    net.add(Core(20, batchNormal=True))
+    #net.add(Core(20, batchNormal=True))
     net.add(Core(7, batchNormal=False))
-    net.add(Core(5, batchNormal=False))
+    #net.add(Core(5, batchNormal=False))
     net.add(Core(1, "sigmoid"))
     net.compile()
-    net.train(X_train, Y_train, X_test, Y_test, normalizing_inputs=True, batch_size=12, printOneTime=False,
+    net.train(X_train, Y_train, X_test, Y_test, normalizing_inputs=True, batch_size=12,
               testing_percentage=0, validation_percentage=0,
-              printLoss=True, learning_rate=0.0075, iterator=2500, optimize='Adam')
+              learning_rate=0.0075, iterator=2500, optimize='Adam')
 
 
 if __name__ == '__main__':

@@ -1,9 +1,11 @@
-import sys
-
-from BUG.function import *
-from BUG.Layers import *
 import gc
+
 from tqdm import trange
+import numpy as np
+
+from BUG.Layers.Layer import Layer, Core, Convolution
+from BUG.function import Optimize
+from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
 
 np.set_printoptions(threshold=np.inf)
 
@@ -15,6 +17,7 @@ class Model(object):
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimize = None
+        self.predict = None
 
     def add(self, layer):
         assert (isinstance(layer, Layer))
@@ -57,9 +60,7 @@ class Model(object):
 
     def train(self, X_train, Y_train, X_test, Y_test, batch_size, normalizing_inputs=True, testing_percentage=0.2,
               validation_percentage=0.2, learning_rate=0.075, iterator=2000,
-              printLoss=False, lossMode='CrossEntry', shuffle=True,
-              printOneTime=False, log=sys.stdout, optimize='BGD',
-              mode='train'):
+              lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train'):
         assert not isinstance(X_train, np.float)
         assert not isinstance(X_test, np.float)
         t = 0
@@ -85,8 +86,12 @@ class Model(object):
         # 初始化损失结构
         if lossMode == 'SoftmaxCrossEntry':
             self.cost = SoftCategoricalCross_entropy()
-        else:
+            self.predict = self.predict_many
+        elif lossMode == 'CrossEntry':
             self.cost = CrossEntry()
+            self.predict = self.predict_one
+        else:
+            raise ValueError
 
         costs = []
 
@@ -95,36 +100,19 @@ class Model(object):
             for it in tr:
                 tr.set_description("第%d代:" % (it + 1))
                 cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
-                tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.predict1(X_test, Y_test))
+                tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.predict(X_test, Y_test))
                 costs.append(cost)
 
-    def predict(self, X_train, Y_train):
+    def predict_many(self, X_train, Y_train):
         A = X_train
         for layer in self.layers:
             A = layer.forward(A, mode='test')
-        p = .0
-        for i in range(X_train.shape[0]):
-            t1 = self.returnMaxIdx(A[i])
-            t2 = self.returnMaxIdx(Y_train[i])
-            if t1 == t2:
-                p += 1
-        return p * 1.0 / X_train.shape[0]
+        return (np.argmax(A, -1) == np.argmax(Y_train, -1)).sum() / X_train.shape[0]
 
-    def predict1(self, A, Y_train):
+    def predict_one(self, A, Y_train):
         for layer in self.layers:
             A = layer.forward(A, mode='test')
-        p = .0
-        for i in range(A.shape[0]):
-            t1 = A[i][0] > 0.5
-            t2 = Y_train[i][0]
-            if t1 == t2:
-                p += 1
-        return p * 1.0 / A.shape[0]
-
-    def returnMaxIdx(self, a):
-        list_a = a.tolist()
-        max_index = list_a.index(max(list_a))  # 返回最大值的索引
-        return max_index
+        return ((A > 0.5) == Y_train).sum() / A.shape[0]
 
     def compile(self):
         for i in range(1, self.getLayerNumber()):
@@ -180,17 +168,20 @@ class Model(object):
                 x_train = X_train[bs:be]
                 y_train = Y_train[bs:be]
                 cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize)
-                tr.set_postfix(loss=cost, acc=self.predict1(x_train, y_train))
+                tr.set_postfix(loss=cost)
                 in_cost.append(cost)
-            cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
-                                   mode, learning_rate, t, optimize)
-            tr.set_postfix(loss=cost, acc=self.predict1(x_train, y_train))
-            in_cost.append(cost)
+
+            s = num_complete * batch_size
+            if s < X_train.shape[0]:
+                cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
+                                       mode, learning_rate, t, optimize)
+                tr.set_postfix(loss=cost)
+                in_cost.append(cost)
 
         return np.mean(in_cost)
 
     def summary(self):
-        for i in range(0, len(self.layers)-1):
+        for i in range(0, len(self.layers) - 1):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
                 print(layer.name + ' -> ' + layer.activation + ' -> ', end='')

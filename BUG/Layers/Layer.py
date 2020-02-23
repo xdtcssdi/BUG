@@ -1,9 +1,11 @@
 import math
 
 from BUG.Layers.Normalization import BatchNormal
-from BUG.Layers.Padding import *
-from BUG.Layers.im2col import *
-from BUG.function.Activation import ac_get, ac_get_grad
+from BUG.Layers.Padding import ZeroPad
+import numpy as np
+
+from BUG.Layers.im2col import col2im_indices, im2col_indices
+from BUG.function.Activation import ac_get_grad, ac_get
 
 
 class Layer(object):

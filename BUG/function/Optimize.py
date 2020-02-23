@@ -1,5 +1,6 @@
 import gc
-from BUG.Layers import Core, Convolution, np
+import numpy as np
+from BUG.Layers.Layer import Convolution, Core
 
 
 class Momentum:
