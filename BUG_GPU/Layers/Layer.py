@@ -217,22 +217,26 @@ class Core(Layer):
         self.batchNormal = BatchNormal() if batchNormal else None
         self.name = 'Core'
 
-    def forward(self, A_pre, mode='train'):
-        self.A_pre = A_pre
-        self.init_params(A_pre)
-        self.Z = cp.dot(A_pre, self.W) + self.b
-        Zhat = self.batchNormal.forward(self.Z) if self.batchNormal else self.Z
-        return ac_get(Zhat, self.activation)
-
-    def backward(self, dZ):
-        dA = dZ if self.isLast else cp.dot(dZ, self.next_layer.W.T)
+    def forward(self, x, mode='train'):
+        self.original_x_shape = x.shape
+        x = x.reshape(x.shape[0], -1)
+        self.init_params(x)
+        self.x = x
+        self.out = cp.dot(self.x, self.W) + self.b
         if self.batchNormal:
-            dA = self.batchNormal.backward(dA)
-        dZ = ac_get_grad(dA, self.Z, self.activation)
+            self.out = self.batchNormal.forward(self.out)
+        return ac_get(self.out, self.activation)
 
-        self.dW = cp.divide(1., dZ.shape[0]) * cp.dot(self.A_pre.T, dZ)
-        self.db = cp.mean(dZ, axis=0, keepdims=True)
-        return dZ
+    def backward(self, dout):
+        dout = ac_get_grad(dout, self.out, self.activation)
+        if self.batchNormal:
+            dout = self.batchNormal.backward(dout)
+        dx = cp.dot(dout, self.W.T)
+        self.dW = cp.dot(self.x.T, dout)
+        self.db = cp.sum(dout, axis=0)
+
+        dx = dx.reshape(self.original_x_shape)  # 还原输入数据的形状（对应张量）
+        return dx
 
     def init_params(self, A_pre):
         pre_unit = A_pre.shape[1] if self.isFirst else self.pre_layer.unit_number
@@ -385,28 +389,6 @@ class Core(Layer):
 #         dx = dx.reshape(x.shape)
 #         return dx
 #
-
-class Flatten(Layer):
-
-    def __init__(self, out_dims=2, activation=None):
-        super(Flatten, self).__init__(activation=activation)
-        self.out_dims = out_dims
-        self.icput_shape = None
-        self.name = 'Flatten'
-
-    def init_params(self, nx):
-        pass
-
-    def forward(self, A_pre, mode='train'):  # m,1,28,28
-        self.icput_shape = A_pre.shape
-        A = ac_get(A_pre.reshape(A_pre.shape[0], -1), self.activation)
-        self.unit_number = A.shape[-1]  # 展开后 (m, nx) 接全连接神经网络需要前一层的神经元数
-        return A
-
-    def backward(self, dZ):
-        dA = cp.dot(dZ, self.next_layer.W.T)
-        return dA.reshape(self.icput_shape)
-
 
 class Convolution(Layer):
     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
