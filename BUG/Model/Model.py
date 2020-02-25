@@ -138,7 +138,6 @@ class Model(object):
         pre_grad = self.cost.backward(y_train, pre_A)
         for layer in reversed(self.layers):
             pre_grad = layer.backward(pre_grad)
-        gc.collect()
         # -----------
 
         #  更新参数
@@ -181,7 +180,8 @@ class Model(object):
         return np.mean(in_cost)
 
     def summary(self):
-        for i in range(0, len(self.layers) - 1):
+
+        for i in range(len(self.layers) - 1):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
                 print(layer.name + ' -> ' + layer.activation + ' -> ', end='')

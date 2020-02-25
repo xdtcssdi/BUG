@@ -215,25 +215,29 @@ class Core(Layer):
         self.batchNormal = BatchNormal() if batchNormal else None
         self.name = 'Core'
 
-    def forward(self, A_pre, mode='train'):
-        self.A_pre = A_pre
-        self.init_params(A_pre)
-        self.Z = np.dot(A_pre, self.W) + self.b
-        Zhat = self.batchNormal.forward(self.Z) if self.batchNormal else self.Z
-        return ac_get(Zhat, self.activation)
-
-    def backward(self, dZ):
-        dA = dZ if self.isLast else np.dot(dZ, self.next_layer.W.T)
+    def forward(self, x, mode='train'):
+        self.original_x_shape = x.shape
+        x = x.reshape(x.shape[0], -1)
+        self.init_params(x)
+        self.x = x
+        self.out = np.dot(self.x, self.W) + self.b
         if self.batchNormal:
-            dA = self.batchNormal.backward(dA)
-        dZ = ac_get_grad(dA, self.Z, self.activation)
+            self.out = self.batchNormal.forward(self.out)
+        return ac_get(self.out, self.activation)
 
-        self.dW = np.divide(1., dZ.shape[0]) * np.dot(self.A_pre.T, dZ)
-        self.db = np.mean(dZ, axis=0, keepdims=True)
-        return dZ
+    def backward(self, dout):
+        dout = ac_get_grad(dout, self.out, self.activation)
+        if self.batchNormal:
+            dout = self.batchNormal.backward(dout)
+        dx = np.dot(dout, self.W.T)
+        self.dW = np.dot(self.x.T, dout)
+        self.db = np.sum(dout, axis=0)
+
+        dx = dx.reshape(self.original_x_shape)  # 还原输入数据的形状（对应张量）
+        return dx
 
     def init_params(self, A_pre):
-        pre_unit = A_pre.shape[1] if self.isFirst else self.pre_layer.unit_number
+        pre_unit = A_pre.shape[1]
         if self.W is None:
             if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
                 self.W = np.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
@@ -383,27 +387,28 @@ class PoolingForloop(Layer):
 #         dx = dx.reshape(x.shape)
 #         return dx
 
+#
+# class Flatten(Layer):
+#
+#     def __init__(self, out_dims=2):
+#         super(Flatten, self).__init__()
+#         self.out_dims = out_dims
+#         self.input_shape = None
+#         self.name = 'Flatten'
+#
+#     def init_params(self, nx):
+#         pass
+#
+#     def forward(self, A_pre, mode='train'):  # m,1,28,28
+#         self.input_shape = A_pre.shape
+#         A = A_pre.reshape(A_pre.shape[0], -1)
+#         self.unit_number = A.shape[-1]  # 展开后 (m, nx) 接全连接神经网络需要前一层的神经元数
+#         return A
+#
+#     def backward(self, dZ):
+#         dA = np.dot(dZ, self.next_layer.W.T)
+#         return dA.reshape(self.input_shape)
 
-class Flatten(Layer):
-
-    def __init__(self, out_dims=2, activation=None):
-        super(Flatten, self).__init__(activation=activation)
-        self.out_dims = out_dims
-        self.input_shape = None
-        self.name = 'Flatten'
-
-    def init_params(self, nx):
-        pass
-
-    def forward(self, A_pre, mode='train'):  # m,1,28,28
-        self.input_shape = A_pre.shape
-        A = ac_get(A_pre.reshape(A_pre.shape[0], -1), self.activation)
-        self.unit_number = A.shape[-1]  # 展开后 (m, nx) 接全连接神经网络需要前一层的神经元数
-        return A
-
-    def backward(self, dZ):
-        dA = np.dot(dZ, self.next_layer.W.T)
-        return dA.reshape(self.input_shape)
 
 
 class Convolution(Layer):

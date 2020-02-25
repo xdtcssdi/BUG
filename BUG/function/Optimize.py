@@ -24,7 +24,7 @@ class Momentum:
             if isinstance(layer, Core) or isinstance(layer, Convolution):
                 self.v['V_dW' + str(i)] = beta * self.v['V_dW' + str(i)] + (1 - beta) * layer.dW
                 self.v['V_db' + str(i)] = beta * self.v['V_db' + str(i)] + (1 - beta) * layer.db
-                layer.W -= learning_rate * self.v['v' + str(i)]
+                layer.W -= learning_rate * self.v['V_dW' + str(i)]
                 layer.b -= learning_rate * self.v['V_db' + str(i)]
                 del layer.dW, layer.db
 
@@ -34,7 +34,7 @@ class Momentum:
                     self.v['V_dgamma' + str(i)] = beta * self.v['V_dgamma' + str(i)] + (
                             1 - beta) * layer.batchNormal.dgamma
                     layer.batchNormal.beta -= learning_rate * self.v['V_dbeta' + str(i)]
-                    layer.batchNormal.gamma -= learning_rate * self.xl['V_dgamma' + str(i)]
+                    layer.batchNormal.gamma -= learning_rate * self.v['V_dgamma' + str(i)]
                     del layer.batchNormal.dbeta, layer.batchNormal.dgamma
 
     gc.collect()
@@ -75,7 +75,7 @@ class Adam:
                 layer.W -= learning_rate * V_dw_corrected / (np.sqrt(S_dw_corrected) + epsilon)
                 layer.b -= learning_rate * V_db_corrected / (np.sqrt(S_db_corrected) + epsilon)
 
-                del layer.dW, layer.db
+                #del layer.dW, layer.db
 
                 if layer.batchNormal is not None:
                     self.v['V_dbeta' + str(i)] = beta1 * self.v['V_dbeta' + str(i)] + (
@@ -94,9 +94,7 @@ class Adam:
 
                     layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (np.sqrt(S_dbeta_corrected) + epsilon)
                     layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (np.sqrt(S_dgamma_corrected) + epsilon)
-                    del layer.batchNormal.dbeta, layer.batchNormal.dgamma
-
-        gc.collect()
+                    #del layer.batchNormal.dbeta, layer.batchNormal.dgamma
 
 
 class BatchGradientDescent:

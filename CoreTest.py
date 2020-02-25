@@ -1,6 +1,6 @@
 import numpy as np
 
-from BUG.Layers.Layer import Core, Flatten
+from BUG.Layers.Layer import Core
 from BUG.Model.Model import Model
 from BUG.function.util import load_data, one_hot
 from tensorflow import keras
@@ -18,22 +18,24 @@ def f2():
     # Y_test = test_labels.reshape(test_labels.shape[0],1)
 
     train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes = load_data()
-
-    X_train = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).astype(np.float32)
-    X_test = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).astype(np.float32)
+    X_train = train_set_x_orig
+    X_test = test_set_x_orig
+    #X_train = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).astype(np.float32)
+    #X_test = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).astype(np.float32)
     Y_train = train_set_y_orig.T
     Y_test = test_set_y_orig.T
 
     # 创建网络架构
     net = Model()
-
-    net.add(Core(128, batchNormal=False))
+    net.add(Core(128, batchNormal=True))
+    net.add(Core(64, batchNormal=False))
     net.add(Core(32, batchNormal=False))
+    net.add(Core(16, batchNormal=False))
     net.add(Core(1, "sigmoid"))
     net.compile()
-    net.train(X_train, Y_train, X_test, Y_test, batch_size=15,
+    net.train(X_train, Y_train, X_test, Y_test, batch_size=X_train.shape[0], normalizing_inputs=False,
               testing_percentage=0, validation_percentage=0, lossMode='CrossEntry',
-              learning_rate=0.0075, iterator=2500, optimize='Adam')
+              learning_rate=0.001, iterator=2500, optimize='Adam')
 
 
 if __name__ == '__main__':
