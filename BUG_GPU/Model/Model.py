@@ -2,7 +2,7 @@ import gc
 
 from tqdm import trange
 import cupy as cp
-
+import numpy as np
 from BUG_GPU.Layers.Layer import Layer, Core, Convolution
 from BUG_GPU.function import Optimize
 from BUG_GPU.function.Loss import SoftCategoricalCross_entropy, CrossEntry
@@ -71,7 +71,7 @@ class Model(object):
 
         #  shuffle start
         if shuffle:
-            permutation = cp.random.permutation(X_train.shape[0])
+            permutation = np.random.permutation(X_train.shape[0])
             X_train = X_train[permutation]
             Y_train = Y_train[permutation]
         #  shuffle end
