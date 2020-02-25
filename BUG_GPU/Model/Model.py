@@ -1,11 +1,13 @@
 import gc
+import pickle
 
-from tqdm import trange
 import cupy as cp
 import numpy as np
-from BUG_GPU.Layers.Layer import Layer, Core, Convolution
-from BUG_GPU.function import Optimize
-from BUG_GPU.function.Loss import SoftCategoricalCross_entropy, CrossEntry
+from tqdm import trange
+import os.path
+from BUG.Layers.Layer import Layer, Core, Convolution
+from BUG.function import Optimize
+from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
 
 
 class Model(object):
@@ -15,7 +17,8 @@ class Model(object):
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimize = None
-        self.predict = None
+        self.evaluate = None
+        self.ndim = 2
 
     def add(self, layer):
         assert (isinstance(layer, Layer))
@@ -24,6 +27,7 @@ class Model(object):
     def getLayerNumber(self):
         return len(self.layers)
 
+    # 划分数据
     def PartitionDataset(self, X, Y, testing_percentage, validation_percentage):
         total_m = X.shape[0]
         test_m = int(total_m * testing_percentage)
@@ -41,39 +45,51 @@ class Model(object):
 
         return X_train, Y_train, X_test, Y_test, X_valid, Y_valid
 
-    def normalizing_inputs(self, X_train, X_test, normalizing_inputs=True):
-        if normalizing_inputs:
+    # 归一化输入
+    def normalizing_inputs(self, X_train, X_test, is_normalizing=True):
+        if is_normalizing:
             if X_train.ndim == 2:
-                u = cp.mean(X_train, axis=0)
-                var = cp.mean(X_train ** 2, axis=0)
-                X_train -= u
-                X_train /= var
-                X_test -= u
-                X_test /= var
+                self.ndim = 2
+                self.u = cp.mean(X_train, axis=0)
+                self.var = cp.mean(X_train ** 2, axis=0)
+                X_train -= self.u
+                X_train /= self.var
+                X_test -= self.u
+                X_test /= self.var
             elif X_train.ndim > 2:
+                self.ndim = X_train.ndim
                 cp.divide(X_train, 255.0, out=X_train, casting="unsafe")
                 cp.divide(X_test, 255.0, out=X_test, casting="unsafe")
             else:
                 raise ValueError
 
-    def train(self, X_train, Y_train, X_test, Y_test, batch_size, normalizing_inputs=True, testing_percentage=0.2,
-              validation_percentage=0.2, learning_rate=0.075, iterator=2000,
-              lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train'):
+    # 训练
+    def fit(self, X_train, Y_train, X_test, Y_test, batch_size, is_normalizing=True, testing_percentage=0.2,
+            validation_percentage=0.2, learning_rate=0.075, iterator=2000,
+            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0):
         assert not isinstance(X_train, cp.float)
         assert not isinstance(X_test, cp.float)
+        print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
         t = 0
 
-        print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
+        if os.path.isfile('caches.data'):
+            with open('caches.data', 'rb+') as f:
+                data = pickle.load(f)
+                self.permutation, start_it, t = data
+            self.load_model('model.h5')
 
         #  Normalizing inputs
-        self.normalizing_inputs(X_train, X_test, normalizing_inputs)
+        self.is_normalizing = is_normalizing
+        self.normalizing_inputs(X_train, X_test, is_normalizing)
         #  Normalizing inputs
 
         #  shuffle start
         if shuffle:
-            permutation = np.random.permutation(X_train.shape[0])
-            X_train = X_train[permutation]
-            Y_train = Y_train[permutation]
+            if not os.path.isfile('caches.data'):
+                self.permutation = cp.random.permutation(X_train.shape[0])
+
+            X_train = X_train[self.permutation]
+            Y_train = Y_train[self.permutation]
         #  shuffle end
 
         #  划分数据
@@ -84,34 +100,65 @@ class Model(object):
         # 初始化损失结构
         if lossMode == 'SoftmaxCrossEntry':
             self.cost = SoftCategoricalCross_entropy()
-            self.predict = self.predict_many
+            self.evaluate = self.evaluate_many
         elif lossMode == 'CrossEntry':
             self.cost = CrossEntry()
-            self.predict = self.predict_one
+            self.evaluate = self.evaluate_one
         else:
             raise ValueError
 
         costs = []
 
         #  mini_batch
-        with trange(iterator) as tr:
-            for it in tr:
-                tr.set_description("第%d代:" % (it + 1))
-                cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize, it, iterator)
-                tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.predict(X_test, Y_test))
-                costs.append(cost)
+        try:
+            with trange(start_it, iterator) as tr:
+                for self.it in tr:
+                    tr.set_description("第%d代:" % (self.it + 1))
+                    cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize, self.it,
+                                           iterator)
+                    tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.evaluate(X_test, Y_test))
+                    costs.append(cost)
+        except KeyboardInterrupt:
+            self.interrupt(self.permutation, self.it, t)
+            self.save_model('model.h5')
+            print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
 
-    def predict_many(self, X_train, Y_train):
+    # 中断处理
+    def interrupt(self, permutation, start_it, t):
+        with open('caches.data', 'wb') as f:
+            data = (permutation, start_it, t)
+            pickle.dump(data, f)
+
+    # 多输出评估
+    def evaluate_many(self, X_train, Y_train):
         A = X_train
         for layer in self.layers:
             A = layer.forward(A, mode='test')
         return (cp.argmax(A, -1) == cp.argmax(Y_train, -1)).sum() / X_train.shape[0]
 
-    def predict_one(self, A, Y_train):
+    # 单输出评估
+    def evaluate_one(self, A, Y_train):
         for layer in self.layers:
             A = layer.forward(A, mode='test')
         return ((A > 0.5) == Y_train).sum() / A.shape[0]
 
+    # 预测
+    def predict(self, x):
+
+        if self.is_normalizing:
+            if x.ndim == 2:
+                x -= self.u
+                x /= self.var
+            elif x.ndim > 2:
+                cp.divide(x, 255.0, out=x, casting="unsafe")
+            else:
+                raise ValueError
+
+        for layer in self.layers:
+            x = layer.forward(x, mode='test')
+        return x
+
+    # 组合层级关系
     def compile(self):
         for i in range(1, self.getLayerNumber()):
             self.layers[i].pre_layer = self.layers[i - 1]
@@ -119,12 +166,12 @@ class Model(object):
         self.layers[0].isFirst = True
         self.layers[-1].isLast = True
 
+    # 单步训练
     def train_step(self, x_train, y_train, mode, learning_rate, t, optimize, it, iterator):
         # 前向传播
         pre_A = x_train
         for layer in self.layers:
             pre_A = layer.forward(pre_A, mode)
-        gc.collect()
 
         # 损失计算
         loss = self.cost.forward(y_train, pre_A)
@@ -148,14 +195,14 @@ class Model(object):
                 self.optimize = Optimize.BatchGradientDescent(self.layers)
             else:
                 raise ValueError
-
+        gc.collect()
         t += 1
         self.optimize.updata(t, learning_rate, it, iterator)
 
         return loss
 
+    # mini-batch
     def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, optimize, it, iterator):
-        # mini-batch
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
         with trange(num_complete) as tr:
@@ -175,10 +222,10 @@ class Model(object):
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
-        return cp.mean(in_cost)
+        return np.mean(in_cost)
 
+    # 网络详情
     def summary(self):
-
         for i in range(len(self.layers) - 1):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
@@ -191,3 +238,28 @@ class Model(object):
         else:
             print(layer.name + ' -> ', end='')
         print('y_hat')
+
+    # 保存模型参数
+    def save_model(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump(self.optimize, f)
+            pickle.dump(self.layers, f)
+            pickle.dump(self.evaluate, f)
+            pickle.dump(self.is_normalizing, f)
+            pickle.dump(self.ndim, f)
+            if self.is_normalizing and self.ndim == 2:
+                pickle.dump(self.u, f)
+                pickle.dump(self.var, f)
+
+    # 加载模型参数
+    def load_model(self, filename):
+        with open(filename, 'rb') as f:
+            self.optimize = pickle.load(f)
+            self.layers = pickle.load(f)
+            self.optimize.layers = self.layers
+            self.evaluate = pickle.load(f)
+            self.is_normalizing = pickle.load(f)
+            self.ndim = pickle.load(f)
+            if self.is_normalizing and self.ndim == 2:
+                self.u = pickle.load(f)
+                self.var = pickle.load(f)

@@ -3,9 +3,17 @@ import numpy as np
 from BUG.Layers.Layer import Convolution, Core
 
 
-class Momentum:
+class Optimize:
     def __init__(self, layers):
         self.layers = layers
+
+    def updata(self, *arg):
+        pass
+
+
+class Momentum(Optimize):
+    def __init__(self, layers):
+        super(Momentum, self).__init__(layers)
         self.v = {}
         self.s = {}
         for i in range(len(layers)):
@@ -17,8 +25,7 @@ class Momentum:
                     self.v['V_dbeta' + str(i)] = np.zeros(layer.batchNormal.dbeta.shape)
                     self.v['V_dgamma' + str(i)] = np.zeros(layer.batchNormal.dgamma.shape)
 
-    def updata(self, it, learning_rate, beta=0.9):
-
+    def updata(self, t, learning_rate, it, iterator, beta=0.9):
         for i in range(len(self.layers)):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
@@ -36,13 +43,12 @@ class Momentum:
                     layer.batchNormal.beta -= learning_rate * self.v['V_dbeta' + str(i)]
                     layer.batchNormal.gamma -= learning_rate * self.v['V_dgamma' + str(i)]
                     del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+        gc.collect()
 
-    gc.collect()
 
-
-class Adam:
+class Adam(Optimize):
     def __init__(self, layers):
-        self.layers = layers
+        super(Adam, self).__init__(layers)
         self.v = {}
         self.s = {}
         for i in range(len(layers)):
@@ -58,7 +64,8 @@ class Adam:
                     self.s['S_dbeta' + str(i)] = np.zeros(layer.batchNormal.dbeta.shape)
                     self.s['S_dgamma' + str(i)] = np.zeros(layer.batchNormal.dgamma.shape)
 
-    def updata(self, it, learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-8):
+    def updata(self, t, learning_rate, it, iterator, beta1=0.9, beta2=0.999, epsilon=1e-8):
+
         for i in range(len(self.layers)):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
@@ -67,41 +74,43 @@ class Adam:
                 self.v['V_db' + str(i)] = beta1 * self.v['V_db' + str(i)] + (1 - beta1) * layer.db
                 self.s['S_dW' + str(i)] = beta2 * self.s['S_dW' + str(i)] + (1 - beta2) * np.square(layer.dW)
                 self.s['S_db' + str(i)] = beta2 * self.s['S_db' + str(i)] + (1 - beta2) * np.square(layer.db)
-                V_dw_corrected = self.v['V_dW' + str(i)] / (1 - np.power(beta1, it))
-                V_db_corrected = self.v['V_db' + str(i)] / (1 - np.power(beta1, it))
-                S_dw_corrected = self.s['S_dW' + str(i)] / (1 - np.power(beta2, it))
-                S_db_corrected = self.s['S_db' + str(i)] / (1 - np.power(beta2, it))
+                V_dw_corrected = self.v['V_dW' + str(i)] / (1 - np.power(beta1, t))
+                V_db_corrected = self.v['V_db' + str(i)] / (1 - np.power(beta1, t))
+                S_dw_corrected = self.s['S_dW' + str(i)] / (1 - np.power(beta2, t))
+                S_db_corrected = self.s['S_db' + str(i)] / (1 - np.power(beta2, t))
 
                 layer.W -= learning_rate * V_dw_corrected / (np.sqrt(S_dw_corrected) + epsilon)
                 layer.b -= learning_rate * V_db_corrected / (np.sqrt(S_db_corrected) + epsilon)
 
-                #del layer.dW, layer.db
+                del layer.dW, layer.db
 
                 if layer.batchNormal is not None:
                     self.v['V_dbeta' + str(i)] = beta1 * self.v['V_dbeta' + str(i)] + (
-                                1 - beta1) * layer.batchNormal.dbeta
+                            1 - beta1) * layer.batchNormal.dbeta
                     self.v['V_dgamma' + str(i)] = beta1 * self.v['V_dgamma' + str(i)] + (
-                                1 - beta1) * layer.batchNormal.dgamma
+                            1 - beta1) * layer.batchNormal.dgamma
                     self.s['S_dbeta' + str(i)] = beta2 * self.s['S_dbeta' + str(i)] + (1 - beta2) * np.square(
                         layer.batchNormal.dbeta)
                     self.s['S_dgamma' + str(i)] = beta2 * self.s['S_dgamma' + str(i)] + (1 - beta2) * np.square(
                         layer.batchNormal.dgamma)
 
-                    V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - np.power(beta1, it))
-                    V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - np.power(beta1, it))
-                    S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - np.power(beta2, it))
-                    S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - np.power(beta2, it))
+                    V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - np.power(beta1, t))
+                    V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - np.power(beta1, t))
+                    S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - np.power(beta2, t))
+                    S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - np.power(beta2, t))
 
                     layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (np.sqrt(S_dbeta_corrected) + epsilon)
-                    layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (np.sqrt(S_dgamma_corrected) + epsilon)
-                    #del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+                    layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (
+                            np.sqrt(S_dgamma_corrected) + epsilon)
+                    del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+        gc.collect()
 
 
-class BatchGradientDescent:
+class BatchGradientDescent(Optimize):
     def __init__(self, layers):
-        self.layers = layers
+        super(BatchGradientDescent, self).__init__(layers)
 
-    def updata(self, t, learning_rate):
+    def updata(self, t, learning_rate, it, iterator):
         for layer in self.layers:
             if isinstance(layer, Core) or isinstance(layer, Convolution):
                 layer.W -= learning_rate * layer.dW

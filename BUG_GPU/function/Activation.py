@@ -25,7 +25,7 @@ def TanH(Z):
 
 
 def TanHGrad(Z):
-    return 1 - TanH(Z) ** 2
+    return 1 - cp.tanh(Z) ** 2
 
 
 def Leak_Relu(Z):
@@ -39,13 +39,14 @@ def Leak_ReluGrad(Z):
 
 
 def SoftmaxStep(Z):
-    shift_scores = Z - cp.max(Z, axis=1).reshape(-1, 1)                    #在每行中10个数都减去该行中最大的数字
+    shift_scores = Z - cp.max(Z, axis=1).reshape(-1, 1) #  在每行中10个数都减去该行中最大的数字
     A = cp.exp(shift_scores) / cp.sum(cp.exp(shift_scores), axis=1).reshape(-1, 1)
     return A
 
 
 def SoftmaxGradStep(Z):
     return cp.ones(Z.shape)
+
 
 def ac_get(Z, activation='relu'):
     if activation == 'sigmoid':
@@ -72,10 +73,13 @@ def ac_get_grad(dA, Z, activation='relu'):
         dZ = dA * TanHGrad(Z)
     elif activation == 'leak_relu':
         dZ = dA * Leak_ReluGrad(Z)
-    elif activation == 'Softmax':
+    elif activation == 'softmax':
         dZ = dA * SoftmaxGradStep(Z)
     elif activation == 'relu':
         dZ = dA * ReluGrad(Z)
-    else:
+    elif activation is None:
         dZ = dA
+    else:
+        raise ValueError
     return dZ
+
