@@ -5,11 +5,11 @@ import os
 import pickle
 
 def load_data():
-    train_dataset = h5py.File('/Users/oswin/Documents/BS/BUG/datasets/train_catvnoncat.h5', "r")
+    train_dataset = h5py.File('/content/drive/My Drive/Colab Notebooks/BUG/BUG_GPU/train_catvnoncat.h5', "r")
     train_set_x_orig = cp.array(train_dataset["train_set_x"][:])  # your train set features
     train_set_y_orig = cp.array(train_dataset["train_set_y"][:])  # your train set labels
 
-    test_dataset = h5py.File('/Users/oswin/Documents/BS/BUG/datasets/test_catvnoncat.h5', "r")
+    test_dataset = h5py.File('/content/drive/My Drive/Colab Notebooks/BUG/BUG_GPU/datasets/test_catvnoncat.h5', "r")
     test_set_x_orig = cp.array(test_dataset["test_set_x"][:])  # your test set features
     test_set_y_orig = cp.array(test_dataset["test_set_y"][:])  # your test set labels
 
@@ -65,11 +65,11 @@ def unhot(one_hot_labels):
 
 
 def load_dataset():
-    train_dataset = h5py.File('/Users/oswin/Documents/BS/BUG/datasets/train_signs.h5', "r")
+    train_dataset = h5py.File('/content/drive/My Drive/Colab Notebooks/BUG/BUG_GPU/datasets/train_signs.h5', "r")
     train_set_x_orig = cp.array(train_dataset["train_set_x"][:]) # your train set features
     train_set_y_orig = cp.array(train_dataset["train_set_y"][:]) # your train set labels
 
-    test_dataset = h5py.File('/Users/oswin/Documents/BS/BUG/datasets/test_signs.h5', "r")
+    test_dataset = h5py.File('/content/drive/My Drive/Colab Notebooks/BUG/BUG_GPU/datasets/test_signs.h5', "r")
     test_set_x_orig = cp.array(test_dataset["test_set_x"][:]) # your test set features
     test_set_y_orig = cp.array(test_dataset["test_set_y"][:]) # your test set labels
 

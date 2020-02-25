@@ -40,19 +40,17 @@ class BatchNormal:
         return self.dgamma, self.dbeta
 
     def fourDims_batchnorm_forward(self, A_pre, mode='train', momentum=0.9):
-        x = A_pre.transpose(0, 2, 3, 1)
-        N, H, W, C = x.shape
-        x_flat = x.reshape(N * H * W, C)
+        N, C, H, W = A_pre.shape
+        x_flat = A_pre.reshape(N * H * W, C)
         out_flat = self.twoDims_batchnormal_forward(x_flat, mode, momentum)
-        out = out_flat.reshape(x.shape).transpose(0, 3, 1, 2)
+        out = out_flat.reshape(A_pre.shape)
         return out
 
     def fourDims_batchnorm_backward(self, dout):
-        x = dout.transpose(0, 2, 3, 1)
-        N, H, W, C = x.shape
+        N, C, H, W = dout.shape
         dout_flat = dout.reshape(N * H * W, C)
         dx_flat = self.twoDims_batchnormal_backward(dout_flat)
-        dx = dx_flat.reshape(x.shape).transpose(0, 3, 1, 2)
+        dx = dx_flat.reshape(dout.shape)
         return dx
 
     def twoDims_batchnormal_forward(self, A_pre, mode='train', momentum=0.9):

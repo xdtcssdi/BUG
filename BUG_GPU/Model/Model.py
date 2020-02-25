@@ -6,7 +6,7 @@ import cupy as cp
 from BUG_GPU.Layers.Layer import Layer, Core, Convolution
 from BUG_GPU.function import Optimize
 from BUG_GPU.function.Loss import SoftCategoricalCross_entropy, CrossEntry
-import numpy as np
+
 
 class Model(object):
 
@@ -41,11 +41,11 @@ class Model(object):
 
         return X_train, Y_train, X_test, Y_test, X_valid, Y_valid
 
-    def normalizing_icputs(self, X_train, X_test, normalizing_icputs=True):
-        if normalizing_icputs:
+    def normalizing_inputs(self, X_train, X_test, normalizing_inputs=True):
+        if normalizing_inputs:
             if X_train.ndim == 2:
-                u = np.mean(X_train, axis=0)
-                var = np.mean(X_train ** 2, axis=0)
+                u = cp.mean(X_train, axis=0)
+                var = cp.mean(X_train ** 2, axis=0)
                 X_train -= u
                 X_train /= var
                 X_test -= u
@@ -56,7 +56,7 @@ class Model(object):
             else:
                 raise ValueError
 
-    def train(self, X_train, Y_train, X_test, Y_test, batch_size, normalizing_icputs=True, testing_percentage=0.2,
+    def train(self, X_train, Y_train, X_test, Y_test, batch_size, normalizing_inputs=True, testing_percentage=0.2,
               validation_percentage=0.2, learning_rate=0.075, iterator=2000,
               lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train'):
         assert not isinstance(X_train, cp.float)
@@ -65,9 +65,9 @@ class Model(object):
 
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
 
-        #  Normalizing icputs
-        self.normalizing_icputs(X_train, X_test, normalizing_icputs)
-        #  Normalizing icputs
+        #  Normalizing inputs
+        self.normalizing_inputs(X_train, X_test, normalizing_inputs)
+        #  Normalizing inputs
 
         #  shuffle start
         if shuffle:
@@ -136,7 +136,6 @@ class Model(object):
         pre_grad = self.cost.backward(y_train, pre_A)
         for layer in reversed(self.layers):
             pre_grad = layer.backward(pre_grad)
-        gc.collect()
         # -----------
 
         #  更新参数
@@ -176,10 +175,11 @@ class Model(object):
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
-        return np.mean(in_cost)
+        return cp.mean(in_cost)
 
     def summary(self):
-        for i in range(0, len(self.layers) - 1):
+
+        for i in range(len(self.layers) - 1):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
                 print(layer.name + ' -> ' + layer.activation + ' -> ', end='')

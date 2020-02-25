@@ -75,7 +75,7 @@ class Adam:
                 layer.W -= learning_rate * V_dw_corrected / (cp.sqrt(S_dw_corrected) + epsilon)
                 layer.b -= learning_rate * V_db_corrected / (cp.sqrt(S_db_corrected) + epsilon)
 
-                del layer.dW, layer.db
+                #del layer.dW, layer.db
 
                 if layer.batchNormal is not None:
                     self.v['V_dbeta' + str(i)] = beta1 * self.v['V_dbeta' + str(i)] + (
@@ -94,9 +94,7 @@ class Adam:
 
                     layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (cp.sqrt(S_dbeta_corrected) + epsilon)
                     layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (cp.sqrt(S_dgamma_corrected) + epsilon)
-                    del layer.batchNormal.dbeta, layer.batchNormal.dgamma
-
-        gc.collect()
+                    #del layer.batchNormal.dbeta, layer.batchNormal.dgamma
 
 
 class BatchGradientDescent:
