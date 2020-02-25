@@ -24,5 +24,4 @@ class SoftCategoricalCross_entropy:
         return np.squeeze(J)
 
     def backward(self, targets, outputs):
-        outputs = np.clip(outputs, self.epsilon, 1 - self.epsilon)
-        return outputs - targets
+        return -targets / np.clip(outputs, self.epsilon, 1 - self.epsilon)
