@@ -17,7 +17,17 @@ class Momentum:
                     self.v['V_dbeta' + str(i)] = cp.zeros(layer.batchNormal.dbeta.shape)
                     self.v['V_dgamma' + str(i)] = cp.zeros(layer.batchNormal.dgamma.shape)
 
-    def updata(self, it, learning_rate, beta=0.9):
+    def updata(self, t, learning_rate, it, iterator, beta=0.9):
+        warmup_steps = iterator // 5
+        init_lr = learning_rate
+
+        if warmup_steps and it < warmup_steps:
+            warmup_percent_done = it / warmup_steps
+            warmup_learning_rate = init_lr * warmup_percent_done  #gradual warmup_lr
+            learning_rate = warmup_learning_rate
+        else:
+            #learning_rate = np.sin(learning_rate)  #预热学习率结束后,学习率呈sin衰减
+            learning_rate = learning_rate**1.0001 #预热学习率结束后,学习率呈指数衰减(近似模拟指数衰减)
 
         for i in range(len(self.layers)):
             layer = self.layers[i]
@@ -58,7 +68,18 @@ class Adam:
                     self.s['S_dbeta' + str(i)] = cp.zeros(layer.batchNormal.dbeta.shape)
                     self.s['S_dgamma' + str(i)] = cp.zeros(layer.batchNormal.dgamma.shape)
 
-    def updata(self, it, learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-8):
+    def updata(self, t, learning_rate, it, iterator, beta1=0.9, beta2=0.999, epsilon=1e-8):
+        warmup_steps = iterator // 5
+        init_lr = learning_rate
+
+        if warmup_steps and it < warmup_steps:
+            warmup_percent_done = it / warmup_steps
+            warmup_learning_rate = init_lr * warmup_percent_done  #gradual warmup_lr
+            learning_rate = warmup_learning_rate
+        else:
+            #learning_rate = np.sin(learning_rate)  #预热学习率结束后,学习率呈sin衰减
+            learning_rate = learning_rate**1.0001 #预热学习率结束后,学习率呈指数衰减(近似模拟指数衰减)
+
         for i in range(len(self.layers)):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
@@ -67,15 +88,15 @@ class Adam:
                 self.v['V_db' + str(i)] = beta1 * self.v['V_db' + str(i)] + (1 - beta1) * layer.db
                 self.s['S_dW' + str(i)] = beta2 * self.s['S_dW' + str(i)] + (1 - beta2) * cp.square(layer.dW)
                 self.s['S_db' + str(i)] = beta2 * self.s['S_db' + str(i)] + (1 - beta2) * cp.square(layer.db)
-                V_dw_corrected = self.v['V_dW' + str(i)] / (1 - cp.power(beta1, it))
-                V_db_corrected = self.v['V_db' + str(i)] / (1 - cp.power(beta1, it))
-                S_dw_corrected = self.s['S_dW' + str(i)] / (1 - cp.power(beta2, it))
-                S_db_corrected = self.s['S_db' + str(i)] / (1 - cp.power(beta2, it))
+                V_dw_corrected = self.v['V_dW' + str(i)] / (1 - cp.power(beta1, t))
+                V_db_corrected = self.v['V_db' + str(i)] / (1 - cp.power(beta1, t))
+                S_dw_corrected = self.s['S_dW' + str(i)] / (1 - cp.power(beta2, t))
+                S_db_corrected = self.s['S_db' + str(i)] / (1 - cp.power(beta2, t))
 
                 layer.W -= learning_rate * V_dw_corrected / (cp.sqrt(S_dw_corrected) + epsilon)
                 layer.b -= learning_rate * V_db_corrected / (cp.sqrt(S_db_corrected) + epsilon)
 
-                #del layer.dW, layer.db
+                del layer.dW, layer.db
 
                 if layer.batchNormal is not None:
                     self.v['V_dbeta' + str(i)] = beta1 * self.v['V_dbeta' + str(i)] + (
@@ -87,21 +108,31 @@ class Adam:
                     self.s['S_dgamma' + str(i)] = beta2 * self.s['S_dgamma' + str(i)] + (1 - beta2) * cp.square(
                         layer.batchNormal.dgamma)
 
-                    V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - cp.power(beta1, it))
-                    V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - cp.power(beta1, it))
-                    S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - cp.power(beta2, it))
-                    S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - cp.power(beta2, it))
+                    V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - cp.power(beta1, t))
+                    V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - cp.power(beta1, t))
+                    S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - cp.power(beta2, t))
+                    S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - cp.power(beta2, t))
 
                     layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (cp.sqrt(S_dbeta_corrected) + epsilon)
                     layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (cp.sqrt(S_dgamma_corrected) + epsilon)
-                    #del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+                    del layer.batchNormal.dbeta, layer.batchNormal.dgamma
 
 
 class BatchGradientDescent:
     def __init__(self, layers):
         self.layers = layers
 
-    def updata(self, t, learning_rate):
+    def updata(self, t, learning_rate, it, iterator):
+        warmup_steps = iterator // 5
+        init_lr = learning_rate
+
+        if warmup_steps and it < warmup_steps:
+            warmup_percent_done = it / warmup_steps
+            warmup_learning_rate = init_lr * warmup_percent_done  #gradual warmup_lr
+            learning_rate = warmup_learning_rate
+        else:
+            #learning_rate = np.sin(learning_rate)  #预热学习率结束后,学习率呈sin衰减
+            learning_rate = learning_rate**1.0001 #预热学习率结束后,学习率呈指数衰减(近似模拟指数衰减)
         for layer in self.layers:
             if isinstance(layer, Core) or isinstance(layer, Convolution):
                 layer.W -= learning_rate * layer.dW

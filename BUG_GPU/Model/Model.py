@@ -97,7 +97,7 @@ class Model(object):
         with trange(iterator) as tr:
             for it in tr:
                 tr.set_description("第%d代:" % (it + 1))
-                cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
+                cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize, it, iterator)
                 tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.predict(X_test, Y_test))
                 costs.append(cost)
 
@@ -119,7 +119,7 @@ class Model(object):
         self.layers[0].isFirst = True
         self.layers[-1].isLast = True
 
-    def train_step(self, x_train, y_train, mode, learning_rate, t, optimize):
+    def train_step(self, x_train, y_train, mode, learning_rate, t, optimize, it, iterator):
         # 前向传播
         pre_A = x_train
         for layer in self.layers:
@@ -150,11 +150,11 @@ class Model(object):
                 raise ValueError
 
         t += 1
-        self.optimize.updata(t, learning_rate)
+        self.optimize.updata(t, learning_rate, it, iterator)
 
         return loss
 
-    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, optimize):
+    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, optimize, it, iterator):
         # mini-batch
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
@@ -164,14 +164,14 @@ class Model(object):
                 be = (b + 1) * batch_size
                 x_train = X_train[bs:be]
                 y_train = Y_train[bs:be]
-                cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize)
+                cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize, it, iterator)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
             s = num_complete * batch_size
             if s < X_train.shape[0]:
                 cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
-                                       mode, learning_rate, t, optimize)
+                                       mode, learning_rate, t, optimize, it, iterator)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 

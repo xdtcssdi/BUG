@@ -45,11 +45,7 @@ def SoftmaxStep(Z):
 
 
 def SoftmaxGradStep(Z):
-    N = Z.shape[0]
-    dscores = SoftmaxStep(Z)
-    dscores[range(N), list(Z)] -= 1
-    dscores /= N
-    return dscores
+    return cp.ones(Z.shape)
 
 def ac_get(Z, activation='relu'):
     if activation == 'sigmoid':
