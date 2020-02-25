@@ -66,7 +66,7 @@ class Model(object):
     # 训练
     def fit(self, X_train, Y_train, X_test, Y_test, batch_size, is_normalizing=True, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000,
-            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0):
+            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model.h5'):
         assert not isinstance(X_train, cp.float)
         assert not isinstance(X_test, cp.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
@@ -76,7 +76,7 @@ class Model(object):
             with open('caches.data', 'rb+') as f:
                 data = pickle.load(f)
                 self.permutation, start_it, t = data
-            self.load_model('model.h5')
+            self.load_model(filename)
 
         #  Normalizing inputs
         self.is_normalizing = is_normalizing
@@ -120,7 +120,7 @@ class Model(object):
                     costs.append(cost)
         except KeyboardInterrupt:
             self.interrupt(self.permutation, self.it, t)
-            self.save_model('model.h5')
+            self.save_model(filename)
             print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
 
     # 中断处理
