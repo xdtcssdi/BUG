@@ -7,8 +7,9 @@ from tensorflow import keras
 
 def f2():
     # 数据预处理
-
-    train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes = load_data()
+    path = ['/Users/oswin/Documents/BS/BUG/datasets/train_catvnoncat.h5',
+            '/Users/oswin/Documents/BS/BUG/datasets/test_catvnoncat.h5']
+    train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes = load_data(path)
     X_train = train_set_x_orig
     X_test = test_set_x_orig
     Y_train = train_set_y_orig.T

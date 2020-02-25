@@ -1,5 +1,5 @@
 import gc
-import numpy as np
+from BUG.load_package import p
 from BUG.Layers.Layer import Convolution, Core
 
 
@@ -19,11 +19,11 @@ class Momentum(Optimize):
         for i in range(len(layers)):
             layer = self.layers[i]
             if isinstance(layer, Core) or isinstance(layer, Convolution):
-                self.v['V_dW' + str(i)] = np.zeros(layer.W.shape)
-                self.v['V_db' + str(i)] = np.zeros(layer.b.shape)
+                self.v['V_dW' + str(i)] = p.zeros(layer.W.shape)
+                self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
                 if layer.batchNormal is not None:
-                    self.v['V_dbeta' + str(i)] = np.zeros(layer.batchNormal.dbeta.shape)
-                    self.v['V_dgamma' + str(i)] = np.zeros(layer.batchNormal.dgamma.shape)
+                    self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
+                    self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
 
     def updata(self, t, learning_rate, it, iterator, beta=0.9):
         for i in range(len(self.layers)):
@@ -54,15 +54,15 @@ class Adam(Optimize):
         for i in range(len(layers)):
             layer = self.layers[i]
             if isinstance(layer, (Core, Convolution)):
-                self.v['V_dW' + str(i)] = np.zeros(layer.W.shape)
-                self.v['V_db' + str(i)] = np.zeros(layer.b.shape)
-                self.s['S_dW' + str(i)] = np.zeros(layer.W.shape)
-                self.s['S_db' + str(i)] = np.zeros(layer.b.shape)
+                self.v['V_dW' + str(i)] = p.zeros(layer.W.shape)
+                self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
+                self.s['S_dW' + str(i)] = p.zeros(layer.W.shape)
+                self.s['S_db' + str(i)] = p.zeros(layer.b.shape)
                 if layer.batchNormal is not None:
-                    self.v['V_dbeta' + str(i)] = np.zeros(layer.batchNormal.dbeta.shape)
-                    self.v['V_dgamma' + str(i)] = np.zeros(layer.batchNormal.dgamma.shape)
-                    self.s['S_dbeta' + str(i)] = np.zeros(layer.batchNormal.dbeta.shape)
-                    self.s['S_dgamma' + str(i)] = np.zeros(layer.batchNormal.dgamma.shape)
+                    self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
+                    self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
+                    self.s['S_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
+                    self.s['S_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
 
     def updata(self, t, learning_rate, it, iterator, beta1=0.9, beta2=0.999, epsilon=1e-8):
 
@@ -72,15 +72,15 @@ class Adam(Optimize):
 
                 self.v['V_dW' + str(i)] = beta1 * self.v['V_dW' + str(i)] + (1 - beta1) * layer.dW
                 self.v['V_db' + str(i)] = beta1 * self.v['V_db' + str(i)] + (1 - beta1) * layer.db
-                self.s['S_dW' + str(i)] = beta2 * self.s['S_dW' + str(i)] + (1 - beta2) * np.square(layer.dW)
-                self.s['S_db' + str(i)] = beta2 * self.s['S_db' + str(i)] + (1 - beta2) * np.square(layer.db)
-                V_dw_corrected = self.v['V_dW' + str(i)] / (1 - np.power(beta1, t))
-                V_db_corrected = self.v['V_db' + str(i)] / (1 - np.power(beta1, t))
-                S_dw_corrected = self.s['S_dW' + str(i)] / (1 - np.power(beta2, t))
-                S_db_corrected = self.s['S_db' + str(i)] / (1 - np.power(beta2, t))
+                self.s['S_dW' + str(i)] = beta2 * self.s['S_dW' + str(i)] + (1 - beta2) * p.square(layer.dW)
+                self.s['S_db' + str(i)] = beta2 * self.s['S_db' + str(i)] + (1 - beta2) * p.square(layer.db)
+                V_dw_corrected = self.v['V_dW' + str(i)] / (1 - p.power(beta1, t))
+                V_db_corrected = self.v['V_db' + str(i)] / (1 - p.power(beta1, t))
+                S_dw_corrected = self.s['S_dW' + str(i)] / (1 - p.power(beta2, t))
+                S_db_corrected = self.s['S_db' + str(i)] / (1 - p.power(beta2, t))
 
-                layer.W -= learning_rate * V_dw_corrected / (np.sqrt(S_dw_corrected) + epsilon)
-                layer.b -= learning_rate * V_db_corrected / (np.sqrt(S_db_corrected) + epsilon)
+                layer.W -= learning_rate * V_dw_corrected / (p.sqrt(S_dw_corrected) + epsilon)
+                layer.b -= learning_rate * V_db_corrected / (p.sqrt(S_db_corrected) + epsilon)
 
                 del layer.dW, layer.db
 
@@ -89,19 +89,19 @@ class Adam(Optimize):
                             1 - beta1) * layer.batchNormal.dbeta
                     self.v['V_dgamma' + str(i)] = beta1 * self.v['V_dgamma' + str(i)] + (
                             1 - beta1) * layer.batchNormal.dgamma
-                    self.s['S_dbeta' + str(i)] = beta2 * self.s['S_dbeta' + str(i)] + (1 - beta2) * np.square(
+                    self.s['S_dbeta' + str(i)] = beta2 * self.s['S_dbeta' + str(i)] + (1 - beta2) * p.square(
                         layer.batchNormal.dbeta)
-                    self.s['S_dgamma' + str(i)] = beta2 * self.s['S_dgamma' + str(i)] + (1 - beta2) * np.square(
+                    self.s['S_dgamma' + str(i)] = beta2 * self.s['S_dgamma' + str(i)] + (1 - beta2) * p.square(
                         layer.batchNormal.dgamma)
 
-                    V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - np.power(beta1, t))
-                    V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - np.power(beta1, t))
-                    S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - np.power(beta2, t))
-                    S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - np.power(beta2, t))
+                    V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - p.power(beta1, t))
+                    V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - p.power(beta1, t))
+                    S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - p.power(beta2, t))
+                    S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - p.power(beta2, t))
 
-                    layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (np.sqrt(S_dbeta_corrected) + epsilon)
+                    layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (p.sqrt(S_dbeta_corrected) + epsilon)
                     layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (
-                            np.sqrt(S_dgamma_corrected) + epsilon)
+                            p.sqrt(S_dgamma_corrected) + epsilon)
                     del layer.batchNormal.dbeta, layer.batchNormal.dgamma
         gc.collect()
 

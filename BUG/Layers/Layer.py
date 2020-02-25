@@ -1,7 +1,6 @@
 import math
 
-import numpy as np
-
+from BUG.load_package import p
 from BUG.Layers.Normalization import BatchNormal
 from BUG.Layers.im2col import im2col_indices, col2im_indices
 from BUG.function.Activation import ac_get_grad, ac_get
@@ -55,17 +54,17 @@ class Convolution(Layer):
             W_shape = (self.filter_count, pre_nc, self.filter_shape[0], self.filter_shape[1])
             n_l = self.filter_shape[0] * self.filter_shape[1] * self.filter_count
             if self.activation == 'relu':  # 'kaiming'
-                self.W = np.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
+                self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
             elif self.activation == 'leak_relu':  # 'kaiming'
-                self.W = np.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
+                self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
             else:
                 n_x, d_x, h_x, w_x = A_pre.shape  # 'xavier'
-                self.W = np.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
-            self.dW = np.zeros_like(self.W)
+                self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
+            self.dW = p.zeros_like(self.W)
 
         if self.b is None:
-            self.b = np.zeros(self.filter_count)
-            self.db = np.zeros_like(self.b)
+            self.b = p.zeros(self.filter_count)
+            self.db = p.zeros_like(self.b)
 
     # 没问题
     def forward(self, A_pre, mode='train'):
@@ -79,7 +78,7 @@ class Convolution(Layer):
     def backward(self, dZ):
         if self.batchNormal:
             dZ = self.batchNormal.backward(dZ)
-        self.db = np.sum(dZ, axis=(0, 2, 3))
+        self.db = p.sum(dZ, axis=(0, 2, 3))
         num_filters, _, filter_height, filter_width = self.W.shape
         dout_reshaped = dZ.transpose(1, 2, 3, 0).reshape(num_filters, -1)
         self.dW = dout_reshaped.dot(self.X_col.T).reshape(self.W.shape)
@@ -105,7 +104,7 @@ class Convolution(Layer):
         h_out, w_out = int(h_out), int(w_out)
         self.X_col = im2col_indices(X, kernel_size, kernel_size, padding=padding, stride=stride)
         W_col = W.reshape(n_filters, -1)
-        out = (np.dot(W_col, self.X_col).T + b).T
+        out = (p.dot(W_col, self.X_col).T + b).T
         out = out.reshape(n_filters, h_out, w_out, n_x)
         out = out.transpose(3, 0, 1, 2)
         return out
@@ -123,7 +122,7 @@ class Core(Layer):
         x = x.reshape(x.shape[0], -1)
         self.init_params(x)
         self.x = x
-        self.out = np.dot(self.x, self.W) + self.b
+        self.out = p.dot(self.x, self.W) + self.b
         if self.batchNormal:
             self.out = self.batchNormal.forward(self.out)
         return ac_get(self.out, self.activation)
@@ -132,9 +131,9 @@ class Core(Layer):
         dout = ac_get_grad(dout, self.out, self.activation)
         if self.batchNormal:
             dout = self.batchNormal.backward(dout)
-        dx = np.dot(dout, self.W.T)
-        self.dW = np.dot(self.x.T, dout)
-        self.db = np.sum(dout, axis=0)
+        dx = p.dot(dout, self.W.T)
+        self.dW = p.dot(self.x.T, dout)
+        self.db = p.sum(dout, axis=0)
 
         dx = dx.reshape(self.original_x_shape)  # 还原输入数据的形状（对应张量）
         return dx
@@ -143,17 +142,17 @@ class Core(Layer):
         pre_unit = A_pre.shape[1]
         if self.W is None:
             if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
-                self.W = np.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
+                self.W = p.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
                                            math.sqrt(6. / (pre_unit + self.unit_number)),
                                            (pre_unit, self.unit_number))
             elif self.activation == 'tanh' or self.activation == 'sigmoid':
-                self.W = np.random.uniform(-1., 1., (pre_unit, self.unit_number)) \
-                         * np.sqrt(6. / (pre_unit + self.unit_number))
+                self.W = p.random.uniform(-1., 1., (pre_unit, self.unit_number)) \
+                         * p.sqrt(6. / (pre_unit + self.unit_number))
             else:  # 'MSRA'
-                self.W = np.random.normal(0, math.sqrt(2. / pre_unit), size=(pre_unit, self.unit_number))
-            # self.W = np.random.randn(pre_unit, self.unit_number) * 0.01
+                self.W = p.random.normal(0, math.sqrt(2. / pre_unit), size=(pre_unit, self.unit_number))
+            # self.W = p.random.randn(pre_unit, self.unit_number) * 0.01
         if self.b is None:
-            self.b = np.zeros((1, self.unit_number))
+            self.b = p.zeros((1, self.unit_number))
 
     @property
     def params(self):
@@ -186,8 +185,8 @@ class Pooling(Layer):
         x_split = A_pre.reshape(N * C, 1, H, W)
         x_cols = im2col_indices(x_split, self.filter_shape[0], self.filter_shape[1], padding=self.padding,
                                 stride=self.stride)
-        x_cols_argmax = np.argmax(x_cols, axis=0)
-        x_cols_max = x_cols[x_cols_argmax, np.arange(x_cols.shape[1])]
+        x_cols_argmax = p.argmax(x_cols, axis=0)
+        x_cols_max = x_cols[x_cols_argmax, p.arange(x_cols.shape[1])]
         out = x_cols_max.reshape(out_height, out_width, N, C).transpose(2, 3, 0, 1)
         self.cache = (A_pre, x_cols, x_cols_argmax)
         return out
@@ -198,8 +197,8 @@ class Pooling(Layer):
         N, C, H, W = x.shape
 
         dout_reshaped = dZ.transpose(2, 3, 0, 1).flatten()
-        dx_cols = np.zeros_like(x_cols)
-        dx_cols[x_cols_argmax, np.arange(dx_cols.shape[1])] = dout_reshaped
+        dx_cols = p.zeros_like(x_cols)
+        dx_cols[x_cols_argmax, p.arange(dx_cols.shape[1])] = dout_reshaped
         dx = col2im_indices(dx_cols, (N * C, 1, H, W), self.filter_shape[0], self.filter_shape[1],
                             padding=self.padding, stride=self.stride)
         dx = dx.reshape(x.shape)
@@ -223,17 +222,17 @@ class Pooling(Layer):
 #             W_shape = (self.filter_count, pre_nc, self.filter_shape[0], self.filter_shape[1])
 #             n_l = self.filter_shape[0] * self.filter_shape[1] * self.filter_count
 #             if self.activation == 'relu':  # 'kaiming'
-#                 self.W = np.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
+#                 self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
 #             elif self.activation == 'leak_relu':  # 'kaiming'
-#                 self.W = np.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
+#                 self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
 #             else:
 #                 n_x, d_x, h_x, w_x = A_pre.shape  # 'xavier'
-#                 self.W = np.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
-#             self.dW = np.zeros_like(self.W)
+#                 self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
+#             self.dW = p.zeros_like(self.W)
 #
 #         if self.b is None:
-#             self.b = np.random.randn(self.filter_count)
-#             self.db = np.zeros_like(self.b)
+#             self.b = p.random.randn(self.filter_count)
+#             self.db = p.zeros_like(self.b)
 #
 #     def forward(self, A_pre, mode='train'):
 #         self.init_params(A_pre)
@@ -246,7 +245,7 @@ class Pooling(Layer):
 #         col = im2col(A_pre, FH, FW, self.stride, self.padding)
 #         col_W = self.W.reshape(FN, -1).T
 #
-#         out = np.dot(col, col_W) + self.b
+#         out = p.dot(col, col_W) + self.b
 #         out = out.reshape(N, out_h, out_w, -1).transpose(0, 3, 1, 2)
 #
 #         self.col = col
@@ -260,11 +259,11 @@ class Pooling(Layer):
 #         FN, C, FH, FW = self.W.shape
 #         dout = dout.transpose(0, 2, 3, 1).reshape(-1, FN)
 #
-#         self.db = np.sum(dout, axis=0)
-#         self.dW = np.dot(self.col.T, dout)
+#         self.db = p.sum(dout, axis=0)
+#         self.dW = p.dot(self.col.T, dout)
 #         self.dW = self.dW.transpose(1, 0).reshape(FN, C, FH, FW)
 #
-#         dcol = np.dot(dout, self.col_W.T)
+#         dcol = p.dot(dout, self.col_W.T)
 #         dx = col2im(dcol, self.A_pre.shape, FH, FW, self.stride, self.padding)
 #         return ac_get_grad(dx, self.A_pre, self.activation)
 #
@@ -296,8 +295,8 @@ class Pooling(Layer):
 #         col = im2col(x, self.pool_h, self.pool_w, self.stride, self.padding)
 #         col = col.reshape(-1, self.pool_h * self.pool_w)
 #
-#         arg_max = np.argmax(col, axis=1)
-#         out = np.max(col, axis=1)
+#         arg_max = p.argmax(col, axis=1)
+#         out = p.max(col, axis=1)
 #         out = out.reshape(N, out_h, out_w, C).transpose(0, 3, 1, 2)
 #
 #         self.x = x
@@ -309,8 +308,8 @@ class Pooling(Layer):
 #         dout = dout.transpose(0, 2, 3, 1)
 #
 #         pool_size = self.pool_h * self.pool_w
-#         dmax = np.zeros((dout.size, pool_size))
-#         dmax[np.arange(self.arg_max.size), self.arg_max.flatten()] = dout.flatten()
+#         dmax = p.zeros((dout.size, pool_size))
+#         dmax[p.arange(self.arg_max.size), self.arg_max.flatten()] = dout.flatten()
 #         dmax = dmax.reshape(dout.shape + (pool_size,))
 #
 #         dcol = dmax.reshape(dmax.shape[0] * dmax.shape[1] * dmax.shape[2], -1)
@@ -333,9 +332,9 @@ class Pooling(Layer):
 #     def init_params(self, pre_nc):  # pre_nc 前一个通道数
 #         if self.W is None:
 #             kernel_shape = (self.filter_count, pre_nc, self.filter_shape[0], self.filter_shape[1])
-#             self.W = np.random.randn(*kernel_shape)  # W.shape == (f, f ,pre_nc, nc)
+#             self.W = p.random.randn(*kernel_shape)  # W.shape == (f, f ,pre_nc, nc)
 #         if self.b is None:
-#             self.b = np.random.randn(self.filter_count)  # b.shape = (1, 1, 1, nc)
+#             self.b = p.random.randn(self.filter_count)  # b.shape = (1, 1, 1, nc)
 #
 #     # 没问题
 #     def forward(self, A_pre, mode='train'):
@@ -344,7 +343,7 @@ class Pooling(Layer):
 #
 #         n_h = int((A_pre.shape[2] + 2 * self.padding - self.filter_shape[0]) / self.stride + 1)
 #         n_w = int((A_pre.shape[3] + 2 * self.padding - self.filter_shape[1]) / self.stride + 1)
-#         Z = np.zeros((A_pre.shape[0], self.filter_count, n_h, n_w))
+#         Z = p.zeros((A_pre.shape[0], self.filter_count, n_h, n_w))
 #
 #         self.Z_pad = ZeroPad(A_pre, self.padding) if self.padding > 0 else A_pre
 #
@@ -358,7 +357,7 @@ class Pooling(Layer):
 #                         hs = w * self.stride
 #                         he = hs + self.filter_shape[1]
 #                         a_slice = a_prev_pad[:, vs:ve, hs:he]
-#                         Z[i, nc, h, w] = np.sum(a_slice * self.W[nc, :, :, :] + self.b[nc])
+#                         Z[i, nc, h, w] = p.sum(a_slice * self.W[nc, :, :, :] + self.b[nc])
 #         Zhat = self.batchNormal.forward(Z, mode) if self.batchNormal else Z
 #         return ac_get(Zhat, self.activation)
 #
@@ -366,11 +365,11 @@ class Pooling(Layer):
 #     def backward(self, dZ):
 #         if self.batchNormal:
 #             dZ = self.batchNormal.backward(dZ)
-#         dZ_pad = np.zeros_like(self.Z_pad)
+#         dZ_pad = p.zeros_like(self.Z_pad)
 #         m, nc, n_h, n_w = dZ.shape
-#         self.dW = np.zeros_like(self.W)
-#         self.db = np.zeros_like(self.b)
-#         dA = np.zeros_like(self.A_pre)
+#         self.dW = p.zeros_like(self.W)
+#         self.db = p.zeros_like(self.b)
+#         dA = p.zeros_like(self.A_pre)
 #
 #         if self.padding > 0:
 #             for i in range(m):
@@ -433,7 +432,7 @@ class Pooling(Layer):
 #
 #         n_h = int((h + 2 * self.padding - self.filter_shape[0]) / self.stride + 1)
 #         n_w = int((w + 2 * self.padding - self.filter_shape[1]) / self.stride + 1)
-#         A = np.zeros((m, nc, n_h, n_w))
+#         A = p.zeros((m, nc, n_h, n_w))
 #
 #         self.A_pad = ZeroPad(A_pre, self.padding) if self.padding > 0 else A_pre
 #
@@ -448,7 +447,7 @@ class Pooling(Layer):
 #                             hs = w * self.stride
 #                             he = hs + self.filter_shape[1]
 #                             a_slice = a_prev_pad[c, vs:ve, hs:he]
-#                             A[i, c, h, w] = np.max(a_slice)
+#                             A[i, c, h, w] = p.max(a_slice)
 #         elif self.mode == 'average':
 #             for i in range(m):
 #                 a_prev_pad = self.A_pad[i]
@@ -460,12 +459,12 @@ class Pooling(Layer):
 #                             hs = w * self.stride
 #                             he = hs + self.filter_shape[1]
 #                             a_slice = a_prev_pad[c, vs:ve, hs:he]
-#                             A[i, c, h, w] = np.mean(a_slice)
+#                             A[i, c, h, w] = p.mean(a_slice)
 #         return A
 #
 #     def backward(self, dZ):
 #         m, nc, n_h, n_w = dZ.shape
-#         dA = np.zeros_like(self.A_pad)
+#         dA = p.zeros_like(self.A_pad)
 #         if self.mode == 'max':
 #             for i in range(m):
 #                 da = dZ[i]
@@ -494,8 +493,8 @@ class Pooling(Layer):
 #
 #     def maxPooling_backward(self, z, grad):  # input: Z:matrix, grad is real return matrix
 #         assert (z.ndim == 2)
-#         return (z == np.max(z)) * grad
+#         return (z == p.max(z)) * grad
 #
 #     def averagePooling_backward(self, a):  # input : a is real return matrix
-#         return np.ones((self.filter_shape[0], self.filter_shape[1])) * (
+#         return p.ones((self.filter_shape[0], self.filter_shape[1])) * (
 #                 a / (self.filter_shape[0] * self.filter_shape[1]))

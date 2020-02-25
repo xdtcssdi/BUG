@@ -1,7 +1,7 @@
 import gc
 import pickle
 
-import numpy as np
+from BUG.load_package import p
 from tqdm import trange
 import os.path
 from BUG.Layers.Layer import Layer, Core, Convolution
@@ -49,16 +49,16 @@ class Model(object):
         if is_normalizing:
             if X_train.ndim == 2:
                 self.ndim = 2
-                self.u = np.mean(X_train, axis=0)
-                self.var = np.mean(X_train ** 2, axis=0)
+                self.u = p.mean(X_train, axis=0)
+                self.var = p.mean(X_train ** 2, axis=0)
                 X_train -= self.u
                 X_train /= self.var
                 X_test -= self.u
                 X_test /= self.var
             elif X_train.ndim > 2:
                 self.ndim = X_train.ndim
-                np.divide(X_train, 255.0, out=X_train, casting="unsafe")
-                np.divide(X_test, 255.0, out=X_test, casting="unsafe")
+                p.divide(X_train, 255.0, out=X_train, casting="unsafe")
+                p.divide(X_test, 255.0, out=X_test, casting="unsafe")
             else:
                 raise ValueError
 
@@ -66,8 +66,8 @@ class Model(object):
     def fit(self, X_train, Y_train, X_test, Y_test, batch_size, is_normalizing=True, testing_percentage=0.2,
               validation_percentage=0.2, learning_rate=0.075, iterator=2000,
               lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model.h5'):
-        assert not isinstance(X_train, np.float)
-        assert not isinstance(X_test, np.float)
+        assert not isinstance(X_train, p.float)
+        assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
         t = 0
 
@@ -85,7 +85,7 @@ class Model(object):
         #  shuffle start
         if shuffle:
             if not os.path.isfile('caches.data'):
-                self.permutation = np.random.permutation(X_train.shape[0])
+                self.permutation = p.random.permutation(X_train.shape[0])
 
             X_train = X_train[self.permutation]
             Y_train = Y_train[self.permutation]
@@ -133,7 +133,7 @@ class Model(object):
         A = X_train
         for layer in self.layers:
             A = layer.forward(A, mode='test')
-        return (np.argmax(A, -1) == np.argmax(Y_train, -1)).sum() / X_train.shape[0]
+        return (p.argmax(A, -1) == p.argmax(Y_train, -1)).sum() / X_train.shape[0]
 
     # 单输出评估
     def evaluate_one(self, A, Y_train):
@@ -149,7 +149,7 @@ class Model(object):
                 x -= self.u
                 x /= self.var
             elif x.ndim > 2:
-                np.divide(x, 255.0, out=x, casting="unsafe")
+                p.divide(x, 255.0, out=x, casting="unsafe")
             else:
                 raise ValueError
 
@@ -221,7 +221,7 @@ class Model(object):
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
-        return np.mean(in_cost)
+        return p.mean(in_cost)
 
     # 网络详情
     def summary(self):

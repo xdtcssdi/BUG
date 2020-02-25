@@ -1,18 +1,17 @@
-import numpy as np
-
+from BUG.load_package import p
 
 def Relu(Z):
-    return np.maximum(.0, Z)
+    return p.maximum(.0, Z)
 
 
 def ReluGrad(Z):
-    res = np.zeros(Z.shape)
+    res = p.zeros(Z.shape)
     res[Z > 0] = 1
     return res
 
 
 def Sigmoid(Z):
-    return .5 * (1 + np.tanh(.5 * Z))
+    return .5 * (1 + p.tanh(.5 * Z))
 
 
 def SigmoidGrad(Z):
@@ -21,31 +20,31 @@ def SigmoidGrad(Z):
 
 
 def TanH(Z):
-    return np.tanh(Z)
+    return p.tanh(Z)
 
 
 def TanHGrad(Z):
-    return 1 - np.tanh(Z) ** 2
+    return 1 - p.tanh(Z) ** 2
 
 
 def Leak_Relu(Z):
-    return np.maximum(0.01 * Z, Z)
+    return p.maximum(0.01 * Z, Z)
 
 
 def Leak_ReluGrad(Z):
-    res = np.full(Z.shape, 0.01)
+    res = p.full(Z.shape, 0.01)
     res[Z > 0] = 1
     return res
 
 
 def SoftmaxStep(Z):
-    shift_scores = Z - np.max(Z, axis=1).reshape(-1, 1) #  在每行中10个数都减去该行中最大的数字
-    A = np.exp(shift_scores) / np.sum(np.exp(shift_scores), axis=1).reshape(-1, 1)
+    shift_scores = Z - p.max(Z, axis=1).reshape(-1, 1) #  在每行中10个数都减去该行中最大的数字
+    A = p.exp(shift_scores) / p.sum(p.exp(shift_scores), axis=1).reshape(-1, 1)
     return A
 
 
 def SoftmaxGradStep(Z):
-    return np.ones(Z.shape)
+    return p.ones(Z.shape)
 
 
 def ac_get(Z, activation='relu'):

@@ -1,6 +1,6 @@
 from BUG.Layers.Layer import Convolution, Pooling, Core
 from BUG.Model.Model import Model
-from BUG.function.util import one_hot, load_dataset
+from BUG.function.util import one_hot
 import numpy as cp
 from tensorflow import keras
 
