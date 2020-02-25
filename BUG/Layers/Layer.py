@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 from BUG.Layers.Normalization import BatchNormal
-from BUG.Layers.im2col import im2col_indices, col2im_indices, im2col, col2im
+from BUG.Layers.im2col import im2col_indices, col2im_indices
 from BUG.function.Activation import ac_get_grad, ac_get
 
 

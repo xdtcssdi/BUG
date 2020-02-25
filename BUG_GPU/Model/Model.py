@@ -5,9 +5,9 @@ import cupy as cp
 import numpy as np
 from tqdm import trange
 import os.path
-from BUG.Layers.Layer import Layer, Core, Convolution
-from BUG.function import Optimize
-from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
+from BUG_GPU.Layers.Layer import Layer, Core, Convolution
+from BUG_GPU.function import Optimize
+from BUG_GPU.function.Loss import SoftCategoricalCross_entropy, CrossEntry
 
 
 class Model(object):
