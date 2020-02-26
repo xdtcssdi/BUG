@@ -44,7 +44,11 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
+<<<<<<< HEAD
         <entry key="$PROJECT_DIR$" value="test" />
+=======
+        <entry key="$PROJECT_DIR$" value="master" />
+>>>>>>> test
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -189,12 +193,22 @@
     <list>
       <item itemvalue="Python.BUG" />
       <item itemvalue="Python.CNNTest" />
+<<<<<<< HEAD
       <item itemvalue="Python.CoreTest" />
       <item itemvalue="Python.test" />
+=======
+      <item itemvalue="Python.test" />
+      <item itemvalue="Python.CoreTest" />
+      <item itemvalue="Python.CoreTest (1)" />
+>>>>>>> test
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.CNNTest" />
+<<<<<<< HEAD
+=======
+        <item itemvalue="Python.CoreTest (1)" />
+>>>>>>> test
         <item itemvalue="Python.CoreTest" />
         <item itemvalue="Python.test" />
       </list>
@@ -265,6 +279,7 @@
     </state>
     <state width="1238" height="274" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1582447169541" />
     <state width="1209" height="227" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1582438208455" />
+<<<<<<< HEAD
     <state x="128" y="84" key="MergeDialog" timestamp="1582684837362">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
@@ -273,6 +288,8 @@
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state x="351" y="105" key="MultipleFileMergeDialog/0.23.1280.719@0.23.1280.719" timestamp="1582684840410" />
+=======
+>>>>>>> test
     <state x="141" y="39" key="SettingsEditor" timestamp="1582362688529">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
@@ -285,10 +302,13 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1582448652037" />
+<<<<<<< HEAD
     <state x="386" y="102" key="git4idea.branch.GitSmartOperationDialog" timestamp="1582684819189">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state x="386" y="102" key="git4idea.branch.GitSmartOperationDialog/0.23.1280.719@0.23.1280.719" timestamp="1582684819189" />
+=======
+>>>>>>> test
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1582447169531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />

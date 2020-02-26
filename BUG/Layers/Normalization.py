@@ -1,4 +1,4 @@
-import numpy as np
+from BUG.load_package import p
 
 
 class BatchNormal:
@@ -40,37 +40,35 @@ class BatchNormal:
         return self.dgamma, self.dbeta
 
     def fourDims_batchnorm_forward(self, A_pre, mode='train', momentum=0.9):
-        x = A_pre.transpose(0, 2, 3, 1)
-        N, H, W, C = x.shape
-        x_flat = x.reshape(N * H * W, C)
+        N, C, H, W = A_pre.shape
+        x_flat = A_pre.reshape(N * H * W, C)
         out_flat = self.twoDims_batchnormal_forward(x_flat, mode, momentum)
-        out = out_flat.reshape(x.shape).transpose(0, 3, 1, 2)
+        out = out_flat.reshape(A_pre.shape)
         return out
 
     def fourDims_batchnorm_backward(self, dout):
-        x = dout.transpose(0, 2, 3, 1)
-        N, H, W, C = x.shape
+        N, C, H, W = dout.shape
         dout_flat = dout.reshape(N * H * W, C)
         dx_flat = self.twoDims_batchnormal_backward(dout_flat)
-        dx = dx_flat.reshape(x.shape).transpose(0, 3, 1, 2)
+        dx = dx_flat.reshape(dout.shape)
         return dx
 
     def twoDims_batchnormal_forward(self, A_pre, mode='train', momentum=0.9):
         if mode == 'train':
             if self.beta is None:
-                self.beta = np.zeros((A_pre.shape[-1],))
-                self.gamma = np.ones_like(self.beta)
-            mean = np.mean(A_pre, axis=0)
+                self.beta = p.zeros((A_pre.shape[-1],))
+                self.gamma = p.ones_like(self.beta)
+            mean = p.mean(A_pre, axis=0)
             xmu = A_pre - mean
-            var = np.mean(xmu ** 2, axis=0)
+            var = p.mean(xmu ** 2, axis=0)
 
             if self.running_mean is None:
-                self.running_mean = np.zeros(A_pre.shape[-1], dtype=A_pre.dtype)
-                self.running_var = np.zeros(A_pre.shape[-1], dtype=A_pre.dtype)
+                self.running_mean = p.zeros(A_pre.shape[-1], dtype=A_pre.dtype)
+                self.running_var = p.zeros(A_pre.shape[-1], dtype=A_pre.dtype)
             self.running_mean = momentum * self.running_mean + (1 - momentum) * mean
             self.running_var = momentum * self.running_var + (1 - momentum) * var
 
-            self.sqrtvar = np.sqrt(var + self.epsilon)
+            self.sqrtvar = p.sqrt(var + self.epsilon)
             ivar = 1. / self.sqrtvar
             xhat = xmu * ivar
             gammax = self.gamma * xhat
@@ -87,18 +85,18 @@ class BatchNormal:
         xhat, xmu, ivar, sqrtvar = self.caches
         del self.caches
         m, nx = pre_grad.shape
-        self.dbeta = np.sum(pre_grad, axis=0)
+        self.dbeta = p.sum(pre_grad, axis=0)
         dgammax = pre_grad
-        self.dgamma = np.sum(xhat * dgammax, axis=0)
+        self.dgamma = p.sum(xhat * dgammax, axis=0)
         dxhat = self.gamma * dgammax
-        divar = np.sum(xmu * dxhat, axis=0)
+        divar = p.sum(xmu * dxhat, axis=0)
         dxmu1 = dxhat * ivar
         dsqrtvar = -1. / (sqrtvar ** 2) * divar
         dvar = 0.5 * ivar * dsqrtvar
-        dsq = np.divide(1., m) * np.ones_like(pre_grad) * dvar
+        dsq = p.divide(1., m) * p.ones_like(pre_grad) * dvar
         dxmu2 = 2 * dsq * xmu
         dx1 = dxmu1 + dxmu2
-        dmu = -1 * np.sum(dx1, axis=0)
-        dx2 = np.divide(1., m) * np.ones_like(pre_grad) * dmu
+        dmu = -1 * p.sum(dx1, axis=0)
+        dx2 = p.divide(1., m) * p.ones_like(pre_grad) * dmu
         dx = dx1 + dx2
         return dx
