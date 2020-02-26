@@ -43,7 +43,6 @@ class Momentum(Optimize):
                     layer.batchNormal.beta -= learning_rate * self.v['V_dbeta' + str(i)]
                     layer.batchNormal.gamma -= learning_rate * self.v['V_dgamma' + str(i)]
                     del layer.batchNormal.dbeta, layer.batchNormal.dgamma
-        gc.collect()
 
 
 class Adam(Optimize):
@@ -103,7 +102,6 @@ class Adam(Optimize):
                     layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (
                             p.sqrt(S_dgamma_corrected) + epsilon)
                     del layer.batchNormal.dbeta, layer.batchNormal.dgamma
-        gc.collect()
 
 
 class BatchGradientDescent(Optimize):
@@ -120,4 +118,4 @@ class BatchGradientDescent(Optimize):
                     layer.batchNormal.beta -= learning_rate * layer.batchNormal.dbeta
                     layer.batchNormal.gamma -= learning_rate * layer.batchNormal.dgamma
                     del layer.batchNormal.dbeta, layer.batchNormal.dgamma
-        gc.collect()
+

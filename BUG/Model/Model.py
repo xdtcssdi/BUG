@@ -1,13 +1,15 @@
 import gc
+import os.path
 import pickle
 
-from BUG.load_package import p
 import numpy as np
 from tqdm import trange
-import os.path
+
 from BUG.Layers.Layer import Layer, Core, Convolution
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
+from BUG.load_package import p
+from goto import with_goto
 
 
 class Model(object):
@@ -64,9 +66,10 @@ class Model(object):
                 raise ValueError
 
     # 训练
+    @with_goto
     def fit(self, X_train, Y_train, X_test, Y_test, batch_size, is_normalizing=True, testing_percentage=0.2,
-              validation_percentage=0.2, learning_rate=0.075, iterator=2000,
-              lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model.h5'):
+            validation_percentage=0.2, learning_rate=0.075, iterator=2000,
+            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model.h5'):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
@@ -111,6 +114,8 @@ class Model(object):
         costs = []
 
         #  mini_batch
+        is_continue = False
+        label .point
         try:
             with trange(start_it, iterator) as tr:
                 for self.it in tr:
@@ -120,13 +125,19 @@ class Model(object):
                     tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.evaluate(X_test, Y_test))
                     costs.append(cost)
         except KeyboardInterrupt:
-            c = input('请输入(Y)保存模型以便继续训练')
+            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行')
             if c == 'Y' or c == 'y':
                 self.interrupt(self.permutation, self.it, t)
                 self.save_model(filename)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
+            elif c == 'C' or c == 'c':
+                is_continue = True
             else:
                 print('结束执行')
+        if is_continue:
+            start_it = self.it
+            is_continue = False
+            goto .point
 
     # 中断处理
     def interrupt(self, permutation, start_it, t):
