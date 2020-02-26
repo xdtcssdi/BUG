@@ -1,15 +1,16 @@
 from BUG.Layers.Layer import Convolution, Pooling, Core
 from BUG.Model.Model import Model
 from BUG.function.util import one_hot
-import numpy as cp
+from BUG.load_package import p
 from tensorflow import keras
+
 
 def LeNet5():
     fashion_mnist = keras.datasets.fashion_mnist
     (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
 
-    X_train = cp.reshape(train_images, (train_images.shape[0],1,28,28)) / 255.
-    X_test = cp.reshape(test_images, (test_images.shape[0], 1,28,28))[:10000] / 255.
+    X_train = p.reshape(train_images, (train_images.shape[0],1,28,28)) / 255.
+    X_test = p.reshape(test_images, (test_images.shape[0], 1,28,28))[:10000] / 255.
     Y_train=one_hot(train_labels, 10)
     Y_test = one_hot(test_labels, 10)[:10000]
     net = Model()
@@ -28,8 +29,7 @@ def LeNet5():
               lossMode='SoftmaxCrossEntry', optimize='Adam')
 
 
-
 if __name__ == '__main__':
-    cp.random.seed(1)
+    p.random.seed(1)
     LeNet5()
 

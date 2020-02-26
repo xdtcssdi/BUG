@@ -1,9 +1,11 @@
 import math
 
-from BUG.load_package import p
+import numpy
+
 from BUG.Layers.Normalization import BatchNormal
-from BUG.Layers.im2col import im2col_indices, col2im_indices
+from BUG.Layers.im2col import im2col_indices, col2im_indices_cpu, col2im_indices_gpu
 from BUG.function.Activation import ac_get_grad, ac_get
+from BUG.load_package import p
 
 
 class Layer(object):
@@ -83,7 +85,10 @@ class Convolution(Layer):
         dout_reshaped = dZ.transpose(1, 2, 3, 0).reshape(num_filters, -1)
         self.dW = dout_reshaped.dot(self.X_col.T).reshape(self.W.shape)
         dx_cols = self.W.reshape(num_filters, -1).T.dot(dout_reshaped)
-        dx = col2im_indices(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
+        if isinstance(dZ, numpy.ndarray):
+            dx = col2im_indices_cpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
+        else:
+            dx = col2im_indices_gpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
         dZ = ac_get_grad(dx, self.A_pre, self.activation)
         del self.A_pre, self.X_col
         return dZ
@@ -143,8 +148,8 @@ class Core(Layer):
         if self.W is None:
             if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
                 self.W = p.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
-                                           math.sqrt(6. / (pre_unit + self.unit_number)),
-                                           (pre_unit, self.unit_number))
+                                          math.sqrt(6. / (pre_unit + self.unit_number)),
+                                          (pre_unit, self.unit_number))
             elif self.activation == 'tanh' or self.activation == 'sigmoid':
                 self.W = p.random.uniform(-1., 1., (pre_unit, self.unit_number)) \
                          * p.sqrt(6. / (pre_unit + self.unit_number))
@@ -199,8 +204,12 @@ class Pooling(Layer):
         dout_reshaped = dZ.transpose(2, 3, 0, 1).flatten()
         dx_cols = p.zeros_like(x_cols)
         dx_cols[x_cols_argmax, p.arange(dx_cols.shape[1])] = dout_reshaped
-        dx = col2im_indices(dx_cols, (N * C, 1, H, W), self.filter_shape[0], self.filter_shape[1],
-                            padding=self.padding, stride=self.stride)
+        if isinstance(x, numpy.ndarray):
+            dx = col2im_indices_cpu(dx_cols, (N * C, 1, H, W), self.filter_shape[0], self.filter_shape[1],
+                                    padding=self.padding, stride=self.stride)
+        else:
+            dx = col2im_indices_gpu(dx_cols, (N * C, 1, H, W), self.filter_shape[0], self.filter_shape[1],
+                                    padding=self.padding, stride=self.stride)
         dx = dx.reshape(x.shape)
         return dx
 

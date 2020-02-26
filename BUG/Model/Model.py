@@ -2,6 +2,7 @@ import gc
 import pickle
 
 from BUG.load_package import p
+import numpy as np
 from tqdm import trange
 import os.path
 from BUG.Layers.Layer import Layer, Core, Convolution
@@ -69,6 +70,7 @@ class Model(object):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
+        print("X_train.type = %s, Y_train.type = %s" % (type(X_train), type(Y_train)))
         t = 0
 
         if os.path.isfile('caches.data'):
@@ -85,7 +87,7 @@ class Model(object):
         #  shuffle start
         if shuffle:
             if not os.path.isfile('caches.data'):
-                self.permutation = p.random.permutation(X_train.shape[0])
+                self.permutation = np.random.permutation(X_train.shape[0])
 
             X_train = X_train[self.permutation]
             Y_train = Y_train[self.permutation]
@@ -118,9 +120,13 @@ class Model(object):
                     tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.evaluate(X_test, Y_test))
                     costs.append(cost)
         except KeyboardInterrupt:
-            self.interrupt(self.permutation, self.it, t)
-            self.save_model(filename)
-            print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
+            c = input('请输入(Y)保存模型以便继续训练')
+            if c == 'Y' or c == 'y':
+                self.interrupt(self.permutation, self.it, t)
+                self.save_model(filename)
+                print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
+            else:
+                print('结束执行')
 
     # 中断处理
     def interrupt(self, permutation, start_it, t):
@@ -221,7 +227,7 @@ class Model(object):
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
-        return p.mean(in_cost)
+        return np.mean(in_cost)
 
     # 网络详情
     def summary(self):
