@@ -25,6 +25,8 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="builtins.input.shape" />
+          <option value="BUG.Model.Model.label" />
+          <option value="BUG.Model.Model.goto" />
         </list>
       </option>
     </inspection_tool>
