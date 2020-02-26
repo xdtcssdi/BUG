@@ -1,5 +1,12 @@
-from tqdm import tqdm
+import numpy as np
+
+from BUG.Layers.Layer import RNN
+
+def f(*aa):
+    print(aa)
+    aa[0][0] *= 100
+
 if __name__ == '__main__':
-    with tqdm(total=10000) as pbar:
-        for i in range(10000):
-            pbar.update(i)
+    a = np.array([1])
+    f(a,2,3,4)
+    print(a)

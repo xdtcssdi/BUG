@@ -1,6 +1,6 @@
 import gc
 from BUG.load_package import p
-from BUG.Layers.Layer import Convolution, Core
+from BUG.Layers.Layer import Convolution, Core, RNN
 
 
 class Optimize:
@@ -28,21 +28,26 @@ class Momentum(Optimize):
     def updata(self, t, learning_rate, it, iterator, beta=0.9):
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            if isinstance(layer, Core) or isinstance(layer, Convolution):
-                self.v['V_dW' + str(i)] = beta * self.v['V_dW' + str(i)] + (1 - beta) * layer.dW
-                self.v['V_db' + str(i)] = beta * self.v['V_db' + str(i)] + (1 - beta) * layer.db
-                layer.W -= learning_rate * self.v['V_dW' + str(i)]
-                layer.b -= learning_rate * self.v['V_db' + str(i)]
-                del layer.dW, layer.db
 
-                if layer.batchNormal is not None:
-                    self.v['V_dbeta' + str(i)] = beta * self.v['V_dbeta' + str(i)] + (
-                            1 - beta) * layer.batchNormal.dbeta
-                    self.v['V_dgamma' + str(i)] = beta * self.v['V_dgamma' + str(i)] + (
-                            1 - beta) * layer.batchNormal.dgamma
-                    layer.batchNormal.beta -= learning_rate * self.v['V_dbeta' + str(i)]
-                    layer.batchNormal.gamma -= learning_rate * self.v['V_dgamma' + str(i)]
-                    del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+            gradients_clip(layer.dW, layer.db)
+
+            self.v['V_dW' + str(i)] = beta * self.v['V_dW' + str(i)] + (1 - beta) * layer.dW
+            self.v['V_db' + str(i)] = beta * self.v['V_db' + str(i)] + (1 - beta) * layer.db
+            layer.W -= learning_rate * self.v['V_dW' + str(i)]
+            if isinstance(layer, RNN):
+                layer.Waa, layer.Wax = p.split(layer.W, [layer.n_a], axis=1)
+            layer.b -= learning_rate * self.v['V_db' + str(i)]
+            del layer.dW, layer.db
+
+            if layer.batchNormal is not None:
+                gradients_clip(layer.batchNormal.dbeta, layer.batchNormal.dgamma)
+                self.v['V_dbeta' + str(i)] = beta * self.v['V_dbeta' + str(i)] + (
+                        1 - beta) * layer.batchNormal.dbeta
+                self.v['V_dgamma' + str(i)] = beta * self.v['V_dgamma' + str(i)] + (
+                        1 - beta) * layer.batchNormal.dgamma
+                layer.batchNormal.beta -= learning_rate * self.v['V_dbeta' + str(i)]
+                layer.batchNormal.gamma -= learning_rate * self.v['V_dgamma' + str(i)]
+                del layer.batchNormal.dbeta, layer.batchNormal.dgamma
 
 
 class Adam(Optimize):
@@ -67,41 +72,43 @@ class Adam(Optimize):
 
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            if isinstance(layer, Core) or isinstance(layer, Convolution):
+            gradients_clip(layer.dW, layer.db)
+            self.v['V_dW' + str(i)] = beta1 * self.v['V_dW' + str(i)] + (1 - beta1) * layer.dW
+            self.v['V_db' + str(i)] = beta1 * self.v['V_db' + str(i)] + (1 - beta1) * layer.db
+            self.s['S_dW' + str(i)] = beta2 * self.s['S_dW' + str(i)] + (1 - beta2) * p.square(layer.dW)
+            self.s['S_db' + str(i)] = beta2 * self.s['S_db' + str(i)] + (1 - beta2) * p.square(layer.db)
+            V_dw_corrected = self.v['V_dW' + str(i)] / (1 - p.power(beta1, t))
+            V_db_corrected = self.v['V_db' + str(i)] / (1 - p.power(beta1, t))
+            S_dw_corrected = self.s['S_dW' + str(i)] / (1 - p.power(beta2, t))
+            S_db_corrected = self.s['S_db' + str(i)] / (1 - p.power(beta2, t))
 
-                self.v['V_dW' + str(i)] = beta1 * self.v['V_dW' + str(i)] + (1 - beta1) * layer.dW
-                self.v['V_db' + str(i)] = beta1 * self.v['V_db' + str(i)] + (1 - beta1) * layer.db
-                self.s['S_dW' + str(i)] = beta2 * self.s['S_dW' + str(i)] + (1 - beta2) * p.square(layer.dW)
-                self.s['S_db' + str(i)] = beta2 * self.s['S_db' + str(i)] + (1 - beta2) * p.square(layer.db)
-                V_dw_corrected = self.v['V_dW' + str(i)] / (1 - p.power(beta1, t))
-                V_db_corrected = self.v['V_db' + str(i)] / (1 - p.power(beta1, t))
-                S_dw_corrected = self.s['S_dW' + str(i)] / (1 - p.power(beta2, t))
-                S_db_corrected = self.s['S_db' + str(i)] / (1 - p.power(beta2, t))
+            layer.W -= learning_rate * V_dw_corrected / (p.sqrt(S_dw_corrected) + epsilon)
+            if isinstance(layer, RNN):
+                layer.Waa, layer.Wax = p.split(layer.W, [layer.n_a], axis=1)
+            layer.b -= learning_rate * V_db_corrected / (p.sqrt(S_db_corrected) + epsilon)
 
-                layer.W -= learning_rate * V_dw_corrected / (p.sqrt(S_dw_corrected) + epsilon)
-                layer.b -= learning_rate * V_db_corrected / (p.sqrt(S_db_corrected) + epsilon)
+            del layer.dW, layer.db
 
-                del layer.dW, layer.db
+            if layer.batchNormal is not None:
+                gradients_clip(layer.batchNormal.dbeta, layer.batchNormal.dgamma)
+                self.v['V_dbeta' + str(i)] = beta1 * self.v['V_dbeta' + str(i)] + (
+                        1 - beta1) * layer.batchNormal.dbeta
+                self.v['V_dgamma' + str(i)] = beta1 * self.v['V_dgamma' + str(i)] + (
+                        1 - beta1) * layer.batchNormal.dgamma
+                self.s['S_dbeta' + str(i)] = beta2 * self.s['S_dbeta' + str(i)] + (1 - beta2) * p.square(
+                    layer.batchNormal.dbeta)
+                self.s['S_dgamma' + str(i)] = beta2 * self.s['S_dgamma' + str(i)] + (1 - beta2) * p.square(
+                    layer.batchNormal.dgamma)
 
-                if layer.batchNormal is not None:
-                    self.v['V_dbeta' + str(i)] = beta1 * self.v['V_dbeta' + str(i)] + (
-                            1 - beta1) * layer.batchNormal.dbeta
-                    self.v['V_dgamma' + str(i)] = beta1 * self.v['V_dgamma' + str(i)] + (
-                            1 - beta1) * layer.batchNormal.dgamma
-                    self.s['S_dbeta' + str(i)] = beta2 * self.s['S_dbeta' + str(i)] + (1 - beta2) * p.square(
-                        layer.batchNormal.dbeta)
-                    self.s['S_dgamma' + str(i)] = beta2 * self.s['S_dgamma' + str(i)] + (1 - beta2) * p.square(
-                        layer.batchNormal.dgamma)
+                V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - p.power(beta1, t))
+                V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - p.power(beta1, t))
+                S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - p.power(beta2, t))
+                S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - p.power(beta2, t))
 
-                    V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - p.power(beta1, t))
-                    V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - p.power(beta1, t))
-                    S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - p.power(beta2, t))
-                    S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - p.power(beta2, t))
-
-                    layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (p.sqrt(S_dbeta_corrected) + epsilon)
-                    layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (
-                            p.sqrt(S_dgamma_corrected) + epsilon)
-                    del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+                layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (p.sqrt(S_dbeta_corrected) + epsilon)
+                layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (
+                        p.sqrt(S_dgamma_corrected) + epsilon)
+                del layer.batchNormal.dbeta, layer.batchNormal.dgamma
 
 
 class BatchGradientDescent(Optimize):
@@ -110,12 +117,22 @@ class BatchGradientDescent(Optimize):
 
     def updata(self, t, learning_rate, it, iterator):
         for layer in self.layers:
-            if isinstance(layer, Core) or isinstance(layer, Convolution):
-                layer.W -= learning_rate * layer.dW
-                layer.b -= learning_rate * layer.db
-                del layer.dW, layer.db
-                if layer.batchNormal is not None:
-                    layer.batchNormal.beta -= learning_rate * layer.batchNormal.dbeta
-                    layer.batchNormal.gamma -= learning_rate * layer.batchNormal.dgamma
-                    del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+            gradients_clip(layer.dW, layer.db)
+            layer.W -= learning_rate * layer.dW
+            if isinstance(layer, RNN):
+                layer.Waa, layer.Wax = p.split(layer.W, [layer.n_a], axis=1)
+
+            layer.b -= learning_rate * layer.db
+            del layer.dW, layer.db
+            if layer.batchNormal is not None:
+                gradients_clip(layer.batchNormal.dbeta, layer.batchNormal.dgamma)
+                layer.batchNormal.beta -= learning_rate * layer.batchNormal.dbeta
+                layer.batchNormal.gamma -= learning_rate * layer.batchNormal.dgamma
+                del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+
+
+#  梯度裁剪
+def gradients_clip(*args, maxValue=5):
+    for gradient in args:
+        p.clip(gradient, -maxValue, maxValue, gradient)
 

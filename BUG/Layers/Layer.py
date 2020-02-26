@@ -213,6 +213,58 @@ class Pooling(Layer):
         dx = dx.reshape(x.shape)
         return dx
 
+
+class RNN(Layer):
+
+    def __init__(self, n_x, n_y, T_x, T_y, n_a=50):
+        super(RNN, self).__init__()
+        self.n_a = n_a
+        self.T_x = T_x
+        self.T_y = T_y
+        self.init_params((n_x, n_y))
+
+    def init_params(self, n_x_y):
+        self.n_x, self.n_y = n_x_y
+        self.Waa = p.random.randn(self.n_a, self.n_a)
+        self.Wax = p.random.randn(self.n_a, self.n_x)
+        self.Wya = p.random.randn(self.n_y, self.n_a)
+        self.W = p.concatenate((self.Waa, self.Wax), axis=1)
+        self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
+        self.b = p.random.randn(self.n_a, 1)
+        self.by = p.random.randn(self.n_y, 1)
+        self.dWaa = p.zeros_like(self.Waa)
+        self.dWax = p.zeros_like(self.Wax)
+        self.db = p.zeros_like(self.b)
+
+    def forward(self, x, mode='train'):
+        n_x, m, T_x = x.shape
+        self.a = p.zeros((self.n_a, m, self.T_x))
+        self.y = p.zeros((self.n_y, m, self.T_y))
+        a_prev = self.a[..., 0]
+        xt = x
+        self.caches = []
+        for t in range(T_x):
+            a_next = p.tanh(p.dot(self.Waa, a_prev) + p.dot(self.Wax, xt[..., t]) + self.b)
+            y_next = ac_get(p.dot(self.Wya, a_next) + self.by, 'softmax')
+            self.caches.append([a_prev.copy(), a_next.copy(), xt[..., t]])
+            a_prev = a_next
+            self.a[..., t] = a_next
+            self.y[..., t] = y_next
+        return a_prev
+
+    def backward(self, dout):
+        da_prev = p.zeros_like(self.a[..., 0])
+        for t in reversed(range(self.T_x)):
+            a_prev, a_next, xt = self.caches[t]
+            dx = (1 - a_next**2) * (dout[..., t] + da_prev)
+            self.dWaa += p.dot(dx, a_prev.T)
+            self.dWax += p.dot(dx, xt.T)
+            self.db += p.sum(dx, axis=-1, keepdims=True)
+            #dxt = p.dot(self.Wax.T, dx)
+            da_prev = p.dot(self.Waa.T, dx)
+        del self.caches
+        self.dW = p.concatenate((self.dWaa, self.dWax), axis=1)
+        return da_prev
 # class Convolution(Layer):
 #     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
 #         super(Convolution, self).__init__(activation=activation)

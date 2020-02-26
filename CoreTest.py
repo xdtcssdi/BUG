@@ -5,6 +5,7 @@ from BUG.Model.Model import Model
 from BUG.function.util import load_data, one_hot
 from tensorflow import keras
 
+
 def f2():
     # 数据预处理
     path = ['/Users/oswin/Documents/BS/BUG/datasets/train_catvnoncat.h5',
