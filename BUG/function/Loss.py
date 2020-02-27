@@ -1,5 +1,6 @@
 from BUG.load_package import p
 
+
 class CrossEntry:
     def __init__(self, epsilon=1e-11):
         self.epsilon = epsilon
@@ -27,5 +28,5 @@ class SoftCategoricalCross_entropy:
         return p.squeeze(J)
 
     def backward(self, targets, outputs):
-        return -targets / p.clip(outputs, self.epsilon, 1.0-self.epsilon)
+        return p.clip(outputs - targets, self.epsilon, 1.0-self.epsilon)
 

@@ -199,7 +199,7 @@ class Model(object):
         #  损失函数对最后一层Z的导数
         pre_grad = self.cost.backward(y_train, pre_A)
         for layer in reversed(self.layers):
-            pre_grad = layer.backward(pre_grad)
+            pre_grad = layer.backward(pre_grad, y_train)
         # -----------
 
         #  更新参数

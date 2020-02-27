@@ -33,7 +33,7 @@ class Layer(object):
     def forward(self, A_pre, mode='train'):
         raise NotImplementedError
 
-    def backward(self, pre_grad):
+    def backward(self, pre_grad, Y=None):
         raise NotImplementedError
 
 
@@ -77,7 +77,7 @@ class Convolution(Layer):
         return ac_get(Z, self.activation)
 
     # 没问题
-    def backward(self, dZ):
+    def backward(self, dZ, Y=None):
         if self.batchNormal:
             dZ = self.batchNormal.backward(dZ)
         self.db = p.sum(dZ, axis=(0, 2, 3))
@@ -132,8 +132,8 @@ class Core(Layer):
             self.out = self.batchNormal.forward(self.out)
         return ac_get(self.out, self.activation)
 
-    def backward(self, dout):
-        dout = ac_get_grad(dout, self.out, self.activation)
+    def backward(self, dout, Y=None):
+        dout = ac_get_grad(dout, (self.out, Y), self.activation)
         if self.batchNormal:
             dout = self.batchNormal.backward(dout)
         dx = p.dot(dout, self.W.T)
@@ -196,7 +196,7 @@ class Pooling(Layer):
         self.cache = (A_pre, x_cols, x_cols_argmax)
         return out
 
-    def backward(self, dZ):
+    def backward(self, dZ, Y=None):
         x, x_cols, x_cols_argmax = self.cache
         del self.cache
         N, C, H, W = x.shape
@@ -252,7 +252,7 @@ class RNN(Layer):
             self.y[..., t] = y_next
         return a_prev
 
-    def backward(self, dout):
+    def backward(self, dout, Y=None):
         da_prev = p.zeros_like(self.a[..., 0])
         for t in reversed(range(self.T_x)):
             a_prev, a_next, xt = self.caches[t]

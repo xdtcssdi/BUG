@@ -1,12 +1,13 @@
 from BUG.load_package import p
 
+
 def Relu(Z):
     return p.maximum(.0, Z)
 
 
 def ReluGrad(Z):
-    res = p.zeros(Z.shape)
-    res[Z > 0] = 1
+    res = p.zeros(Z[0].shape)
+    res[Z[0] > 0] = 1
     return res
 
 
@@ -15,7 +16,7 @@ def Sigmoid(Z):
 
 
 def SigmoidGrad(Z):
-    tmp = Sigmoid(Z)
+    tmp = Sigmoid(Z[0])
     return tmp * (1 - tmp)
 
 
@@ -24,7 +25,7 @@ def TanH(Z):
 
 
 def TanHGrad(Z):
-    return 1 - p.tanh(Z) ** 2
+    return 1 - p.tanh(Z[0]) ** 2
 
 
 def Leak_Relu(Z):
@@ -32,8 +33,8 @@ def Leak_Relu(Z):
 
 
 def Leak_ReluGrad(Z):
-    res = p.full(Z.shape, 0.01)
-    res[Z > 0] = 1
+    res = p.full(Z[0].shape, 0.01)
+    res[Z[0] > 0] = 1
     return res
 
 
@@ -44,9 +45,10 @@ def SoftmaxStep(Z):
 
 
 def SoftmaxGradStep(Z):
-    idx = p.argmax(Z, axis=1)
-    Z[:, idx] -= 1
-    return Z
+    output, target = Z
+    idx = p.argmax(target, axis=1)
+    output[:, idx] -= 1
+    return output
 
 
 def ac_get(Z, activation='relu'):
