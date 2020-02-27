@@ -23,9 +23,9 @@ def f2():
     net.add(Core(16, batchNormal=False))
     net.add(Core(1, "sigmoid"))
     net.compile()
-    net.fit(X_train, Y_train, X_test, Y_test, batch_size=X_train.shape[0]//10,is_normalizing=False,
-              testing_percentage=0, validation_percentage=0, lossMode='CrossEntry',
-              learning_rate=0.001, iterator=1000, optimize='Adam')
+    net.fit(X_train, Y_train, X_test, Y_test, batch_size=X_train.shape[0]//10,
+            is_normalizing=False, lossMode='CrossEntry',
+            learning_rate=0.001, iterator=1000, optimize='Adam')
 
 
 def f3():
