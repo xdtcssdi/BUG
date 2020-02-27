@@ -4,6 +4,8 @@ import pickle
 import h5py
 import numpy as np
 
+from BUG.Layers.Layer import RNN
+from BUG.function.Activation import ac_get
 from BUG.load_package import p
 
 
@@ -81,3 +83,35 @@ def one_hot(labels, nb_classes=None):
 
 def unhot(one_hot_labels):
     return np.argmax(one_hot_labels, axis=-1)
+
+
+def words_between_idx(doc):
+    chars = list(set(doc))
+    chars.sort()
+    return {ch: i for i, ch in enumerate(chars)}, {i: ch for i, ch in enumerate(chars)}
+
+
+def sample(layer, words_between_idx, max_chars=50, seed=0):
+    if not isinstance(layer, RNN):
+        raise AttributeError
+    n_a, n_x = layer.Wax.shape
+    a_prev = p.zeros((n_a, 1))
+    x = p.zeros_like((n_x, 1))
+
+    count = 0
+    idx = -1
+    indices = []
+    newschar = words_between_idx['\n']
+    while newschar != idx and count != max_chars:
+        p.random.seed(count+seed)
+        a_next = p.tanh(p.dot(layer.Waa, a_prev) + p.dot(layer.Wax, x) + layer.b)
+        y = ac_get(p.dot(layer.Wya, a_next) + layer.by, 'softmax')  # 每个字符的概率
+        idx = p.random.choice(list(range(n_x)), p=y.ravel())
+        indices.append(idx)
+        x = y
+        x[idx] = 1
+        a_prev = a_next
+
+        count += 1
+        seed += 1
+    return indices

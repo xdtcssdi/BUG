@@ -1,5 +1,6 @@
 from BUG.load_package import p
 
+
 class CrossEntry:
     def __init__(self, epsilon=1e-11):
         self.epsilon = epsilon

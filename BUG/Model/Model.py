@@ -67,7 +67,7 @@ class Model(object):
 
     # 训练
     @with_goto
-    def fit(self, X_train, Y_train, X_test, Y_test, batch_size, is_normalizing=True, testing_percentage=0.2,
+    def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000,
             lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model.h5'):
         assert not isinstance(X_train, p.float)
@@ -97,8 +97,9 @@ class Model(object):
         #  shuffle end
 
         #  划分数据
-        X_train, Y_train, _, __, X_valid, Y_valid = \
-            self.PartitionDataset(X_train, Y_train, testing_percentage, validation_percentage)
+        if X_test is None and Y_test is None:
+            X_train, Y_train, X_test, Y_test, X_valid, Y_valid = \
+                self.PartitionDataset(X_train, Y_train, testing_percentage, validation_percentage)
         #  -------------
 
         # 初始化损失结构
@@ -198,7 +199,7 @@ class Model(object):
         #  损失函数对最后一层Z的导数
         pre_grad = self.cost.backward(y_train, pre_A)
         for layer in reversed(self.layers):
-            pre_grad = layer.backward(pre_grad)
+            pre_grad = layer.backward(pre_grad, y_train)
         # -----------
 
         #  更新参数
