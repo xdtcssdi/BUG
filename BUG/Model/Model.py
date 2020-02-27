@@ -213,7 +213,7 @@ class Model(object):
                 raise ValueError
         gc.collect()
         t += 1
-        self.optimize.updata(t, learning_rate, it, iterator)
+        self.optimize.update(t, learning_rate, it, iterator)
 
         return loss
 

@@ -21,10 +21,9 @@ def LeNet5():
     net.add(Pooling(filter_shape=(2, 2), stride=2, mode='max', paddingMode='valid'))
     net.add(Core(120, batchNormal=True))
     net.add(Core(84, batchNormal=True))
-    net.add(Core(32, batchNormal=True))
     net.add(Core(10, batchNormal=True, activation="softmax"))
     net.compile()
-    net.fit(X_train, Y_train, X_test, Y_test, batch_size=10000,
+    net.fit(X_train, Y_train, X_test, Y_test, batch_size=100,
             learning_rate=0.0001, is_normalizing=False,
             validation_percentage=0, testing_percentage=0,
             lossMode='SoftmaxCrossEntry', optimize='Adam')

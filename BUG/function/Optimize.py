@@ -1,13 +1,13 @@
 import gc
 from BUG.load_package import p
-from BUG.Layers.Layer import Convolution, Core, RNN
+from BUG.Layers.Layer import Convolution, Core, RNN, Pooling
 
 
 class Optimize:
     def __init__(self, layers):
         self.layers = layers
 
-    def updata(self, *arg):
+    def update(self, *arg):
         pass
 
 
@@ -18,17 +18,19 @@ class Momentum(Optimize):
         self.s = {}
         for i in range(len(layers)):
             layer = self.layers[i]
-            if isinstance(layer, Core) or isinstance(layer, Convolution):
-                self.v['V_dW' + str(i)] = p.zeros(layer.W.shape)
-                self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
-                if layer.batchNormal is not None:
-                    self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
-                    self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
+            if isinstance(layer, Pooling):
+                continue
+            self.v['V_dW' + str(i)] = p.zeros(layer.W.shape)
+            self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
+            if layer.batchNormal is not None:
+                self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
+                self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
 
-    def updata(self, t, learning_rate, it, iterator, beta=0.9):
+    def update(self, t, learning_rate, it, iterator, beta=0.9):
         for i in range(len(self.layers)):
             layer = self.layers[i]
-
+            if isinstance(layer, Pooling):
+                continue
             gradients_clip(layer.dW, layer.db)
 
             self.v['V_dW' + str(i)] = beta * self.v['V_dW' + str(i)] + (1 - beta) * layer.dW
@@ -57,21 +59,24 @@ class Adam(Optimize):
         self.s = {}
         for i in range(len(layers)):
             layer = self.layers[i]
-            if isinstance(layer, (Core, Convolution)):
-                self.v['V_dW' + str(i)] = p.zeros(layer.W.shape)
-                self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
-                self.s['S_dW' + str(i)] = p.zeros(layer.W.shape)
-                self.s['S_db' + str(i)] = p.zeros(layer.b.shape)
-                if layer.batchNormal is not None:
-                    self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
-                    self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
-                    self.s['S_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
-                    self.s['S_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
+            if isinstance(layer, Pooling):
+                continue
+            self.v['V_dW' + str(i)] = p.zeros(layer.W.shape)
+            self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
+            self.s['S_dW' + str(i)] = p.zeros(layer.W.shape)
+            self.s['S_db' + str(i)] = p.zeros(layer.b.shape)
+            if layer.batchNormal is not None:
+                self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
+                self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
+                self.s['S_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
+                self.s['S_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
 
-    def updata(self, t, learning_rate, it, iterator, beta1=0.9, beta2=0.999, epsilon=1e-8):
+    def update(self, t, learning_rate, it, iterator, beta1=0.9, beta2=0.999, epsilon=1e-8):
 
         for i in range(len(self.layers)):
             layer = self.layers[i]
+            if isinstance(layer, Pooling):
+                continue
             gradients_clip(layer.dW, layer.db)
             self.v['V_dW' + str(i)] = beta1 * self.v['V_dW' + str(i)] + (1 - beta1) * layer.dW
             self.v['V_db' + str(i)] = beta1 * self.v['V_db' + str(i)] + (1 - beta1) * layer.db
@@ -115,8 +120,10 @@ class BatchGradientDescent(Optimize):
     def __init__(self, layers):
         super(BatchGradientDescent, self).__init__(layers)
 
-    def updata(self, t, learning_rate, it, iterator):
+    def update(self, t, learning_rate, it, iterator):
         for layer in self.layers:
+            if isinstance(layer, Pooling):
+                continue
             gradients_clip(layer.dW, layer.db)
             layer.W -= learning_rate * layer.dW
             if isinstance(layer, RNN):

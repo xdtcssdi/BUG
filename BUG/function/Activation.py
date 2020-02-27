@@ -1,5 +1,6 @@
 from BUG.load_package import p
 
+
 def Relu(Z):
     return p.maximum(.0, Z)
 
@@ -38,13 +39,12 @@ def Leak_ReluGrad(Z):
 
 
 def SoftmaxStep(Z):
-    shift_scores = Z - p.max(Z, axis=1).reshape(-1, 1) #  在每行中10个数都减去该行中最大的数字
-    A = p.exp(shift_scores) / p.sum(p.exp(shift_scores), axis=1).reshape(-1, 1)
-    return A
+    shift_scores = Z - p.max(Z, axis=1, keepdims=True)  # 在每行中10个数都减去该行中最大的数字
+    return p.exp(shift_scores) / p.sum(p.exp(shift_scores), axis=1, keepdims=True)
 
 
 def SoftmaxGradStep(Z):
-    return p.ones(Z.shape)
+    return p.ones_like(Z)
 
 
 def ac_get(Z, activation='relu'):
