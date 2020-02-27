@@ -22,12 +22,10 @@ class SoftCategoricalCross_entropy:
         self.epsilon = epsilon
 
     def forward(self, targets, outputs):
-        cost = - targets * p.log(p.clip(outputs, self.epsilon, 1.0-self.epsilon)) - \
-               (1 - targets) * p.log(p.clip(1 - outputs, self.epsilon, 1.0-self.epsilon))
+        cost = - targets * p.log(p.clip(outputs, self.epsilon, 1.0-self.epsilon))
         J = p.mean(p.sum(cost, axis=1, keepdims=True), axis=0)
         return p.squeeze(J)
 
     def backward(self, targets, outputs):
-        return -targets / p.clip(outputs, self.epsilon, 1.0-self.epsilon) + \
-               (1 - targets) / p.clip(1 - outputs, self.epsilon, 1.0-self.epsilon)
+        return -targets / p.clip(outputs, self.epsilon, 1.0-self.epsilon)
 

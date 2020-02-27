@@ -237,7 +237,7 @@ class RNN(Layer):
         self.db = p.zeros_like(self.b)
 
     def forward(self, x, mode='train'):
-        n_x, m, T_x = x.shape
+        n_x, m, T_x = x.shape  # 字符数, 数量 , 时间步
         self.a = p.zeros((self.n_a, m, self.T_x))
         self.y = p.zeros((self.n_y, m, self.T_y))
         a_prev = self.a[..., 0]
@@ -265,6 +265,8 @@ class RNN(Layer):
         del self.caches
         self.dW = p.concatenate((self.dWaa, self.dWax), axis=1)
         return da_prev
+
+
 # class Convolution(Layer):
 #     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
 #         super(Convolution, self).__init__(activation=activation)

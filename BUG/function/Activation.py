@@ -44,7 +44,9 @@ def SoftmaxStep(Z):
 
 
 def SoftmaxGradStep(Z):
-    return p.ones(Z.shape)
+    idx = p.argmax(Z, axis=1)
+    Z[:, idx] -= 1
+    return Z
 
 
 def ac_get(Z, activation='relu'):
@@ -73,7 +75,7 @@ def ac_get_grad(dA, Z, activation='relu'):
     elif activation == 'leak_relu':
         dZ = dA * Leak_ReluGrad(Z)
     elif activation == 'softmax':
-        dZ = dA * SoftmaxGradStep(Z)
+        dZ = SoftmaxGradStep(Z)
     elif activation == 'relu':
         dZ = dA * ReluGrad(Z)
     elif activation is None:
