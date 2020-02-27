@@ -23,7 +23,7 @@ def LeNet5():
     net.add(Core(84, batchNormal=True))
     net.add(Core(10, batchNormal=True, activation="softmax"))
     net.compile()
-    net.fit(X_train, Y_train, X_test, Y_test, batch_size=100,
+    net.fit(X_train, Y_train, X_test, Y_test, batch_size=10,
             learning_rate=0.0001, is_normalizing=False,
             validation_percentage=0, testing_percentage=0,
             lossMode='SoftmaxCrossEntry', optimize='Adam')

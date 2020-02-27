@@ -33,7 +33,7 @@ class Layer(object):
     def forward(self, A_pre, mode='train'):
         raise NotImplementedError
 
-    def backward(self, pre_grad, Y=None):
+    def backward(self, pre_grad):
         raise NotImplementedError
 
 
@@ -73,11 +73,12 @@ class Convolution(Layer):
         self.init_params(A_pre)
         self.A_pre = A_pre
         output_data = self.conv(A_pre, self.W, self.b, self.stride, self.padding)
-        Z = self.batchNormal.forward(output_data, mode) if self.batchNormal else output_data
-        return ac_get(Z, self.activation)
+        self.Z = self.batchNormal.forward(output_data, mode) if self.batchNormal else output_data
+        return ac_get(self.Z, self.activation)
 
     # 没问题
-    def backward(self, dZ, Y=None):
+    def backward(self, dout):
+        dZ = ac_get_grad(dout, self.Z, self.activation)
         if self.batchNormal:
             dZ = self.batchNormal.backward(dZ)
         self.db = p.sum(dZ, axis=(0, 2, 3))
@@ -89,9 +90,8 @@ class Convolution(Layer):
             dx = col2im_indices_cpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
         else:
             dx = col2im_indices_gpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
-        dZ = ac_get_grad(dx, self.A_pre, self.activation)
         del self.A_pre, self.X_col
-        return dZ
+        return dx
 
     @property
     def params(self):
@@ -127,19 +127,18 @@ class Core(Layer):
         x = x.reshape(x.shape[0], -1)
         self.init_params(x)
         self.x = x
-        self.out = p.dot(self.x, self.W) + self.b
+        self.Z = p.dot(self.x, self.W) + self.b
         if self.batchNormal:
-            self.out = self.batchNormal.forward(self.out)
-        return ac_get(self.out, self.activation)
+            self.Z = self.batchNormal.forward(self.Z)
+        return ac_get(self.Z, self.activation)
 
-    def backward(self, dout, Y=None):
-        dout = ac_get_grad(dout, (self.out, Y), self.activation)
+    def backward(self, dout):
+        dout = ac_get_grad(dout, self.Z, self.activation)
         if self.batchNormal:
             dout = self.batchNormal.backward(dout)
         dx = p.dot(dout, self.W.T)
         self.dW = p.dot(self.x.T, dout)
         self.db = p.sum(dout, axis=0)
-
         dx = dx.reshape(self.original_x_shape)  # 还原输入数据的形状（对应张量）
         return dx
 
@@ -196,7 +195,7 @@ class Pooling(Layer):
         self.cache = (A_pre, x_cols, x_cols_argmax)
         return out
 
-    def backward(self, dZ, Y=None):
+    def backward(self, dZ):
         x, x_cols, x_cols_argmax = self.cache
         del self.cache
         N, C, H, W = x.shape
@@ -252,7 +251,7 @@ class RNN(Layer):
             self.y[..., t] = y_next
         return a_prev
 
-    def backward(self, dout, Y=None):
+    def backward(self, dout):
         da_prev = p.zeros_like(self.a[..., 0])
         for t in reversed(range(self.T_x)):
             a_prev, a_next, xt = self.caches[t]
