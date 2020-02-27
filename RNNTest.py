@@ -18,7 +18,7 @@ def strArray2intArray(chars_size, data):
 
 
 if __name__ == '__main__':
-    with open(r'/Users/oswin/Documents/BS/BUG/datasets/dinos.txt') as f:
+    with open(r'/dinos.txt') as f:
         data = f.read()
     word_to_idx, idx_to_word = words_between_idx(data)
     n_x = len(word_to_idx)

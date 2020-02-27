@@ -186,20 +186,20 @@ class Model(object):
     # 单步训练
     def train_step(self, x_train, y_train, mode, learning_rate, t, optimize, it, iterator):
         # 前向传播
-        pre_A = x_train
+        output = x_train
         for layer in self.layers:
-            pre_A = layer.forward(pre_A, mode)
+            output = layer.forward(output, mode)
 
         # 损失计算
-        loss = self.cost.forward(y_train, pre_A)
+        loss = self.cost.forward(y_train, output)
         # -------
 
         # 反向传播
 
         #  损失函数对最后一层Z的导数
-        pre_grad = self.cost.backward(y_train, pre_A)
+        dout = self.cost.backward(y_train, output)
         for layer in reversed(self.layers):
-            pre_grad = layer.backward(pre_grad)
+            dout = layer.backward(dout)
         # -----------
 
         #  更新参数
