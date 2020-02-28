@@ -110,7 +110,7 @@ class Model(object):
             X_train, Y_train, X_test, Y_test, X_valid, Y_valid = \
                 self.PartitionDataset(X_train, Y_train, testing_percentage, validation_percentage)
         #  -------------
-
+        self.lossMode = lossMode
         # 初始化损失结构
         if lossMode == 'SoftmaxCrossEntry':
             self.cost = SoftCategoricalCross_entropy()
