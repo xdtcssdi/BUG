@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 from tqdm import trange
 
-from BUG.Layers.Layer import Layer, Core, Convolution
+from BUG.Layers.Layer import Layer, Core, Convolution, Pooling
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
 from BUG.load_package import p
@@ -69,7 +69,7 @@ class Model(object):
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000,
-            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model.h5'):
+            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model'):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
@@ -258,9 +258,15 @@ class Model(object):
 
     # 保存模型参数
     def save_model(self, filename):
-        with open(filename, 'wb') as f:
+        params = []
+        for layer in self.layers:
+            if not isinstance(layer, Pooling):
+                params.append(layer.W)
+                params.append(layer.b)
+        p.savez_compressed(filename+'.npz', *params)
+
+        with open(filename+'.obj', 'wb') as f:
             pickle.dump(self.optimize, f)
-            pickle.dump(self.layers, f)
             pickle.dump(self.evaluate, f)
             pickle.dump(self.is_normalizing, f)
             pickle.dump(self.ndim, f)
@@ -270,9 +276,18 @@ class Model(object):
 
     # 加载模型参数
     def load_model(self, filename):
-        with open(filename, 'rb') as f:
+
+        r = p.load(filename+'.npz')
+        idx = 0
+        for layer in self.layers:
+            if isinstance(layer, Pooling):
+                continue
+            layer.W = r['arr_'+str(idx)]
+            layer.b = r['arr_'+str(idx+1)]
+            idx += 2
+
+        with open(filename+'.obj', 'rb') as f:
             self.optimize = pickle.load(f)
-            self.layers = pickle.load(f)
             self.optimize.layers = self.layers
             self.evaluate = pickle.load(f)
             self.is_normalizing = pickle.load(f)
