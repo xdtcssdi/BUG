@@ -68,7 +68,7 @@ class Model(object):
     # 训练
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True, testing_percentage=0.2,
-            validation_percentage=0.2, learning_rate=0.075, iterator=2000,
+            validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
             lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model'):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
@@ -79,7 +79,9 @@ class Model(object):
         if os.path.isfile('caches.data'):
             with open('caches.data', 'rb+') as f:
                 data = pickle.load(f)
-                self.permutation, start_it, t = data
+                start_it, t = data
+                self.permutation = p.load('caches.npz')['permutation']
+
             self.load_model(filename)
 
         #  Normalizing inputs
@@ -89,7 +91,7 @@ class Model(object):
 
         #  shuffle start
         if shuffle:
-            if not os.path.isfile('caches.data'):
+            if not os.path.isfile('caches.npz'):
                 self.permutation = np.random.permutation(X_train.shape[0])
 
             X_train = X_train[self.permutation]
@@ -124,9 +126,12 @@ class Model(object):
                     cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize, self.it,
                                            iterator)
                     tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.evaluate(X_test, Y_test))
+                    if self.it != 0 and self.it % save_epoch == 0:
+                        self.interrupt(self.permutation, self.it, t)
+                        self.save_model(filename)
                     costs.append(cost)
         except KeyboardInterrupt:
-            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行')
+            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
                 self.interrupt(self.permutation, self.it, t)
                 self.save_model(filename)
@@ -143,8 +148,10 @@ class Model(object):
     # 中断处理
     def interrupt(self, permutation, start_it, t):
         with open('caches.data', 'wb') as f:
-            data = (permutation, start_it, t)
+            data = (start_it, t)
+            p.savez_compressed('caches.npz', permutation=permutation)
             pickle.dump(data, f)
+
 
     # 多输出评估
     def evaluate_many(self, X_train, Y_train):
