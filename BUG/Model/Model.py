@@ -3,13 +3,13 @@ import os.path
 import pickle
 
 import numpy as np
+from goto import with_goto
 from tqdm import trange
 
-from BUG.Layers.Layer import Layer, Core, Convolution, Pooling
+from BUG.Layers.Layer import Layer, Core, Convolution
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
 from BUG.load_package import p
-from goto import with_goto
 
 
 class Model(object):
@@ -68,9 +68,11 @@ class Model(object):
 
     # 训练
     @with_goto
-    def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True, testing_percentage=0.2,
+    def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True,
+            testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
-            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model', path='data'):
+            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model',
+            path='data'):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
@@ -80,9 +82,9 @@ class Model(object):
         if not os.path.exists(path):
             os.mkdir(path)
 
-        if os.path.isfile(path+ os.sep + 'caches.npz'):
-            with open(path+ os.sep + 'caches.npz', 'rb+') as f:
-                r = p.load(path+ os.sep +'caches.npz')
+        if os.path.isfile(path + os.sep + 'caches.npz'):
+            with open(path + os.sep + 'caches.npz', 'rb+') as f:
+                r = p.load(path + os.sep + 'caches.npz')
                 start_it = r['start_it']
                 t = r['t']
                 self.permutation = r['permutation']
@@ -96,7 +98,7 @@ class Model(object):
 
         #  shuffle start
         if shuffle:
-            if not os.path.isfile(path+ os.sep + 'caches.npz'):
+            if not os.path.isfile(path + os.sep + 'caches.npz'):
                 self.permutation = np.random.permutation(X_train.shape[0])
 
             X_train = X_train[self.permutation]
@@ -123,7 +125,7 @@ class Model(object):
 
         #  mini_batch
         is_continue = False
-        label .point
+        label.point
         try:
             with trange(start_it, iterator) as tr:
                 for self.it in tr:
@@ -148,7 +150,7 @@ class Model(object):
         if is_continue:
             start_it = self.it
             is_continue = False
-            goto .point
+            goto.point
 
     # 中断处理
     def interrupt(self, path, permutation, start_it, t):
@@ -267,25 +269,25 @@ class Model(object):
         print('y_hat')
 
     # 保存模型参数
-    def save_model(self,path, filename):
+    def save_model(self, path, filename):
         for layer in self.layers:
             layer.save_params(path, filename)
 
-        with open(path + os.sep + filename+'.obj', 'wb') as f:
+        with open(path + os.sep + filename + '.obj', 'wb') as f:
             pickle.dump(self.optimizeMode, f)
-            pickle.dump(self.evaluate, f)
+            pickle.dump(self.lossMode, f)
             pickle.dump(self.is_normalizing, f)
             pickle.dump(self.ndim, f)
-            if self.is_normalizing and self.ndim == 2:
-                p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
+        if self.is_normalizing and self.ndim == 2:
+            p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
 
     # 加载模型参数
-    def load_model(self,path, filename):
+    def load_model(self, path, filename):
 
         for layer in self.layers:
             layer.load_params(path, filename)
 
-        with open(path+ os.sep + filename+'.obj', 'rb') as f:
+        with open(path + os.sep + filename + '.obj', 'rb') as f:
             self.optimizeMode = pickle.load(f)
             if self.optimizeMode == 'Adam':
                 self.optimizer = Optimize.Adam(self.layers)
@@ -296,10 +298,19 @@ class Model(object):
             else:
                 raise ValueError
 
-            self.evaluate = pickle.load(f)
+            self.lossMode = pickle.load(f)
+            if self.lossMode == 'SoftmaxCrossEntry':
+                self.cost = SoftCategoricalCross_entropy()
+                self.evaluate = self.evaluate_many
+            elif self.lossMode == 'CrossEntry':
+                self.cost = CrossEntry()
+                self.evaluate = self.evaluate_one
+            else:
+                raise ValueError
+
             self.is_normalizing = pickle.load(f)
             self.ndim = pickle.load(f)
-            if self.is_normalizing and self.ndim == 2:
-                r = p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
-                self.u = r['u']
-                self.var = r['var']
+        if self.is_normalizing and self.ndim == 2:
+            r = p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
+            self.u = r['u']
+            self.var = r['var']
