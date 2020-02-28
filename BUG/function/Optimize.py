@@ -22,9 +22,9 @@ class Momentum(Optimize):
                 continue
             self.v['V_dW' + str(i)] = p.zeros(layer.W.shape)
             self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
-            if layer.batchNormal is not None:
-                self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
-                self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
+            if layer.batch_normal is not None:
+                self.v['V_dbeta' + str(i)] = p.zeros(layer.batch_normal.dbeta.shape)
+                self.v['V_dgamma' + str(i)] = p.zeros(layer.batch_normal.dgamma.shape)
 
     def update(self, t, learning_rate, it, iterator, beta=0.9):
         for i in range(len(self.layers)):
@@ -41,15 +41,15 @@ class Momentum(Optimize):
             layer.b -= learning_rate * self.v['V_db' + str(i)]
             del layer.dW, layer.db
 
-            if layer.batchNormal is not None:
-                gradients_clip(layer.batchNormal.dbeta, layer.batchNormal.dgamma)
+            if layer.batch_normal is not None:
+                gradients_clip(layer.batch_normal.dbeta, layer.batch_normal.dgamma)
                 self.v['V_dbeta' + str(i)] = beta * self.v['V_dbeta' + str(i)] + (
-                        1 - beta) * layer.batchNormal.dbeta
+                        1 - beta) * layer.batch_normal.dbeta
                 self.v['V_dgamma' + str(i)] = beta * self.v['V_dgamma' + str(i)] + (
-                        1 - beta) * layer.batchNormal.dgamma
-                layer.batchNormal.beta -= learning_rate * self.v['V_dbeta' + str(i)]
-                layer.batchNormal.gamma -= learning_rate * self.v['V_dgamma' + str(i)]
-                del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+                        1 - beta) * layer.batch_normal.dgamma
+                layer.batch_normal.beta -= learning_rate * self.v['V_dbeta' + str(i)]
+                layer.batch_normal.gamma -= learning_rate * self.v['V_dgamma' + str(i)]
+                del layer.batch_normal.dbeta, layer.batch_normal.dgamma
 
 
 class Adam(Optimize):
@@ -65,11 +65,11 @@ class Adam(Optimize):
             self.v['V_db' + str(i)] = p.zeros(layer.b.shape)
             self.s['S_dW' + str(i)] = p.zeros(layer.W.shape)
             self.s['S_db' + str(i)] = p.zeros(layer.b.shape)
-            if layer.batchNormal is not None:
-                self.v['V_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
-                self.v['V_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
-                self.s['S_dbeta' + str(i)] = p.zeros(layer.batchNormal.dbeta.shape)
-                self.s['S_dgamma' + str(i)] = p.zeros(layer.batchNormal.dgamma.shape)
+            if layer.batch_normal is not None:
+                self.v['V_dbeta' + str(i)] = p.zeros(layer.batch_normal.beta.shape)
+                self.v['V_dgamma' + str(i)] = p.zeros(layer.batch_normal.gamma.shape)
+                self.s['S_dbeta' + str(i)] = p.zeros(layer.batch_normal.beta.shape)
+                self.s['S_dgamma' + str(i)] = p.zeros(layer.batch_normal.gamma.shape)
 
     def update(self, t, learning_rate, it, iterator, beta1=0.9, beta2=0.999, epsilon=1e-8):
 
@@ -94,26 +94,26 @@ class Adam(Optimize):
 
             del layer.dW, layer.db
 
-            if layer.batchNormal is not None:
-                gradients_clip(layer.batchNormal.dbeta, layer.batchNormal.dgamma)
+            if layer.batch_normal is not None:
+                gradients_clip(layer.batch_normal.dbeta, layer.batch_normal.dgamma)
                 self.v['V_dbeta' + str(i)] = beta1 * self.v['V_dbeta' + str(i)] + (
-                        1 - beta1) * layer.batchNormal.dbeta
+                        1 - beta1) * layer.batch_normal.dbeta
                 self.v['V_dgamma' + str(i)] = beta1 * self.v['V_dgamma' + str(i)] + (
-                        1 - beta1) * layer.batchNormal.dgamma
+                        1 - beta1) * layer.batch_normal.dgamma
                 self.s['S_dbeta' + str(i)] = beta2 * self.s['S_dbeta' + str(i)] + (1 - beta2) * p.square(
-                    layer.batchNormal.dbeta)
+                    layer.batch_normal.dbeta)
                 self.s['S_dgamma' + str(i)] = beta2 * self.s['S_dgamma' + str(i)] + (1 - beta2) * p.square(
-                    layer.batchNormal.dgamma)
+                    layer.batch_normal.dgamma)
 
                 V_dbeta_corrected = self.v['V_dbeta' + str(i)] / (1 - p.power(beta1, t))
                 V_dgamma_corrected = self.v['V_dgamma' + str(i)] / (1 - p.power(beta1, t))
                 S_dbeta_corrected = self.s['S_dbeta' + str(i)] / (1 - p.power(beta2, t))
                 S_dgamma_corrected = self.s['S_dgamma' + str(i)] / (1 - p.power(beta2, t))
 
-                layer.batchNormal.beta -= learning_rate * V_dbeta_corrected / (p.sqrt(S_dbeta_corrected) + epsilon)
-                layer.batchNormal.gamma -= learning_rate * V_dgamma_corrected / (
+                layer.batch_normal.beta -= learning_rate * V_dbeta_corrected / (p.sqrt(S_dbeta_corrected) + epsilon)
+                layer.batch_normal.gamma -= learning_rate * V_dgamma_corrected / (
                         p.sqrt(S_dgamma_corrected) + epsilon)
-                del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+                del layer.batch_normal.dbeta, layer.batch_normal.dgamma
 
 
 class BatchGradientDescent(Optimize):
@@ -131,11 +131,11 @@ class BatchGradientDescent(Optimize):
 
             layer.b -= learning_rate * layer.db
             del layer.dW, layer.db
-            if layer.batchNormal is not None:
-                gradients_clip(layer.batchNormal.dbeta, layer.batchNormal.dgamma)
-                layer.batchNormal.beta -= learning_rate * layer.batchNormal.dbeta
-                layer.batchNormal.gamma -= learning_rate * layer.batchNormal.dgamma
-                del layer.batchNormal.dbeta, layer.batchNormal.dgamma
+            if layer.batch_normal is not None:
+                gradients_clip(layer.batch_normal.dbeta, layer.batch_normal.dgamma)
+                layer.batch_normal.beta -= learning_rate * layer.batch_normal.dbeta
+                layer.batch_normal.gamma -= learning_rate * layer.batch_normal.dgamma
+                del layer.batch_normal.dbeta, layer.batch_normal.dgamma
 
 
 #  梯度裁剪

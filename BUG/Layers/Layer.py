@@ -1,6 +1,6 @@
 import math
 
-import numpy
+import numpy, os
 
 from BUG.Layers.Normalization import BatchNormal
 from BUG.Layers.im2col import im2col_indices, col2im_indices_cpu, col2im_indices_gpu
@@ -22,7 +22,7 @@ class Layer(object):
         self.dZ = None
         self.isFirst = False
         self.isLast = False
-        self.batchNormal = None
+        self.batch_normal = None
         self.A_pre = None
         self.Z = None
         self.name = 'layer'
@@ -36,18 +36,29 @@ class Layer(object):
     def backward(self, pre_grad):
         raise NotImplementedError
 
+    def save_params(self, path, filename):
+        raise NotImplementedError
+
+    def load_params(self, path, filename):
+        raise NotImplementedError
+
 
 class Convolution(Layer):
+    count = 0
 
     def __init__(self, filter_count, filter_shape,
                  stride=1, padding=0, activation='relu', batchNormal=False):
         super(Convolution, self).__init__(activation=activation)
-        self.name = 'Convolution'
+        Convolution.count += 1
+        self.name = 'Convolution_' + str(Convolution.count)
         self.filter_count = filter_count  # 卷积核数量
         self.filter_shape = filter_shape  # 卷积核形状
         self.stride = stride  # 步长
         self.padding = padding  # pad
-        self.batchNormal = BatchNormal() if batchNormal else None
+        self.batch_normal = BatchNormal() if batchNormal else None
+        self.args = {'filter_count': filter_count, 'filter_shape': filter_shape,
+                     'stride': stride, 'padding': padding, 'activation': activation,
+                     'batchNormal': batchNormal}
 
     def init_params(self, A_pre):  # pre_nc 前一个通道数
         pre_nc = A_pre.shape[1]
@@ -68,19 +79,42 @@ class Convolution(Layer):
             self.b = p.zeros(self.filter_count)
             self.db = p.zeros_like(self.b)
 
+    def save_params(self, path, filename):
+        # path = 'xxx/'
+        if not os.path.exists(path):
+            os.mkdir(path)
+        self.args['W'] = self.W
+        self.args['b'] = self.b
+        p.savez_compressed(path + os.sep + self.name + '_' + filename + '.npz', **self.args)
+        if self.batch_normal:
+            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
+
+    def load_params(self, path, filename):
+        dic = p.load(path + os.sep + self.name + '_' + filename + '.npz')
+        self.filter_count = dic['filter_count']
+        self.filter_shape = dic['filter_shape']
+        self.stride = dic['stride']
+        self.padding = dic['padding']
+        self.activation = dic['activation']
+        self.W = dic['W']
+        self.b = dic['b']
+        if dic['batchNormal']:
+            self.batch_normal = BatchNormal()
+            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
+
     # 没问题
     def forward(self, A_pre, mode='train'):
         self.init_params(A_pre)
         self.A_pre = A_pre
         output_data = self.conv(A_pre, self.W, self.b, self.stride, self.padding)
-        self.Z = self.batchNormal.forward(output_data, mode) if self.batchNormal else output_data
+        self.Z = self.batch_normal.forward(output_data, mode) if self.batch_normal else output_data
         return ac_get(self.Z, self.activation)
 
     # 没问题
     def backward(self, dout):
         dZ = ac_get_grad(dout, self.Z, self.activation)
-        if self.batchNormal:
-            dZ = self.batchNormal.backward(dZ)
+        if self.batch_normal:
+            dZ = self.batch_normal.backward(dZ)
         self.db = p.sum(dZ, axis=(0, 2, 3))
         num_filters, _, filter_height, filter_width = self.W.shape
         dout_reshaped = dZ.transpose(1, 2, 3, 0).reshape(num_filters, -1)
@@ -116,11 +150,14 @@ class Convolution(Layer):
 
 
 class Core(Layer):
+    count = 0
 
     def __init__(self, unit_number, activation="relu", batchNormal=False):
         super(Core, self).__init__(unit_number, activation)
-        self.batchNormal = BatchNormal() if batchNormal else None
-        self.name = 'Core'
+        Core.count += 1
+        self.name = 'Core_' + str(Core.count)
+        self.batch_normal = BatchNormal() if batchNormal else None
+        self.args = {'unit_number': unit_number, 'activation': activation, 'batchNormal': batchNormal}
 
     def forward(self, x, mode='train'):
         self.original_x_shape = x.shape
@@ -128,14 +165,14 @@ class Core(Layer):
         self.init_params(x)
         self.x = x
         self.Z = p.dot(self.x, self.W) + self.b
-        if self.batchNormal:
-            self.Z = self.batchNormal.forward(self.Z)
+        if self.batch_normal:
+            self.Z = self.batch_normal.forward(self.Z)
         return ac_get(self.Z, self.activation)
 
     def backward(self, dout):
         dout = ac_get_grad(dout, self.Z, self.activation)
-        if self.batchNormal:
-            dout = self.batchNormal.backward(dout)
+        if self.batch_normal:
+            dout = self.batch_normal.backward(dout)
         dx = p.dot(dout, self.W.T)
         self.dW = p.dot(self.x.T, dout)
         self.db = p.sum(dout, axis=0)
@@ -158,6 +195,24 @@ class Core(Layer):
         if self.b is None:
             self.b = p.zeros((1, self.unit_number))
 
+    def save_params(self, path, filename):
+        self.args['W'] = self.W
+        self.args['b'] = self.b
+        p.savez_compressed(path + os.sep + self.name + '_' + filename + '.npz', **self.args)
+        if self.batch_normal:
+            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
+
+
+    def load_params(self, path, filename):
+        r = p.load(path + os.sep + self.name + '_' + filename + '.npz')
+        self.unit_number = r['unit_number']
+        self.activation = r['activation']
+        if r['batchNormal']:
+            self.batch_normal = BatchNormal()
+            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
+        self.W = r['W']
+        self.b = r['b']
+
     @property
     def params(self):
         return self.W, self.b
@@ -168,14 +223,29 @@ class Core(Layer):
 
 
 class Pooling(Layer):
+    count = 0
+
     def __init__(self, filter_shape, paddingMode='same', stride=1, mode='max'):
         super(Pooling, self).__init__()
+        Pooling.count += 1
         self.filter_shape = filter_shape
-        self.name = 'Pooling'
+        self.name = 'Pooling_' + str(Pooling.count)
         self.stride = stride
         self.padding = 0 if paddingMode == 'valid' else (filter_shape[0] - 1) // 2
         self.mode = mode
+        self.args = {'filter_shape': filter_shape, 'padding': self.padding,
+                     'stride': stride, 'mode': mode}
         assert (self.mode in ['max', 'average'])
+
+    def save_params(self, path, filename):
+        p.savez_compressed(path + os.sep + self.name + '_' + filename + '.npz', **self.args)
+
+    def load_params(self, path, filename):
+        r = p.load(path+ os.sep + self.name + '_' + filename + '.npz')
+        self.filter_shape = r['filter_shape']
+        self.padding = r['padding']
+        self.stride = r['stride']
+        self.mode = r['mode']
 
     def init_params(self, nx):
         pass
@@ -255,16 +325,15 @@ class RNN(Layer):
         da_prev = p.zeros_like(self.a[..., 0])
         for t in reversed(range(self.T_x)):
             a_prev, a_next, xt = self.caches[t]
-            dx = (1 - a_next**2) * (dout[..., t] + da_prev)
+            dx = (1 - a_next ** 2) * (dout[..., t] + da_prev)
             self.dWaa += p.dot(dx, a_prev.T)
             self.dWax += p.dot(dx, xt.T)
             self.db += p.sum(dx, axis=-1, keepdims=True)
-            #dxt = p.dot(self.Wax.T, dx)
+            # dxt = p.dot(self.Wax.T, dx)
             da_prev = p.dot(self.Waa.T, dx)
         del self.caches
         self.dW = p.concatenate((self.dWaa, self.dWax), axis=1)
         return da_prev
-
 
 # class Convolution(Layer):
 #     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):

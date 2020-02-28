@@ -12,6 +12,19 @@ class BatchNormal:
         self.running_mean = None
         self.running_var = None
 
+    def save_params(self, filename):
+        p.savez_compressed(filename, epsilon=self.epsilon, gamma=self.gamma,
+                           beta=self.beta, running_mean=self.running_mean,
+                           running_var=self.running_var)
+
+    def load_params(self, filename):
+        r = p.load(filename)
+        self.epsilon = r['epsilon']
+        self.gamma = r['gamma']
+        self.beta = r['beta']
+        self.running_mean = r['running_mean']
+        self.running_var = r['running_var']
+
     def init_params(self, nx):
         pass
 

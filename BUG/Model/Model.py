@@ -18,9 +18,10 @@ class Model(object):
         self.layers = []
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
-        self.optimize = None
+        self.optimizer = None
         self.evaluate = None
         self.ndim = 2
+        self.optimizeMode = None
 
     def add(self, layer):
         assert (isinstance(layer, Layer))
@@ -69,20 +70,24 @@ class Model(object):
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
-            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model'):
+            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model', path='data'):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
         print("X_train.type = %s, Y_train.type = %s" % (type(X_train), type(Y_train)))
         t = 0
+        self.optimizeMode = optimize
+        if not os.path.exists(path):
+            os.mkdir(path)
 
-        if os.path.isfile('caches.data'):
-            with open('caches.data', 'rb+') as f:
-                data = pickle.load(f)
-                start_it, t = data
-                self.permutation = p.load('caches.npz')['permutation']
+        if os.path.isfile(path+ os.sep + 'caches.npz'):
+            with open(path+ os.sep + 'caches.npz', 'rb+') as f:
+                r = p.load(path+ os.sep +'caches.npz')
+                start_it = r['start_it']
+                t = r['t']
+                self.permutation = r['permutation']
 
-            self.load_model(filename)
+            self.load_model(path, filename)
 
         #  Normalizing inputs
         self.is_normalizing = is_normalizing
@@ -91,7 +96,7 @@ class Model(object):
 
         #  shuffle start
         if shuffle:
-            if not os.path.isfile('caches.npz'):
+            if not os.path.isfile(path+ os.sep + 'caches.npz'):
                 self.permutation = np.random.permutation(X_train.shape[0])
 
             X_train = X_train[self.permutation]
@@ -123,18 +128,18 @@ class Model(object):
             with trange(start_it, iterator) as tr:
                 for self.it in tr:
                     tr.set_description("第%d代:" % (self.it + 1))
-                    cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize, self.it,
-                                           iterator)
+                    cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, self.it,
+                                           iterator, optimize)
                     tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.evaluate(X_test, Y_test))
                     if self.it != 0 and self.it % save_epoch == 0:
-                        self.interrupt(self.permutation, self.it, t)
-                        self.save_model(filename)
+                        self.interrupt(path, self.permutation, self.it, t)
+                        self.save_model(path, filename)
                     costs.append(cost)
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.interrupt(self.permutation, self.it, t)
-                self.save_model(filename)
+                self.interrupt(path, self.permutation, self.it, t)
+                self.save_model(path, filename)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
@@ -146,12 +151,9 @@ class Model(object):
             goto .point
 
     # 中断处理
-    def interrupt(self, permutation, start_it, t):
-        with open('caches.data', 'wb') as f:
-            data = (start_it, t)
-            p.savez_compressed('caches.npz', permutation=permutation)
-            pickle.dump(data, f)
-
+    def interrupt(self, path, permutation, start_it, t):
+        with open(path + os.sep + 'caches.npz', 'wb') as f:
+            p.savez_compressed(path + os.sep + 'caches.npz', permutation=permutation, start_it=start_it, t=t)
 
     # 多输出评估
     def evaluate_many(self, X_train, Y_train):
@@ -191,7 +193,7 @@ class Model(object):
         self.layers[-1].isLast = True
 
     # 单步训练
-    def train_step(self, x_train, y_train, mode, learning_rate, t, optimize, it, iterator):
+    def train_step(self, x_train, y_train, mode, learning_rate, t, it, iterator, optimize):
         # 前向传播
         output = x_train
         for layer in self.layers:
@@ -209,24 +211,25 @@ class Model(object):
             dout = layer.backward(dout)
         # -----------
 
-        #  更新参数
-        if self.optimize is None:
+        if self.optimizer is None:
             if optimize == 'Adam':
-                self.optimize = Optimize.Adam(self.layers)
+                self.optimizer = Optimize.Adam(self.layers)
             elif optimize == 'Momentum':
-                self.optimize = Optimize.Momentum(self.layers)
+                self.optimizer = Optimize.Momentum(self.layers)
             elif optimize == 'BGD':
-                self.optimize = Optimize.BatchGradientDescent(self.layers)
+                self.optimizer = Optimize.BatchGradientDescent(self.layers)
             else:
                 raise ValueError
+
+        #  更新参数
         gc.collect()
         t += 1
-        self.optimize.update(t, learning_rate, it, iterator)
+        self.optimizer.update(t, learning_rate, it, iterator)
 
         return loss
 
     # mini-batch
-    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, optimize, it, iterator):
+    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, it, iterator, optimize):
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
         with trange(num_complete) as tr:
@@ -235,14 +238,14 @@ class Model(object):
                 be = (b + 1) * batch_size
                 x_train = X_train[bs:be]
                 y_train = Y_train[bs:be]
-                cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize, it, iterator)
+                cost = self.train_step(x_train, y_train, mode, learning_rate, t, it, iterator, optimize)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
             s = num_complete * batch_size
             if s < X_train.shape[0]:
                 cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
-                                       mode, learning_rate, t, optimize, it, iterator)
+                                       mode, learning_rate, t, it, iterator, optimize)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
@@ -264,16 +267,12 @@ class Model(object):
         print('y_hat')
 
     # 保存模型参数
-    def save_model(self, filename):
-        params = []
+    def save_model(self,path, filename):
         for layer in self.layers:
-            if not isinstance(layer, Pooling):
-                params.append(layer.W)
-                params.append(layer.b)
-        p.savez_compressed(filename+'.npz', *params)
+            layer.save_params(path, filename)
 
-        with open(filename+'.obj', 'wb') as f:
-            pickle.dump(self.optimize, f)
+        with open(path + os.sep + filename+'.obj', 'wb') as f:
+            pickle.dump(self.optimizeMode, f)
             pickle.dump(self.evaluate, f)
             pickle.dump(self.is_normalizing, f)
             pickle.dump(self.ndim, f)
@@ -282,20 +281,22 @@ class Model(object):
                 pickle.dump(self.var, f)
 
     # 加载模型参数
-    def load_model(self, filename):
+    def load_model(self,path, filename):
 
-        r = p.load(filename+'.npz')
-        idx = 0
         for layer in self.layers:
-            if isinstance(layer, Pooling):
-                continue
-            layer.W = r['arr_'+str(idx)]
-            layer.b = r['arr_'+str(idx+1)]
-            idx += 2
+            layer.load_params(path, filename)
 
-        with open(filename+'.obj', 'rb') as f:
-            self.optimize = pickle.load(f)
-            self.optimize.layers = self.layers
+        with open(path+ os.sep + filename+'.obj', 'rb') as f:
+            self.optimizeMode = pickle.load(f)
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam(self.layers)
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum(self.layers)
+            elif self.optimizeMode == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent(self.layers)
+            else:
+                raise ValueError
+
             self.evaluate = pickle.load(f)
             self.is_normalizing = pickle.load(f)
             self.ndim = pickle.load(f)
