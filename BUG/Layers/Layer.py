@@ -1,11 +1,24 @@
 import math
+import pickle
 
-import numpy, os
+import numpy
+import os
 
 from BUG.Layers.Normalization import BatchNormal
 from BUG.Layers.im2col import im2col_indices, col2im_indices_cpu, col2im_indices_gpu
 from BUG.function.Activation import ac_get_grad, ac_get
 from BUG.load_package import p
+
+
+def save_struct_params(path, dic):
+    with open(path, 'wb') as f:
+        pickle.dump(dic, f)
+
+
+def load_struct_params(path):
+    with open(path, 'rb') as f:
+        dic = pickle.load(f)
+    return dic
 
 
 class Layer(object):
@@ -83,24 +96,24 @@ class Convolution(Layer):
         # path = 'xxx/'
         if not os.path.exists(path):
             os.mkdir(path)
-        self.args['W'] = self.W
-        self.args['b'] = self.b
-        p.savez_compressed(path + os.sep + self.name + '_' + filename + '.npz', **self.args)
+        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.W, b=self.b)
         if self.batch_normal:
-            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
+            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
 
     def load_params(self, path, filename):
-        dic = p.load(path + os.sep + self.name + '_' + filename + '.npz')
+        params = p.load(path + os.sep + self.name + '_' + filename +'.npz')
+        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
         self.filter_count = dic['filter_count']
         self.filter_shape = dic['filter_shape']
         self.stride = dic['stride']
         self.padding = dic['padding']
         self.activation = dic['activation']
-        self.W = dic['W']
-        self.b = dic['b']
+        self.W = params['W']
+        self.b = params['b']
         if dic['batchNormal']:
             self.batch_normal = BatchNormal()
-            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
+            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal.npz')
 
     # 没问题
     def forward(self, A_pre, mode='train'):
@@ -196,20 +209,19 @@ class Core(Layer):
             self.b = p.zeros((1, self.unit_number))
 
     def save_params(self, path, filename):
-        self.args['W'] = self.W
-        self.args['b'] = self.b
-        p.savez_compressed(path + os.sep + self.name + '_' + filename + '.npz', **self.args)
+        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.W, b=self.b)
         if self.batch_normal:
-            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
-
+            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
 
     def load_params(self, path, filename):
-        r = p.load(path + os.sep + self.name + '_' + filename + '.npz')
-        self.unit_number = r['unit_number']
-        self.activation = r['activation']
-        if r['batchNormal']:
+        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+        self.unit_number = dic['unit_number']
+        self.activation = dic['activation']
+        if dic['batchNormal']:
             self.batch_normal = BatchNormal()
-            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal' + '.npz')
+            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal.npz')
+        r = p.load(path + os.sep + self.name + '_' + filename + '.npz')
         self.W = r['W']
         self.b = r['b']
 
@@ -238,10 +250,10 @@ class Pooling(Layer):
         assert (self.mode in ['max', 'average'])
 
     def save_params(self, path, filename):
-        p.savez_compressed(path + os.sep + self.name + '_' + filename + '.npz', **self.args)
+        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
 
     def load_params(self, path, filename):
-        r = p.load(path+ os.sep + self.name + '_' + filename + '.npz')
+        r = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
         self.filter_shape = r['filter_shape']
         self.padding = r['padding']
         self.stride = r['stride']
@@ -284,6 +296,12 @@ class Pooling(Layer):
 
 
 class RNN(Layer):
+
+    def save_params(self, path, filename):
+        pass
+
+    def load_params(self, path, filename):
+        pass
 
     def __init__(self, n_x, n_y, T_x, T_y, n_a=50):
         super(RNN, self).__init__()
@@ -334,6 +352,7 @@ class RNN(Layer):
         del self.caches
         self.dW = p.concatenate((self.dWaa, self.dWax), axis=1)
         return da_prev
+
 
 # class Convolution(Layer):
 #     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):

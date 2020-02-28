@@ -71,7 +71,7 @@ class Model(object):
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True,
             testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
-            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='model',
+            lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='train_params',
             path='data'):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
