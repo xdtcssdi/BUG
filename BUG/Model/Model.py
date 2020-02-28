@@ -277,8 +277,7 @@ class Model(object):
             pickle.dump(self.is_normalizing, f)
             pickle.dump(self.ndim, f)
             if self.is_normalizing and self.ndim == 2:
-                pickle.dump(self.u, f)
-                pickle.dump(self.var, f)
+                p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
 
     # 加载模型参数
     def load_model(self,path, filename):
@@ -301,5 +300,6 @@ class Model(object):
             self.is_normalizing = pickle.load(f)
             self.ndim = pickle.load(f)
             if self.is_normalizing and self.ndim == 2:
-                self.u = pickle.load(f)
-                self.var = pickle.load(f)
+                r = p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
+                self.u = r['u']
+                self.var = r['var']
