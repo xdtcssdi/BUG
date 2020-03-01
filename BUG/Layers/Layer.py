@@ -1,8 +1,8 @@
 import math
+import os
 import pickle
 
 import numpy
-import os
 
 from BUG.Layers.Normalization import BatchNormal
 from BUG.Layers.im2col import im2col_indices, col2im_indices_cpu, col2im_indices_gpu
@@ -43,7 +43,7 @@ class Layer(object):
     def init_params(self, nx):
         raise NotImplementedError
 
-    def forward(self, A_pre, mode='train'):
+    def forward(self, A_pre, Y=None, mode='train'):
         raise NotImplementedError
 
     def backward(self, pre_grad):
@@ -102,7 +102,7 @@ class Convolution(Layer):
             self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
 
     def load_params(self, path, filename):
-        params = p.load(path + os.sep + self.name + '_' + filename +'.npz')
+        params = p.load(path + os.sep + self.name + '_' + filename + '.npz')
         dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
         self.filter_count = dic['filter_count']
         self.filter_shape = dic['filter_shape']
@@ -116,7 +116,7 @@ class Convolution(Layer):
             self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal.npz')
 
     # 没问题
-    def forward(self, A_pre, mode='train'):
+    def forward(self, A_pre, Y=None, mode='train'):
         self.init_params(A_pre)
         self.A_pre = A_pre
         output_data = self.conv(A_pre, self.W, self.b, self.stride, self.padding)
@@ -172,7 +172,7 @@ class Core(Layer):
         self.batch_normal = BatchNormal() if batchNormal else None
         self.args = {'unit_number': unit_number, 'activation': activation, 'batchNormal': batchNormal}
 
-    def forward(self, x, mode='train'):
+    def forward(self, x, Y=None, mode='train'):
         self.original_x_shape = x.shape
         x = x.reshape(x.shape[0], -1)
         self.init_params(x)
@@ -262,7 +262,7 @@ class Pooling(Layer):
     def init_params(self, nx):
         pass
 
-    def forward(self, A_pre, mode='train'):
+    def forward(self, A_pre, Y=None, mode='train'):
         N, C, H, W = A_pre.shape
 
         out_height = (H - self.filter_shape[0]) // self.stride + 1
@@ -295,7 +295,7 @@ class Pooling(Layer):
         return dx
 
 
-class RNN(Layer):
+class SimpleRNN(Layer):
 
     def save_params(self, path, filename):
         pass
@@ -303,57 +303,96 @@ class RNN(Layer):
     def load_params(self, path, filename):
         pass
 
-    def __init__(self, n_x, n_y, T_x, T_y, n_a=50):
-        super(RNN, self).__init__()
+    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, n_a=50, learning_rate=0.01, activation='softmax'):
+        super(SimpleRNN, self).__init__(activation=activation)
         self.n_a = n_a
-        self.T_x = T_x
-        self.T_y = T_y
+        self.ix_to_char = ix_to_char
+        self.char_to_ix = char_to_ix
         self.init_params((n_x, n_y))
+        self.learning_rate = learning_rate
 
     def init_params(self, n_x_y):
         self.n_x, self.n_y = n_x_y
-        self.Waa = p.random.randn(self.n_a, self.n_a)
-        self.Wax = p.random.randn(self.n_a, self.n_x)
-        self.Wya = p.random.randn(self.n_y, self.n_a)
+        self.Waa = p.random.randn(self.n_a, self.n_a) * 0.01
+        self.Wax = p.random.randn(self.n_a, self.n_x) * 0.01
+        self.Wya = p.random.randn(self.n_y, self.n_a) * 0.01
         self.W = p.concatenate((self.Waa, self.Wax), axis=1)
-        self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
-        self.b = p.random.randn(self.n_a, 1)
-        self.by = p.random.randn(self.n_y, 1)
+        self.b = p.zeros((self.n_a, 1))
+        self.by = p.zeros((self.n_y, 1))
         self.dWaa = p.zeros_like(self.Waa)
         self.dWax = p.zeros_like(self.Wax)
+        self.dWya = p.zeros_like(self.Wya)
         self.db = p.zeros_like(self.b)
+        self.dby = p.zeros_like(self.by)
+        self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
 
-    def forward(self, x, mode='train'):
-        n_x, m, T_x = x.shape  # 字符数, 数量 , 时间步
-        self.a = p.zeros((self.n_a, m, self.T_x))
-        self.y = p.zeros((self.n_y, m, self.T_y))
-        a_prev = self.a[..., 0]
-        xt = x
-        self.caches = []
-        for t in range(T_x):
-            a_next = p.tanh(p.dot(self.Waa, a_prev) + p.dot(self.Wax, xt[..., t]) + self.b)
-            y_next = ac_get(p.dot(self.Wya, a_next) + self.by, 'softmax')
-            self.caches.append([a_prev.copy(), a_next.copy(), xt[..., t]])
-            a_prev = a_next
-            self.a[..., t] = a_next
-            self.y[..., t] = y_next
-        return a_prev
+    '''
+        X: int array，shape = (n_x , length) one_hot, X[0] = zero
+        Y: Y[0]==X[:,1:] + p.zeros(n_x,1)[char_to_ix['\n']]
+    '''
+
+    def softmax(self, x):
+        e_x = p.exp(x - p.max(x))
+        return e_x / e_x.sum(axis=0)
+
+    def forward(self, X, Y=None, mode='train'):
+        self.X = X
+        self.x, self.a, self.y_hat = {}, {}, {}
+        self.Y = Y
+        self.a[-1] = p.zeros((self.n_a, 1))
+        loss = 0
+        for t in range(len(X)):
+            self.x[t] = p.zeros((self.n_x, 1))
+            if X[t] is not None:
+                self.x[t][X[t]] = 1
+            self.a[t], self.y_hat[t] = self.rnn_step_forward(self.a[t-1], self.x[t])
+            loss -= p.log(self.y_hat[t][Y[t], 0])
+
+        return loss / len(X), self.y_hat
 
     def backward(self, dout):
-        da_prev = p.zeros_like(self.a[..., 0])
-        for t in reversed(range(self.T_x)):
-            a_prev, a_next, xt = self.caches[t]
-            dx = (1 - a_next ** 2) * (dout[..., t] + da_prev)
-            self.dWaa += p.dot(dx, a_prev.T)
-            self.dWax += p.dot(dx, xt.T)
-            self.db += p.sum(dx, axis=-1, keepdims=True)
-            # dxt = p.dot(self.Wax.T, dx)
-            da_prev = p.dot(self.Waa.T, dx)
-        del self.caches
-        self.dW = p.concatenate((self.dWaa, self.dWax), axis=1)
-        return da_prev
+        self.dWaa = p.zeros_like(self.Waa)
+        self.dWax = p.zeros_like(self.Wax)
+        self.dWya = p.zeros_like(self.Wya)
+        self.db = p.zeros_like(self.b)
+        self.dby = p.zeros_like(self.by)
+        self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
+        da_next = p.zeros((self.n_a, 1))
+        for t in reversed(range(len(self.X))):
+            dy = p.copy(self.y_hat[t])
+            dy[self.Y[t]] -= 1
+            da_next = self.rnn_step_backward(dy, self.x[t], self.a[t], self.a[t-1], da_next)
+        return da_next
 
+    def rnn_step_forward(self, a_prev, x):
+        a_next = p.tanh(p.dot(self.Wax, x) + p.dot(self.Waa, a_prev) + self.b)
+        y_hat = self.softmax(p.dot(self.Wya, a_next) + self.by)
+        return a_next, y_hat
 
+    def rnn_step_backward(self, dout, x, a, a_prev, da_next):
+        self.dWya += p.dot(dout, a.T)
+        self.dby += dout
+        da = p.dot(self.Wya.T, dout) + da_next
+        daraw = (1 - a * a) * da
+        self.db += daraw
+        self.dWax += p.dot(daraw, x.T)
+        self.dWaa += p.dot(daraw, a_prev.T)
+        da_next = p.dot(self.Waa.T, daraw)
+        return da_next
+
+    def clip(self):
+        p.clip(self.dWaa, -5, 5, self.dWaa)
+        p.clip(self.dWax, -5, 5, self.dWax)
+        p.clip(self.dWya, -5, 5, self.dWya)
+        p.clip(self.db, -5, 5, self.db)
+        p.clip(self.dby, -5, 5, self.dby)
+
+    def update_params(self):
+        self.Waa -= self.learning_rate * self.dWaa
+        self.Wax -= self.learning_rate * self.dWax
+        self.Wya -= self.learning_rate * self.dWya
+        self.b -= self.learning_rate * self.db
+        self.by -= self.learning_rate * self.dby
 # class Convolution(Layer):
 #     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
 #         super(Convolution, self).__init__(activation=activation)
@@ -470,7 +509,8 @@ class RNN(Layer):
 
 # class ConvolutionForloop(Layer):
 #
-#     def __init__(self, filter_count, filter_shape, stride=1, paddingMode='same', activation='relu', batchNormal=False):
+#     def __init__(self, filter_count, filter_shape, stride=1, paddingMode='same',
+#         activation='relu', batchNormal=False):
 #         super(ConvolutionForloop, self).__init__(activation=activation)
 #         self.filter_count = filter_count  # 卷积核数量
 #         self.filter_shape = filter_shape  # 卷积核形状

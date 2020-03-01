@@ -1,6 +1,6 @@
 import gc
 from BUG.load_package import p
-from BUG.Layers.Layer import Convolution, Core, RNN, Pooling
+from BUG.Layers.Layer import Convolution, Core, SimpleRNN, Pooling
 
 
 class Optimize:

@@ -83,12 +83,9 @@ class Model(object):
             os.mkdir(path)
 
         if os.path.isfile(path + os.sep + 'caches.npz'):
-            with open(path + os.sep + 'caches.npz', 'rb+') as f:
-                r = p.load(path + os.sep + 'caches.npz')
-                start_it = r['start_it']
-                t = r['t']
-                self.permutation = r['permutation']
-
+            with open(path + os.sep + 'caches.obj', 'rb+') as f:
+                start_it, t = pickle.load(f)
+            self.permutation = p.load(path + os.sep + 'caches.npz')['permutation']
             self.load_model(path, filename)
 
         #  Normalizing inputs
@@ -154,8 +151,9 @@ class Model(object):
 
     # 中断处理
     def interrupt(self, path, permutation, start_it, t):
-        with open(path + os.sep + 'caches.npz', 'wb') as f:
-            p.savez_compressed(path + os.sep + 'caches.npz', permutation=permutation, start_it=start_it, t=t)
+        with open(path + os.sep + 'caches.obj', 'wb') as f:
+            pickle.dump(f, (start_it, t))
+        p.savez_compressed(path + os.sep + 'caches.npz', permutation=permutation)
 
     # 多输出评估
     def evaluate_many(self, X_train, Y_train):
