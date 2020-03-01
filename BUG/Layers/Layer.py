@@ -43,7 +43,7 @@ class Layer(object):
     def init_params(self, nx):
         raise NotImplementedError
 
-    def forward(self, A_pre, Y=None, mode='train'):
+    def forward(self, A_pre, mode='train'):
         raise NotImplementedError
 
     def backward(self, pre_grad):
@@ -335,20 +335,17 @@ class SimpleRNN(Layer):
         e_x = p.exp(x - p.max(x))
         return e_x / e_x.sum(axis=0)
 
-    def forward(self, X, Y=None, mode='train'):
+    def forward(self, X, mode='train'):
         self.X = X
-        self.x, self.a, self.y_hat = {}, {}, {}
-        self.Y = Y
+        self.x, self.a, self.y_hat = {}, {}, p.zeros((len(X), self.n_y))
         self.a[-1] = p.zeros((self.n_a, 1))
-        loss = 0
         for t in range(len(X)):
             self.x[t] = p.zeros((self.n_x, 1))
             if X[t] is not None:
                 self.x[t][X[t]] = 1
             self.a[t], self.y_hat[t] = self.rnn_step_forward(self.a[t-1], self.x[t])
-            loss -= p.log(self.y_hat[t][Y[t], 0])
 
-        return loss / len(X), self.y_hat
+        return self.y_hat
 
     def backward(self, dout):
         self.dWaa = p.zeros_like(self.Waa)
@@ -359,15 +356,13 @@ class SimpleRNN(Layer):
         self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
         da_next = p.zeros((self.n_a, 1))
         for t in reversed(range(len(self.X))):
-            dy = p.copy(self.y_hat[t])
-            dy[self.Y[t]] -= 1
-            da_next = self.rnn_step_backward(dy, self.x[t], self.a[t], self.a[t-1], da_next)
+            da_next = self.rnn_step_backward(dout[t].reshape(-1, 1), self.x[t], self.a[t], self.a[t-1], da_next)
         return da_next
 
     def rnn_step_forward(self, a_prev, x):
         a_next = p.tanh(p.dot(self.Wax, x) + p.dot(self.Waa, a_prev) + self.b)
         y_hat = self.softmax(p.dot(self.Wya, a_next) + self.by)
-        return a_next, y_hat
+        return a_next, y_hat.reshape(-1, )
 
     def rnn_step_backward(self, dout, x, a, a_prev, da_next):
         self.dWya += p.dot(dout, a.T)
@@ -379,20 +374,6 @@ class SimpleRNN(Layer):
         self.dWaa += p.dot(daraw, a_prev.T)
         da_next = p.dot(self.Waa.T, daraw)
         return da_next
-
-    def clip(self):
-        p.clip(self.dWaa, -5, 5, self.dWaa)
-        p.clip(self.dWax, -5, 5, self.dWax)
-        p.clip(self.dWya, -5, 5, self.dWya)
-        p.clip(self.db, -5, 5, self.db)
-        p.clip(self.dby, -5, 5, self.dby)
-
-    def update_params(self):
-        self.Waa -= self.learning_rate * self.dWaa
-        self.Wax -= self.learning_rate * self.dWax
-        self.Wya -= self.learning_rate * self.dWya
-        self.b -= self.learning_rate * self.db
-        self.by -= self.learning_rate * self.dby
 # class Convolution(Layer):
 #     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
 #         super(Convolution, self).__init__(activation=activation)

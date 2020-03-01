@@ -1,11 +1,15 @@
 import os
 import pickle
-
+import zipfile
+import requests
+import json
+import re
+from bs4 import BeautifulSoup
 import h5py
 import numpy as np
-
 from BUG.Layers.Layer import SimpleRNN
 from BUG.function.Activation import ac_get
+from BUG.function.zhtools.langconv import Converter
 from BUG.load_package import p
 
 
@@ -118,10 +122,6 @@ def sample(layer, words_between_idx, max_chars=50, seed=0):
 
 
 def lyric_download():
-    import requests
-    import json
-    import re
-    from bs4 import BeautifulSoup
 
     def download_by_music_id(music_id):
         # 根据歌词id下载
@@ -168,5 +168,71 @@ def lyric_download():
     singer_id = input()
     download_lyric(singer_id)
 
-if __name__ == '__main__':
-    lyric_download()
+
+def load_data_jay_lyrics():
+
+    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/jaychou_lyrics.zip') as zin:
+        with zin.open('jaychou_lyrics.txt') as f:
+            corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
+
+    idx_to_char = list(set(corpus_chars))
+    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
+    vocab_size = len(char_to_idx)
+
+    example = corpus_chars.split('\n')
+    example = [seq.strip() for seq in example]
+
+    return example, char_to_idx, idx_to_char, vocab_size
+
+def load_data_gem_lyrics():
+
+    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
+        with zin.open('gem_lyrics.txt') as f:
+            corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
+
+    idx_to_char = list(set(corpus_chars))
+    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
+    vocab_size = len(char_to_idx)
+
+    example = corpus_chars.split('\n')
+    example = [seq.strip() for seq in example]
+
+    return example, char_to_idx, idx_to_char, vocab_size
+
+
+def load_data_dinos_names():
+    np.random.seed(1)
+    with open('/Users/oswin/Documents/BS/BUG/datasets/dinos.txt') as f:
+        data = f.readlines()
+        example = [seq.lower().strip() for seq in data]
+    with open('/Users/oswin/Documents/BS/BUG/datasets/dinos.txt') as f:
+        L = list(set(f.read().lower()))
+        L.sort()
+        vocab_size = len(L)
+        char_to_ix = {ch: i for i, ch in enumerate(L)}
+        ix_to_char = {i: ch for i, ch in enumerate(L)}
+    return example, char_to_ix, ix_to_char, vocab_size
+
+
+def cat_to_chs(sentence):  # 传入参数为列表
+    """
+    将繁体转换成简体
+    :param line:
+    :return:
+    """
+    sentence = ",".join(sentence)
+    sentence = Converter('zh-hans').convert(sentence)
+    sentence.encode('utf-8')
+    return sentence.split(",")
+
+
+def chs_to_cht(sentence):  # 传入参数为列表
+    """
+    将简体转换成繁体
+    :param sentence:
+    :return:
+    """
+    sentence = ",".join(sentence)
+    sentence = Converter('zh-hant').convert(sentence)
+    sentence.encode('utf-8')
+    return sentence.split(",")

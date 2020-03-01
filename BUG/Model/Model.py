@@ -127,8 +127,7 @@ class Model(object):
             with trange(start_it, iterator) as tr:
                 for self.it in tr:
                     tr.set_description("第%d代:" % (self.it + 1))
-                    cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, self.it,
-                                           iterator, optimize)
+                    cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
                     tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.evaluate(X_test, Y_test))
                     if self.it != 0 and self.it % save_epoch == 0:
                         self.interrupt(path, self.permutation, self.it, t)
@@ -151,8 +150,8 @@ class Model(object):
 
     # 中断处理
     def interrupt(self, path, permutation, start_it, t):
-        with open(path + os.sep + 'caches.obj', 'wb') as f:
-            pickle.dump(f, (start_it, t))
+        with open(path + os.sep + 'caches.obj', 'wb+') as f:
+            pickle.dump((start_it, t), f)
         p.savez_compressed(path + os.sep + 'caches.npz', permutation=permutation)
 
     # 多输出评估
@@ -193,7 +192,7 @@ class Model(object):
         self.layers[-1].isLast = True
 
     # 单步训练
-    def train_step(self, x_train, y_train, mode, learning_rate, t, it, iterator, optimize):
+    def train_step(self, x_train, y_train, mode, learning_rate, t, optimize):
         # 前向传播
         output = x_train
         for layer in self.layers:
@@ -224,12 +223,12 @@ class Model(object):
         #  更新参数
         gc.collect()
         t += 1
-        self.optimizer.update(t, learning_rate, it, iterator)
+        self.optimizer.update(t, learning_rate)
 
         return loss
 
     # mini-batch
-    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, it, iterator, optimize):
+    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, optimize):
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
         with trange(num_complete) as tr:
@@ -238,14 +237,14 @@ class Model(object):
                 be = (b + 1) * batch_size
                 x_train = X_train[bs:be]
                 y_train = Y_train[bs:be]
-                cost = self.train_step(x_train, y_train, mode, learning_rate, t, it, iterator, optimize)
+                cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
             s = num_complete * batch_size
             if s < X_train.shape[0]:
                 cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
-                                       mode, learning_rate, t, it, iterator, optimize)
+                                       mode, learning_rate, t, optimize)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
