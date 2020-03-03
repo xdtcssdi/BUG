@@ -61,9 +61,26 @@ def load_CIFAR10(ROOT):
         return p.asarray(Xtr), p.asarray(Ytr), p.asarray(Xte), p.asarray(Yte)
     except:
         return Xtr, Ytr, Xte, Yte
-
+#
+# def one_hot(labels, nb_classes):
+#     one_hot_labels = p.zeros(labels.shape+(nb_classes, ))
+#
 
 def one_hot(labels, nb_classes=None):
+    '''
+    二维矩阵转换成one_hot
+    :param labels: 矩阵
+    :param nb_classes: 分类数
+    :return: one_hot 矩阵
+    '''
+    if labels.shape[-1]:
+        # array : batch_size, classes, time_steps
+        array = np.zeros([labels.shape[0], nb_classes, labels.shape[-1]])
+        for i in range(labels.shape[0]):
+            for j in range(labels.shape[1]):
+                array[i, labels[i, j], j] = 1
+
+        return array.transpose(0, 2, 1)
     try:
         numpy_labels = p.asnumpy(labels)
         classes = np.unique(numpy_labels)
@@ -79,14 +96,14 @@ def one_hot(labels, nb_classes=None):
         if nb_classes is None:
             nb_classes = classes.size
         one_hot_labels = np.zeros((labels.shape[0], nb_classes))
-
         for i, c in enumerate(classes):
+            print(labels == c, i)
             one_hot_labels[labels == c, i] = 1.
         return one_hot_labels
 
 
 def unhot(one_hot_labels):
-    return np.argmax(one_hot_labels, axis=-1)
+    return np.argmax(one_hot_labels, axis=1)
 
 
 def words_between_idx(doc):
@@ -122,7 +139,10 @@ def sample(layer, words_between_idx, max_chars=50, seed=0):
 
 
 def lyric_download():
-
+    '''
+    根据歌手id下载歌词
+    :return:
+    '''
     def download_by_music_id(music_id):
         # 根据歌词id下载
         url = 'http://music.163.com/api/song/lyric?' + 'id=' + str(music_id) + '&lv=1&kv=1&tv=-1'
@@ -178,9 +198,7 @@ def load_data_jay_lyrics():
     idx_to_char = list(set(corpus_chars))
     char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
     vocab_size = len(char_to_idx)
-
-    example = corpus_chars.split('\n')
-    example = [seq.strip() for seq in example]
+    example = [char_to_idx[ch] for ch in corpus_chars]
 
     return example, char_to_idx, idx_to_char, vocab_size
 
@@ -194,8 +212,7 @@ def load_data_gem_lyrics():
     char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
     vocab_size = len(char_to_idx)
 
-    example = corpus_chars.split('\n')
-    example = [seq.strip() for seq in example]
+    example = [char_to_idx[ch] for ch in corpus_chars]
 
     return example, char_to_idx, idx_to_char, vocab_size
 
@@ -236,3 +253,25 @@ def chs_to_cht(sentence):  # 传入参数为列表
     sentence = Converter('zh-hant').convert(sentence)
     sentence.encode('utf-8')
     return sentence.split(",")
+
+
+def data_iter_consecutive(txt, batch_size, time_steps, vocab_size):
+    '''
+    batch数据生成器
+    :param txt: int of list
+    :param batch_size:
+    :param time_steps:
+    :return: X : [batch_size, batch_len]
+    '''
+    data_len = len(txt)
+    txt = np.array(txt)
+    batch_len = data_len // batch_size
+    indices = txt[: batch_size*batch_len].reshape([batch_size, batch_len])
+    epoch_size = (batch_len-1) // time_steps
+    if epoch_size == 0:
+        raise ValueError
+    for i in range(epoch_size):
+        i = i * time_steps
+        X = indices[:, i: i + time_steps]
+        Y = indices[:, i + 1: i + time_steps + 1]
+        yield one_hot(X, vocab_size), one_hot(Y, vocab_size)

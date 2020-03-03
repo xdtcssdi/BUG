@@ -41,18 +41,47 @@ class Layer(object):
         self.name = 'layer'
 
     def init_params(self, nx):
+        '''
+        根据输入的矩阵，初始化参数
+        :param nx: 输入矩阵
+        :return: None
+        '''
         raise NotImplementedError
 
     def forward(self, A_pre, mode='train'):
+        '''
+        前向传播
+        :param A_pre: 前一层的激活值
+        :param Y: 训练集
+        :param mode: 前向传播模式
+        :return: 当前层的激活值
+        '''
         raise NotImplementedError
 
     def backward(self, pre_grad):
+        '''
+        反向传播
+        :param pre_grad: 损失值对当前激活值的导数
+        :return: 损失值对前一层激活值的导数
+        '''
         raise NotImplementedError
 
     def save_params(self, path, filename):
+        '''
+        保存当前类的参数
+        :param path: 路径格式为'xxx/'
+        :param filename: 文件名
+        :return: None
+        '''
         raise NotImplementedError
 
     def load_params(self, path, filename):
+        '''
+        加载npz文件中的参数
+        :param path: 路径格式为'xxx/'
+        :param filename: 文件名
+        :return: None
+        '''
         raise NotImplementedError
 
 
@@ -61,6 +90,14 @@ class Convolution(Layer):
 
     def __init__(self, filter_count, filter_shape,
                  stride=1, padding=0, activation='relu', batchNormal=False):
+        '''
+        :param filter_count: 卷积核数量
+        :param filter_shape: 卷积核形状
+        :param stride: 步长
+        :param padding: pad
+        :param activation: 激活函数名字
+        :param batchNormal: 是否归一化输出
+        '''
         super(Convolution, self).__init__(activation=activation)
         Convolution.count += 1
         self.name = 'Convolution_' + str(Convolution.count)
@@ -93,7 +130,6 @@ class Convolution(Layer):
             self.db = p.zeros_like(self.b)
 
     def save_params(self, path, filename):
-        # path = 'xxx/'
         if not os.path.exists(path):
             os.mkdir(path)
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
@@ -148,7 +184,16 @@ class Convolution(Layer):
     def grads(self):
         return self.dW, self.db
 
-    def conv(self, X, W, b, stride=1, padding=0):  # 卷积的计算过程，向前传播的具体计算
+    def conv(self, X, W, b, stride=1, padding=0):
+        '''
+        卷积的计算过程，向前传播的具体计算
+        :param X: 前一层的激活值
+        :param W: 过滤器
+        :param b: 偏差
+        :param stride: 步长
+        :param padding: pad
+        :return:
+        '''
         n_filters, d_filter, kernel_size, _ = W.shape
         n_x, d_x, h_x, w_x = X.shape
         h_out = (h_x - kernel_size + 2 * padding) // stride + 1
@@ -303,8 +348,9 @@ class SimpleRNN(Layer):
     def load_params(self, path, filename):
         pass
 
-    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, n_a=50, learning_rate=0.01, activation='softmax'):
+    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, time_steps, n_a=50, learning_rate=0.01, activation='softmax'):
         super(SimpleRNN, self).__init__(activation=activation)
+        self.time_steps = time_steps
         self.n_a = n_a
         self.ix_to_char = ix_to_char
         self.char_to_ix = char_to_ix
@@ -317,35 +363,37 @@ class SimpleRNN(Layer):
         self.Wax = p.random.randn(self.n_a, self.n_x) * 0.01
         self.Wya = p.random.randn(self.n_y, self.n_a) * 0.01
         self.W = p.concatenate((self.Waa, self.Wax), axis=1)
-        self.b = p.zeros((self.n_a, 1))
-        self.by = p.zeros((self.n_y, 1))
         self.dWaa = p.zeros_like(self.Waa)
         self.dWax = p.zeros_like(self.Wax)
         self.dWya = p.zeros_like(self.Wya)
+        self.b = p.zeros((self.n_a, 1))
+        self.by = p.zeros((self.n_y, 1))
         self.db = p.zeros_like(self.b)
         self.dby = p.zeros_like(self.by)
         self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
-
-    '''
-        X: int array，shape = (n_x , length) one_hot, X[0] = zero
-        Y: Y[0]==X[:,1:] + p.zeros(n_x,1)[char_to_ix['\n']]
-    '''
 
     def softmax(self, x):
         e_x = p.exp(x - p.max(x))
         return e_x / e_x.sum(axis=0)
 
-    def forward(self, X, mode='train'):
+    def forward(self, X, a0=None, mode='train'):
+        '''
+        :param X: shape = (batch_size, time_steps, vocab_size)
+        :param a0:
+        :param mode:
+        :return:
+        '''
         self.X = X
-        self.x, self.a, self.y_hat = {}, {}, p.zeros((len(X), self.n_y))
-        self.a[-1] = p.zeros((self.n_a, 1))
-        for t in range(len(X)):
-            self.x[t] = p.zeros((self.n_x, 1))
-            if X[t] is not None:
-                self.x[t][X[t]] = 1
-            self.a[t], self.y_hat[t] = self.rnn_step_forward(self.a[t-1], self.x[t])
-
-        return self.y_hat
+        self.y_hat = p.zeros([X.shape[0], self.time_steps, self.n_y])
+        self.a = p.zeros([self.n_a, self.time_steps, X.shape[0]])
+        if a0 is not None:
+            self.a[:, 0, :] = a0
+        for t in range(self.time_steps - 1):
+            at, self.y_hat[:, t, :] = self.rnn_step_forward(self.a[:, t, :], X[:, t, :])
+            self.a[:, t + 1, :] = at
+        self.at, self.y_hat[:, self.time_steps - 1, :] = self.rnn_step_forward(self.a[:, self.time_steps - 1, :],
+                                                                               X[:, self.time_steps - 1, :])
+        return self.at, self.y_hat
 
     def backward(self, dout):
         self.dWaa = p.zeros_like(self.Waa)
@@ -353,27 +401,30 @@ class SimpleRNN(Layer):
         self.dWya = p.zeros_like(self.Wya)
         self.db = p.zeros_like(self.b)
         self.dby = p.zeros_like(self.by)
-        self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
-        da_next = p.zeros((self.n_a, 1))
-        for t in reversed(range(len(self.X))):
-            da_next = self.rnn_step_backward(dout[t].reshape(-1, 1), self.x[t], self.a[t], self.a[t-1], da_next)
+        da_next = p.zeros((self.n_a, dout.shape[0]))
+        da_next = self.rnn_step_backward(dout[:, dout.shape[1] - 1, :], self.X[:, dout.shape[1] - 1, :], self.at,
+                                         self.a[:, dout.shape[1] - 2, :], da_next)
+        for t in reversed(range(dout.shape[1] - 1)):
+            da_next = self.rnn_step_backward(dout[:, t, :], self.X[:, t, :], self.a[:, t, :], self.a[:, t - 1, :],
+                                             da_next)
         return da_next
 
     def rnn_step_forward(self, a_prev, x):
-        a_next = p.tanh(p.dot(self.Wax, x) + p.dot(self.Waa, a_prev) + self.b)
+        a_next = p.tanh(p.dot(self.Wax, x.T) + p.dot(self.Waa, a_prev) + self.b)
         y_hat = self.softmax(p.dot(self.Wya, a_next) + self.by)
-        return a_next, y_hat.reshape(-1, )
+        return a_next, y_hat.T
 
     def rnn_step_backward(self, dout, x, a, a_prev, da_next):
-        self.dWya += p.dot(dout, a.T)
-        self.dby += dout
-        da = p.dot(self.Wya.T, dout) + da_next
+        self.dWya += p.dot(a, dout).T
+        self.dby += p.mean(dout.T, axis=1, keepdims=True)
+        da = p.dot(dout, self.Wya).T + da_next
         daraw = (1 - a * a) * da
-        self.db += daraw
-        self.dWax += p.dot(daraw, x.T)
+        self.db += p.mean(daraw, axis=1, keepdims=True)
+        self.dWax += p.dot(daraw, x)
         self.dWaa += p.dot(daraw, a_prev.T)
         da_next = p.dot(self.Waa.T, daraw)
         return da_next
+
 # class Convolution(Layer):
 #     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
 #         super(Convolution, self).__init__(activation=activation)
