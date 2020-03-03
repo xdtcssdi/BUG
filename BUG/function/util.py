@@ -6,7 +6,6 @@ import json
 import re
 from bs4 import BeautifulSoup
 import h5py
-import numpy as np
 from BUG.Layers.Layer import SimpleRNN
 from BUG.function.Activation import ac_get
 from BUG.function.zhtools.langconv import Converter
@@ -75,7 +74,7 @@ def one_hot(labels, nb_classes=None):
     '''
     if labels.shape[-1]:
         # array : batch_size, classes, time_steps
-        array = np.zeros([labels.shape[0], nb_classes, labels.shape[-1]])
+        array = p.zeros([labels.shape[0], nb_classes, labels.shape[-1]])
         for i in range(labels.shape[0]):
             for j in range(labels.shape[1]):
                 array[i, labels[i, j], j] = 1
@@ -218,7 +217,7 @@ def load_data_gem_lyrics():
 
 
 def load_data_dinos_names():
-    np.random.seed(1)
+    p.random.seed(1)
     with open('/Users/oswin/Documents/BS/BUG/datasets/dinos.txt') as f:
         data = f.readlines()
         example = [seq.lower().strip() for seq in data]
@@ -264,7 +263,7 @@ def data_iter_consecutive(txt, batch_size, time_steps, vocab_size):
     :return: X : [batch_size, batch_len]
     '''
     data_len = len(txt)
-    txt = np.array(txt)
+    txt = p.array(txt)
     batch_len = data_len // batch_size
     indices = txt[: batch_size*batch_len].reshape([batch_size, batch_len])
     epoch_size = (batch_len-1) // time_steps

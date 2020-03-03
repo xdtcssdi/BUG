@@ -2,8 +2,6 @@ import math
 import os
 import pickle
 
-import numpy
-
 from BUG.Layers.Normalization import BatchNormal
 from BUG.Layers.im2col import im2col_indices, col2im_indices_cpu, col2im_indices_gpu
 from BUG.function.Activation import ac_get_grad, ac_get
