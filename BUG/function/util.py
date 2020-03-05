@@ -10,7 +10,7 @@ from BUG.Layers.Layer import SimpleRNN
 from BUG.function.Activation import ac_get
 from BUG.function.zhtools.langconv import Converter
 from BUG.load_package import p
-
+import numpy as np
 
 def load_data(path):
     train_dataset = h5py.File(path[0], "r")
@@ -72,7 +72,7 @@ def one_hot(labels, nb_classes=None):
     :param nb_classes: 分类数
     :return: one_hot 矩阵
     '''
-    if labels.shape[-1]:
+    if labels.ndim == 2:
         # array : batch_size, classes, time_steps
         array = p.zeros([labels.shape[0], nb_classes, labels.shape[-1]])
         for i in range(labels.shape[0]):
@@ -96,7 +96,6 @@ def one_hot(labels, nb_classes=None):
             nb_classes = classes.size
         one_hot_labels = np.zeros((labels.shape[0], nb_classes))
         for i, c in enumerate(classes):
-            print(labels == c, i)
             one_hot_labels[labels == c, i] = 1.
         return one_hot_labels
 

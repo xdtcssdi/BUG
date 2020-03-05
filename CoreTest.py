@@ -4,7 +4,8 @@ from BUG.Layers.Layer import Core
 from BUG.Model.Model import Model
 from BUG.function.util import load_data, one_hot
 from tensorflow import keras
-
+import matplotlib.pyplot as plt
+from BUG.load_package import p
 
 def f2():
     # 数据预处理
@@ -19,13 +20,13 @@ def f2():
     # 创建网络架构
     net = Model()
     net.add(Core(64, batchNormal=True))
-    net.add(Core(32, batchNormal=False))
     net.add(Core(16, batchNormal=False))
+    net.add(Core(8, batchNormal=False))
     net.add(Core(1, "sigmoid"))
     net.compile()
     net.fit(X_train, Y_train, X_test, Y_test, batch_size=X_train.shape[0]//10,
-            is_normalizing=False, lossMode='CrossEntry',
-            learning_rate=0.001, iterator=1000, optimize='Adam')
+            is_normalizing=False, lossMode='CrossEntry',save_epoch=1000,
+            learning_rate=0.001, iterator=1000, optimize='BGD')
 
 
 def f3():

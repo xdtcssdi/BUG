@@ -4,7 +4,7 @@ from BUG.Layers.Layer import Convolution, Pooling, Core
 from BUG.Model.Model import Model
 from BUG.function.util import one_hot
 from BUG.load_package import p
-
+import matplotlib.pyplot as plt
 
 def LeNet5():
     fashion_mnist = keras.datasets.fashion_mnist
@@ -23,7 +23,7 @@ def LeNet5():
     net.add(Core(84, batchNormal=True))
     net.add(Core(10, batchNormal=True, activation="softmax"))
     net.compile()
-    net.fit(X_train, Y_train, X_test, Y_test, batch_size=10,
+    net.fit(X_train, Y_train, X_test, Y_test, batch_size=10,iterator=100,
             learning_rate=0.0001, is_normalizing=False,
             lossMode='SoftmaxCrossEntry', optimize='Adam')
 

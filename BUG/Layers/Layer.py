@@ -2,6 +2,8 @@ import math
 import os
 import pickle
 
+import numpy
+
 from BUG.Layers.Normalization import BatchNormal
 from BUG.Layers.im2col import im2col_indices, col2im_indices_cpu, col2im_indices_gpu
 from BUG.function.Activation import ac_get_grad, ac_get
@@ -24,12 +26,10 @@ class Layer(object):
     def __init__(self, unit_number=0, activation="relu"):
         self.unit_number = unit_number
         self.activation = activation
+        self.parameters = {}
+        self.gradients = {}
         self.pre_layer = None
         self.next_layer = None
-        self.W = None
-        self.b = None
-        self.dW = None
-        self.db = None
         self.dZ = None
         self.isFirst = False
         self.isLast = False
@@ -109,29 +109,28 @@ class Convolution(Layer):
                      'batchNormal': batchNormal}
 
     def init_params(self, A_pre):  # pre_nc 前一个通道数
-        pre_nc = A_pre.shape[1]
-
-        if self.W is None:
+        if 'W' not in self.parameters:
+            pre_nc = A_pre.shape[1]
             W_shape = (self.filter_count, pre_nc, self.filter_shape[0], self.filter_shape[1])
             n_l = self.filter_shape[0] * self.filter_shape[1] * self.filter_count
             if self.activation == 'relu':  # 'kaiming'
-                self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
+                self.parameters['W'] = p.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
             elif self.activation == 'leak_relu':  # 'kaiming'
-                self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
+                self.parameters['W'] = p.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
             else:
                 n_x, d_x, h_x, w_x = A_pre.shape  # 'xavier'
-                self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
-            self.dW = p.zeros_like(self.W)
+                self.parameters['W'] = p.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
 
-        if self.b is None:
-            self.b = p.zeros(self.filter_count)
-            self.db = p.zeros_like(self.b)
+            self.gradient['dW'] = p.zeros_like(self.parameters['W'])
+        if 'b' not in self.parameters:
+            self.parameters['b'] = p.zeros(self.filter_count)
+            self.gradient['db'] = p.zeros_like(self.parameters['W'])
 
     def save_params(self, path, filename):
         if not os.path.exists(path):
             os.mkdir(path)
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.W, b=self.b)
+        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'], b=self.parameters['b'])
         if self.batch_normal:
             self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
 
@@ -143,8 +142,8 @@ class Convolution(Layer):
         self.stride = dic['stride']
         self.padding = dic['padding']
         self.activation = dic['activation']
-        self.W = params['W']
-        self.b = params['b']
+        self.parameters['W'] = params['W']
+        self.parameters['b'] = params['b']
         if dic['batchNormal']:
             self.batch_normal = BatchNormal()
             self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal.npz')
@@ -153,7 +152,7 @@ class Convolution(Layer):
     def forward(self, A_pre, Y=None, mode='train'):
         self.init_params(A_pre)
         self.A_pre = A_pre
-        output_data = self.conv(A_pre, self.W, self.b, self.stride, self.padding)
+        output_data = self.conv(A_pre, self.parameters['W'], self.parameters['b'], self.stride, self.padding)
         self.Z = self.batch_normal.forward(output_data, mode) if self.batch_normal else output_data
         return ac_get(self.Z, self.activation)
 
@@ -162,25 +161,17 @@ class Convolution(Layer):
         dZ = ac_get_grad(dout, self.Z, self.activation)
         if self.batch_normal:
             dZ = self.batch_normal.backward(dZ)
-        self.db = p.sum(dZ, axis=(0, 2, 3))
-        num_filters, _, filter_height, filter_width = self.W.shape
+        self.gradients['db'] = p.sum(dZ, axis=(0, 2, 3))
+        num_filters, _, filter_height, filter_width = self.parameters['W'].shape
         dout_reshaped = dZ.transpose(1, 2, 3, 0).reshape(num_filters, -1)
-        self.dW = dout_reshaped.dot(self.X_col.T).reshape(self.W.shape)
-        dx_cols = self.W.reshape(num_filters, -1).T.dot(dout_reshaped)
+        self.gradients['dW'] = dout_reshaped.dot(self.X_col.T).reshape(self.parameters['W'].shape)
+        dx_cols = self.parameters['W'].reshape(num_filters, -1).T.dot(dout_reshaped)
         if isinstance(dZ, numpy.ndarray):
             dx = col2im_indices_cpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
         else:
             dx = col2im_indices_gpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
         del self.A_pre, self.X_col
         return dx
-
-    @property
-    def params(self):
-        return self.W, self.b
-
-    @property
-    def grads(self):
-        return self.dW, self.db
 
     def conv(self, X, W, b, stride=1, padding=0):
         '''
@@ -220,7 +211,7 @@ class Core(Layer):
         x = x.reshape(x.shape[0], -1)
         self.init_params(x)
         self.x = x
-        self.Z = p.dot(self.x, self.W) + self.b
+        self.Z = p.dot(self.x, self.parameters['W']) + self.parameters['b']
         if self.batch_normal:
             self.Z = self.batch_normal.forward(self.Z)
         return ac_get(self.Z, self.activation)
@@ -229,31 +220,31 @@ class Core(Layer):
         dout = ac_get_grad(dout, self.Z, self.activation)
         if self.batch_normal:
             dout = self.batch_normal.backward(dout)
-        dx = p.dot(dout, self.W.T)
-        self.dW = p.dot(self.x.T, dout)
-        self.db = p.sum(dout, axis=0)
+        dx = p.dot(dout, self.parameters['W'].T)
+        self.gradients['dW'] = p.dot(self.x.T, dout)
+        self.gradients['db'] = p.sum(dout, axis=0)
         dx = dx.reshape(self.original_x_shape)  # 还原输入数据的形状（对应张量）
         return dx
 
     def init_params(self, A_pre):
         pre_unit = A_pre.shape[1]
-        if self.W is None:
+        if 'W' not in self.parameters:
             if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
-                self.W = p.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
-                                          math.sqrt(6. / (pre_unit + self.unit_number)),
-                                          (pre_unit, self.unit_number))
+                self.parameters['W'] = p.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
+                                                        math.sqrt(6. / (pre_unit + self.unit_number)),
+                                                        (pre_unit, self.unit_number))
             elif self.activation == 'tanh' or self.activation == 'sigmoid':
-                self.W = p.random.uniform(-1., 1., (pre_unit, self.unit_number)) \
-                         * p.sqrt(6. / (pre_unit + self.unit_number))
+                self.parameters['W'] = p.random.uniform(-1., 1., (pre_unit, self.unit_number)) \
+                                       * p.sqrt(6. / (pre_unit + self.unit_number))
             else:  # 'MSRA'
-                self.W = p.random.normal(0, math.sqrt(2. / pre_unit), size=(pre_unit, self.unit_number))
+                self.parameters['W'] = p.random.normal(0, math.sqrt(2. / pre_unit), size=(pre_unit, self.unit_number))
             # self.W = p.random.randn(pre_unit, self.unit_number) * 0.01
-        if self.b is None:
-            self.b = p.zeros((1, self.unit_number))
+        if 'b' not in self.parameters:
+            self.parameters['b'] = p.zeros((1, self.unit_number))
 
     def save_params(self, path, filename):
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.W, b=self.b)
+        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'], b=self.parameters['b'])
         if self.batch_normal:
             self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
 
@@ -265,16 +256,8 @@ class Core(Layer):
             self.batch_normal = BatchNormal()
             self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal.npz')
         r = p.load(path + os.sep + self.name + '_' + filename + '.npz')
-        self.W = r['W']
-        self.b = r['b']
-
-    @property
-    def params(self):
-        return self.W, self.b
-
-    @property
-    def grads(self):
-        return self.dW, self.db
+        self.parameters['W'] = r['W']
+        self.parameters['b'] = r['b']
 
 
 class Pooling(Layer):
@@ -346,9 +329,8 @@ class SimpleRNN(Layer):
     def load_params(self, path, filename):
         pass
 
-    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, time_steps, n_a=50, learning_rate=0.01, activation='softmax'):
+    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, n_a=50, learning_rate=0.01, activation='softmax'):
         super(SimpleRNN, self).__init__(activation=activation)
-        self.time_steps = time_steps
         self.n_a = n_a
         self.ix_to_char = ix_to_char
         self.char_to_ix = char_to_ix
@@ -357,18 +339,16 @@ class SimpleRNN(Layer):
 
     def init_params(self, n_x_y):
         self.n_x, self.n_y = n_x_y
-        self.Waa = p.random.randn(self.n_a, self.n_a) * 0.01
-        self.Wax = p.random.randn(self.n_a, self.n_x) * 0.01
-        self.Wya = p.random.randn(self.n_y, self.n_a) * 0.01
-        self.W = p.concatenate((self.Waa, self.Wax), axis=1)
-        self.dWaa = p.zeros_like(self.Waa)
-        self.dWax = p.zeros_like(self.Wax)
-        self.dWya = p.zeros_like(self.Wya)
-        self.b = p.zeros((self.n_a, 1))
-        self.by = p.zeros((self.n_y, 1))
-        self.db = p.zeros_like(self.b)
-        self.dby = p.zeros_like(self.by)
-        self.dW = p.zeros((self.n_a, self.n_x + self.n_a))
+        self.parameters['Waa'] = p.random.randn(self.n_a, self.n_a) * 0.01
+        self.parameters['Wax'] = p.random.randn(self.n_a, self.n_x) * 0.01
+        self.parameters['Wya'] = p.random.randn(self.n_y, self.n_a) * 0.01
+        self.gradients['dWaa'] = p.zeros_like(self.parameters['Waa'])
+        self.gradients['dWax'] = p.zeros_like(self.parameters['Wax'])
+        self.gradients['dWya'] = p.zeros_like(self.parameters['Wya'])
+        self.parameters['b'] = p.zeros((self.n_a, 1))
+        self.parameters['by'] = p.zeros((self.n_y, 1))
+        self.gradients['db'] = p.zeros_like(self.parameters['b'])
+        self.gradients['dby'] = p.zeros_like(self.parameters['by'])
 
     def softmax(self, x):
         e_x = p.exp(x - p.max(x))
@@ -382,339 +362,170 @@ class SimpleRNN(Layer):
         :return:
         '''
         self.X = X
-        self.y_hat = p.zeros([X.shape[0], self.time_steps, self.n_y])
-        self.a = p.zeros([self.n_a, self.time_steps, X.shape[0]])
+        self.a0 = a0 if a0 is not None else p.zeros([self.n_a, X.shape[0]])
+        m, T_x, n_x = X.shape
+        self.y_hat = p.zeros([X.shape[0], T_x, self.n_y])
+        self.a = p.zeros([self.n_a, T_x, X.shape[0]])
         if a0 is not None:
             self.a[:, 0, :] = a0
-        for t in range(self.time_steps - 1):
+
+        for t in range(T_x - 1):
             at, self.y_hat[:, t, :] = self.rnn_step_forward(self.a[:, t, :], X[:, t, :])
             self.a[:, t + 1, :] = at
-        self.at, self.y_hat[:, self.time_steps - 1, :] = self.rnn_step_forward(self.a[:, self.time_steps - 1, :],
-                                                                               X[:, self.time_steps - 1, :])
+        self.at, self.y_hat[:, T_x - 1, :] = self.rnn_step_forward(self.a[:, T_x - 1, :], X[:, T_x - 1, :])
         return self.at, self.y_hat
 
     def backward(self, dout):
-        self.dWaa = p.zeros_like(self.Waa)
-        self.dWax = p.zeros_like(self.Wax)
-        self.dWya = p.zeros_like(self.Wya)
-        self.db = p.zeros_like(self.b)
-        self.dby = p.zeros_like(self.by)
-        da_next = p.zeros((self.n_a, dout.shape[0]))
-        da_next = self.rnn_step_backward(dout[:, dout.shape[1] - 1, :], self.X[:, dout.shape[1] - 1, :], self.at,
-                                         self.a[:, dout.shape[1] - 2, :], da_next)
-        for t in reversed(range(dout.shape[1] - 1)):
-            da_next = self.rnn_step_backward(dout[:, t, :], self.X[:, t, :], self.a[:, t, :], self.a[:, t - 1, :],
-                                             da_next)
+        self.gradients['dWaa'] = p.zeros_like(self.parameters['Waa'])
+        self.gradients['dWax'] = p.zeros_like(self.parameters['Wax'])
+        self.gradients['dWya'] = p.zeros_like(self.parameters['Wya'])
+        self.gradients['db'] = p.zeros_like(self.parameters['b'])
+        self.gradients['dby'] = p.zeros_like(self.parameters['by'])
+        da_next = self.at
+        for t in reversed(range(self.X.shape[1])):
+            da_next = self.rnn_step_backward(dout[:, t, :], self.X[:, t, :], self.a[:, t, :],
+                                             self.a[:, t - 1, :] if t != 0 else self.a0, da_next)
         return da_next
 
     def rnn_step_forward(self, a_prev, x):
-        a_next = p.tanh(p.dot(self.Wax, x.T) + p.dot(self.Waa, a_prev) + self.b)
-        y_hat = self.softmax(p.dot(self.Wya, a_next) + self.by)
+        a_next = p.tanh(
+            p.dot(self.parameters['Wax'], x.T) + p.dot(self.parameters['Waa'], a_prev) + self.parameters['b'])
+        y_hat = self.softmax(p.dot(self.parameters['Wya'], a_next) + self.parameters['by'])
         return a_next, y_hat.T
 
     def rnn_step_backward(self, dout, x, a, a_prev, da_next):
-        self.dWya += p.dot(a, dout).T
-        self.dby += p.mean(dout.T, axis=1, keepdims=True)
-        da = p.dot(dout, self.Wya).T + da_next
+        self.gradients['dWya'] += p.dot(a, dout).T
+        self.gradients['dby'] += p.mean(dout.T, axis=1, keepdims=True)
+        da = p.dot(dout, self.parameters['Wya']).T + da_next
         daraw = (1 - a * a) * da
-        self.db += p.mean(daraw, axis=1, keepdims=True)
-        self.dWax += p.dot(daraw, x)
-        self.dWaa += p.dot(daraw, a_prev.T)
-        da_next = p.dot(self.Waa.T, daraw)
+        self.gradients['db'] += p.mean(daraw, axis=1, keepdims=True)
+        self.gradients['dWax'] += p.dot(daraw, x)
+        self.gradients['dWaa'] += p.dot(daraw, a_prev.T)
+        da_next = p.dot(self.parameters['Waa'].T, daraw)
         return da_next
 
-# class Convolution(Layer):
-#     def __init__(self, filter_count, filter_shape, stride=1, padding=0, activation='relu', batchNormal=False):
-#         super(Convolution, self).__init__(activation=activation)
-#         self.name = 'Convolution'
-#         self.filter_count = filter_count  # 卷积核数量
-#         self.filter_shape = filter_shape  # 卷积核形状
-#         self.stride = stride  # 步长
-#         self.padding = padding  # pad
-#         self.Z_pad = None
-#         self.batchNormal = BatchNormal() if batchNormal else None
-#
-#     def init_params(self, A_pre):  # pre_nc 前一个通道数
-#         pre_nc = A_pre.shape[1]
-#
-#         if self.W is None:
-#             W_shape = (self.filter_count, pre_nc, self.filter_shape[0], self.filter_shape[1])
-#             n_l = self.filter_shape[0] * self.filter_shape[1] * self.filter_count
-#             if self.activation == 'relu':  # 'kaiming'
-#                 self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
-#             elif self.activation == 'leak_relu':  # 'kaiming'
-#                 self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
-#             else:
-#                 n_x, d_x, h_x, w_x = A_pre.shape  # 'xavier'
-#                 self.W = p.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
-#             self.dW = p.zeros_like(self.W)
-#
-#         if self.b is None:
-#             self.b = p.random.randn(self.filter_count)
-#             self.db = p.zeros_like(self.b)
-#
-#     def forward(self, A_pre, mode='train'):
-#         self.init_params(A_pre)
-#         self.A_pre = A_pre
-#         FN, C, FH, FW = self.W.shape
-#         N, C, H, W = A_pre.shape
-#         out_h = 1 + int((H + 2 * self.padding - FH) / self.stride)
-#         out_w = 1 + int((W + 2 * self.padding - FW) / self.stride)
-#
-#         col = im2col(A_pre, FH, FW, self.stride, self.padding)
-#         col_W = self.W.reshape(FN, -1).T
-#
-#         out = p.dot(col, col_W) + self.b
-#         out = out.reshape(N, out_h, out_w, -1).transpose(0, 3, 1, 2)
-#
-#         self.col = col
-#         self.col_W = col_W
-#         Z = self.batchNormal.forward(out, mode) if self.batchNormal else out
-#         return ac_get(Z, self.activation)
-#
-#     def backward(self, dout):
-#         if self.batchNormal:
-#             dout = self.batchNormal.backward(dout)
-#         FN, C, FH, FW = self.W.shape
-#         dout = dout.transpose(0, 2, 3, 1).reshape(-1, FN)
-#
-#         self.db = p.sum(dout, axis=0)
-#         self.dW = p.dot(self.col.T, dout)
-#         self.dW = self.dW.transpose(1, 0).reshape(FN, C, FH, FW)
-#
-#         dcol = p.dot(dout, self.col_W.T)
-#         dx = col2im(dcol, self.A_pre.shape, FH, FW, self.stride, self.padding)
-#         return ac_get_grad(dx, self.A_pre, self.activation)
-#
-#     @property
-#     def params(self):
-#         return self.W, self.b
-#
-#     @property
-#     def grads(self):
-#         return self.dW, self.db
-#
-#
-# class Pooling(Layer):
-#     def __init__(self, filter_shape, paddingMode='same', stride=1, mode='max'):
-#         super(Pooling, self).__init__()
-#         self.filter_shape = filter_shape
-#         self.pool_h , self.pool_w = filter_shape
-#         self.name = 'Pooling'
-#         self.stride = stride
-#         self.padding = 0 if paddingMode == 'valid' else (filter_shape[0] - 1) // 2
-#         self.mode = mode
-#         assert (self.mode in ['max', 'average'])
-#
-#     def forward(self, x, mode='train'):
-#         N, C, H, W = x.shape
-#         out_h = int(1 + (H - self.pool_h) / self.stride)
-#         out_w = int(1 + (W - self.pool_w) / self.stride)
-#
-#         col = im2col(x, self.pool_h, self.pool_w, self.stride, self.padding)
-#         col = col.reshape(-1, self.pool_h * self.pool_w)
-#
-#         arg_max = p.argmax(col, axis=1)
-#         out = p.max(col, axis=1)
-#         out = out.reshape(N, out_h, out_w, C).transpose(0, 3, 1, 2)
-#
-#         self.x = x
-#         self.arg_max = arg_max
-#
-#         return out
-#
-#     def backward(self, dout):
-#         dout = dout.transpose(0, 2, 3, 1)
-#
-#         pool_size = self.pool_h * self.pool_w
-#         dmax = p.zeros((dout.size, pool_size))
-#         dmax[p.arange(self.arg_max.size), self.arg_max.flatten()] = dout.flatten()
-#         dmax = dmax.reshape(dout.shape + (pool_size,))
-#
-#         dcol = dmax.reshape(dmax.shape[0] * dmax.shape[1] * dmax.shape[2], -1)
-#         dx = col2im(dcol, self.x.shape, self.pool_h, self.pool_w, self.stride, self.padding)
-#
-#         return dx
 
+class LSTM(Layer):
 
-# class ConvolutionForloop(Layer):
-#
-#     def __init__(self, filter_count, filter_shape, stride=1, paddingMode='same',
-#         activation='relu', batchNormal=False):
-#         super(ConvolutionForloop, self).__init__(activation=activation)
-#         self.filter_count = filter_count  # 卷积核数量
-#         self.filter_shape = filter_shape  # 卷积核形状
-#         self.stride = stride  # 步长
-#         self.padding = 0 if paddingMode == 'valid' else (filter_shape[0] - 1) // 2
-#         self.Z_pad = None
-#         self.batchNormal = BatchNormal() if batchNormal else None
-#
-#     def init_params(self, pre_nc):  # pre_nc 前一个通道数
-#         if self.W is None:
-#             kernel_shape = (self.filter_count, pre_nc, self.filter_shape[0], self.filter_shape[1])
-#             self.W = p.random.randn(*kernel_shape)  # W.shape == (f, f ,pre_nc, nc)
-#         if self.b is None:
-#             self.b = p.random.randn(self.filter_count)  # b.shape = (1, 1, 1, nc)
-#
-#     # 没问题
-#     def forward(self, A_pre, mode='train'):
-#         self.A_pre = A_pre
-#         self.init_params(A_pre.shape[1])
-#
-#         n_h = int((A_pre.shape[2] + 2 * self.padding - self.filter_shape[0]) / self.stride + 1)
-#         n_w = int((A_pre.shape[3] + 2 * self.padding - self.filter_shape[1]) / self.stride + 1)
-#         Z = p.zeros((A_pre.shape[0], self.filter_count, n_h, n_w))
-#
-#         self.Z_pad = ZeroPad(A_pre, self.padding) if self.padding > 0 else A_pre
-#
-#         for i in range(A_pre.shape[0]):
-#             a_prev_pad = self.Z_pad[i]
-#             for h in range(Z.shape[2]):
-#                 for w in range(Z.shape[3]):
-#                     for nc in range(self.filter_count):
-#                         vs = h * self.stride
-#                         ve = vs + self.filter_shape[0]
-#                         hs = w * self.stride
-#                         he = hs + self.filter_shape[1]
-#                         a_slice = a_prev_pad[:, vs:ve, hs:he]
-#                         Z[i, nc, h, w] = p.sum(a_slice * self.W[nc, :, :, :] + self.b[nc])
-#         Zhat = self.batchNormal.forward(Z, mode) if self.batchNormal else Z
-#         return ac_get(Zhat, self.activation)
-#
-#     # 没问题
-#     def backward(self, dZ):
-#         if self.batchNormal:
-#             dZ = self.batchNormal.backward(dZ)
-#         dZ_pad = p.zeros_like(self.Z_pad)
-#         m, nc, n_h, n_w = dZ.shape
-#         self.dW = p.zeros_like(self.W)
-#         self.db = p.zeros_like(self.b)
-#         dA = p.zeros_like(self.A_pre)
-#
-#         if self.padding > 0:
-#             for i in range(m):
-#                 a_pre = self.Z_pad[i]
-#                 da_pre = dZ_pad[i]
-#                 for h in range(n_h):
-#                     for w in range(n_w):
-#                         for c in range(nc):
-#                             vs = h * self.stride
-#                             ve = vs + self.filter_shape[0]
-#                             hs = w * self.stride
-#                             he = hs + self.filter_shape[1]
-#                             a_slice = a_pre[:, vs:ve, hs:he]
-#                             da_pre[:, vs:ve, hs:he] = da_pre[:, vs:ve, hs:he] + self.W[c, :, :, :] * dZ[i, c, h, w]
-#                             self.dW[c, :, :, :] = self.dW[c, :, :, :] + a_slice * dZ[i, c, h, w]
-#                             self.db[c] = self.db[c] + dZ[i, c, h, w]
-#                 dA[i] = da_pre[:, self.padding:-self.padding, self.padding:-self.padding]
-#         else:
-#             for i in range(m):
-#                 a_pre = self.Z_pad[i]
-#                 da_pre = dZ_pad[i]
-#                 for h in range(n_h):
-#                     for w in range(n_w):
-#                         for c in range(nc):
-#                             vs = h * self.stride
-#                             ve = vs + self.filter_shape[0]
-#                             hs = w * self.stride
-#                             he = hs + self.filter_shape[1]
-#                             a_slice = a_pre[:, vs:ve, hs:he]
-#                             da_pre[:, vs:ve, hs:he] = da_pre[:, vs:ve, hs:he] + self.W[c, :, :, :] * dZ[i, c, h, w]
-#                             self.dW[c, :, :, :] = self.dW[c, :, :, :] + a_slice * dZ[i, c, h, w]
-#                             self.db[c] = self.db[c] + dZ[i, c, h, w]
-#                 dA[i] = da_pre
-#         return ac_get_grad(dA, self.A_pre, self.activation)
-#
-#     @property
-#     def params(self):
-#         return self.W, self.b
-#
-#     @property
-#     def grads(self):
-#         return self.dW, self.db
+    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, n_a=50):
+        super(LSTM, self).__init__()
+        self.n_a = n_a
+        self.ix_to_char = ix_to_char
+        self.char_to_ix = char_to_ix
+        self.gradients = {}
+        self.parameters = {}
+        self.init_params([n_a, n_x, n_y])
 
+    def init_params(self, n_a_x_y):
+        n_a, n_x, self.n_y = n_a_x_y
+        self.parameters['Wf'] = p.random.randn(n_a, n_a + n_x)
+        self.parameters['bf'] = p.random.randn(n_a, 1)
+        self.parameters['Wi'] = p.random.randn(n_a, n_a + n_x)
+        self.parameters['bi'] = p.random.randn(n_a, 1)
+        self.parameters['Wo'] = p.random.randn(n_a, n_a + n_x)
+        self.parameters['bo'] = p.random.randn(n_a, 1)
+        self.parameters['Wc'] = p.random.randn(n_a, n_a + n_x)
+        self.parameters['bc'] = p.random.randn(n_a, 1)
+        self.parameters['Wy'] = p.random.randn(self.n_y, n_a)
+        self.parameters['by'] = p.random.randn(self.n_y, 1)
 
-#
-# class PoolingForloop(Layer):
-#     def __init__(self, filter_shape, paddingMode='same', stride=1, mode='max'):
-#         super(PoolingForloop, self).__init__()
-#         self.filter_shape = filter_shape
-#         self.padding = 0 if paddingMode == 'valid' else (filter_shape[0] - 1) // 2
-#         self.stride = stride
-#         self.mode = mode
-#         assert (self.mode in ['max', 'average'])
-#
-#     def init_params(self, nx):
-#         pass
-#
-#     def forward(self, A_pre, mode='train'):
-#         m, nc, h, w = A_pre.shape
-#
-#         n_h = int((h + 2 * self.padding - self.filter_shape[0]) / self.stride + 1)
-#         n_w = int((w + 2 * self.padding - self.filter_shape[1]) / self.stride + 1)
-#         A = p.zeros((m, nc, n_h, n_w))
-#
-#         self.A_pad = ZeroPad(A_pre, self.padding) if self.padding > 0 else A_pre
-#
-#         if self.mode == 'max':
-#             for i in range(m):
-#                 a_prev_pad = self.A_pad[i]
-#                 for h in range(n_h):
-#                     for w in range(n_w):
-#                         for c in range(nc):
-#                             vs = h * self.stride
-#                             ve = vs + self.filter_shape[0]
-#                             hs = w * self.stride
-#                             he = hs + self.filter_shape[1]
-#                             a_slice = a_prev_pad[c, vs:ve, hs:he]
-#                             A[i, c, h, w] = p.max(a_slice)
-#         elif self.mode == 'average':
-#             for i in range(m):
-#                 a_prev_pad = self.A_pad[i]
-#                 for h in range(n_h):
-#                     for w in range(n_w):
-#                         for c in range(nc):
-#                             vs = h * self.stride
-#                             ve = vs + self.filter_shape[0]
-#                             hs = w * self.stride
-#                             he = hs + self.filter_shape[1]
-#                             a_slice = a_prev_pad[c, vs:ve, hs:he]
-#                             A[i, c, h, w] = p.mean(a_slice)
-#         return A
-#
-#     def backward(self, dZ):
-#         m, nc, n_h, n_w = dZ.shape
-#         dA = p.zeros_like(self.A_pad)
-#         if self.mode == 'max':
-#             for i in range(m):
-#                 da = dZ[i]
-#                 for h in range(n_h):
-#                     for w in range(n_w):
-#                         for c in range(nc):
-#                             vs = h * self.stride
-#                             ve = vs + self.filter_shape[0]
-#                             hs = w * self.stride
-#                             he = hs + self.filter_shape[1]
-#                             dA[i, c, vs:ve, hs:he] += self.maxPooling_backward(self.A_pad[i, c, vs:ve, hs:he],
-#                                                                                da[c, h, w])
-#         elif self.mode == 'average':
-#             for i in range(m):
-#                 da = dZ[i]
-#                 for h in range(n_h):
-#                     for w in range(n_w):
-#                         for c in range(nc):
-#                             vs = h * self.stride
-#                             ve = vs + self.filter_shape[0]
-#                             hs = w * self.stride
-#                             he = hs + self.filter_shape[1]
-#                             dA[i, c, vs:ve, hs:he] += self.averagePooling_backward(da[c, h, w])
-#
-#         return dA[:, :, self.padding:-self.padding, self.padding:-self.padding] if self.padding > 0 else dA
-#
-#     def maxPooling_backward(self, z, grad):  # input: Z:matrix, grad is real return matrix
-#         assert (z.ndim == 2)
-#         return (z == p.max(z)) * grad
-#
-#     def averagePooling_backward(self, a):  # input : a is real return matrix
-#         return p.ones((self.filter_shape[0], self.filter_shape[1])) * (
-#                 a / (self.filter_shape[0] * self.filter_shape[1]))
+    def softmax(self, x):
+        e_x = p.exp(x - p.max(x))
+        return e_x / e_x.sum(axis=0)
+
+    def forward(self, X, a0=None, mode='train'):
+        self.x = X
+        n_x, m, T_x = X.shape
+        n_y, n_a = self.parameters['Wy'].shape
+        self.a = p.zeros((n_a, m, T_x))
+        c = p.zeros((n_a, m, T_x))
+        y = p.zeros((n_y, m, T_x))
+        a_next = a0
+        c_next = p.zeros_like(a_next)
+        for t in range(T_x):
+            a_next, c_next, yt_pred = self.lstm_step_forward(a_next, X[..., t], c_next, )
+            self.a[..., t] = a_next
+            y[..., t] = yt_pred
+            c[..., t] = c_next
+
+        return a_next, y, c
+
+    def backward(self, dout):
+        n_x, m, T_x = self.x.shape
+        self.gradients['dx'] = p.zeros([n_x, m, T_x])
+        self.gradients['dWf'] = p.zeros([self.n_a, self.n_a + n_x])
+        self.gradients['dWi'] = p.zeros([self.n_a, self.n_a + n_x])
+        self.gradients['dWc'] = p.zeros([self.n_a, self.n_a + n_x])
+        self.gradients['dWo'] = p.zeros([self.n_a, self.n_a + n_x])
+        self.gradients['dWy'] = p.zeros([self.n_y, self.n_a])
+        self.gradients['dby'] = p.zeros([self.n_y, 1])
+        self.gradients['dbf'] = p.zeros([self.n_a, 1])
+        self.gradients['dbi'] = p.zeros([self.n_a, 1])
+        self.gradients['dbc'] = p.zeros([self.n_a, 1])
+        self.gradients['dbo'] = p.zeros([self.n_a, 1])
+
+        da_prev = p.zeros([self.n_a, m])
+        dc_prev = p.zeros([self.n_a, m])
+        for t in reversed(range(T_x)):
+            gradients = self.lstm_step_backward(dout[:, :, t], self.x[..., t], self.a[..., t], da_prev, dc_prev)
+            self.gradients['dx'][:, :, t] = gradients['dx']
+            self.gradients['dWf'] += gradients['dWf']
+            self.gradients['dWi'] += gradients['dWi']
+            self.gradients['dWc'] += gradients['dWc']
+            self.gradients['dWo'] += gradients['dWo']
+            self.gradients['dbf'] += gradients['dbf']
+            self.gradients['dbi'] += gradients['dbi']
+            self.gradients['dbc'] += gradients['dbc']
+            self.gradients['dbo'] += gradients['dbo']
+            self.gradients['dWy'] += gradients['dWy']
+            self.gradients['dby'] += gradients['dby']
+            da_prev = gradients['da_prev']
+            dc_prev = gradients['dc_prev']
+        # da0 = gradients['da_prev']
+
+    def save_params(self, path, filename):
+        pass
+
+    def load_params(self, path, filename):
+        pass
+
+    def lstm_step_forward(self, a_prev, x, c_prev):
+        # print(a_prev.shape, x.shape)
+        merge = p.concatenate([a_prev, x], axis=0)
+        f = ac_get(p.dot(self.parameters['Wf'], merge) + self.parameters['bf'], 'sigmoid')
+        i = ac_get(p.dot(self.parameters['Wi'], merge) + self.parameters['bi'], 'sigmoid')
+        c_hat = p.tanh(p.dot(self.parameters['Wc'], merge) + self.parameters['bc'])
+        c = f * c_prev + i * c_hat
+        o = ac_get(p.dot(self.parameters['Wo'], merge) + self.parameters['bo'], 'sigmoid')
+        a = o * p.tanh(c)
+        y = ac_get(p.dot(self.parameters['Wy'], a) + self.parameters['by'], 'softmax')
+        self.caches = (f, i, c_hat, c_prev, c, o, a_prev, a)
+        return a, c, y
+
+    def lstm_step_backward(self, dout, xt, at, da_next, dc_next):
+        f, i, c_hat, c_prev, c_next, o, a_prev, a_next = self.caches
+        n_a, m = a_next.shape
+        do = da_next * p.tanh(c_next) * o * (1 - o)
+        dc_hat = (dc_next * i + o * (1 - p.square(p.tanh(c_next))) * i * da_next) * (1 - p.square(c_hat))
+        di = (dc_next * c_hat + o * (1 - p.square(p.tanh(c_next))) * c_hat * da_next) * i * (1 - i)
+        df = (dc_next * c_prev + o * (1 - p.square(p.tanh(c_next))) * c_prev * da_next) * f * (1 - f)
+        concat = p.concatenate((a_prev, xt), axis=0).T
+        gradient = {}
+        gradient['dWy'] = p.dot(dout, at.T)
+        gradient['dby'] = p.mean(dout, axis=1, keepdims=True)
+        gradient['dWf'] = p.dot(df, concat)
+        gradient['dWi'] = p.dot(di, concat)
+        gradient['dWc'] = p.dot(dc_hat, concat)
+        gradient['dWo'] = p.dot(do, concat)
+        gradient['dbf'] = p.sum(df, axis=1, keepdims=True)
+        gradient['dbi'] = p.sum(di, axis=1, keepdims=True)
+        gradient['dbc'] = p.sum(dc_hat, axis=1, keepdims=True)
+        gradient['dbo'] = p.sum(do, axis=1, keepdims=True)
+        gradient['da_prev'] = p.dot(self.parameters['Wf'][:, :n_a].T, df) + p.dot(self.parameters['Wc'][:, :n_a].T,
+                                                                                  dc_hat) + \
+                              p.dot(self.parameters['Wi'][:, :n_a].T, di) + p.dot(self.parameters['Wo'][:, :n_a].T, do)
+        gradient['dc_prev'] = dc_next * f + o * (1 - p.square(p.tanh(c_next))) * f * da_next
+        gradient['dx'] = p.dot(self.parameters['Wf'][:, n_a:].T, df) + p.dot(self.parameters['Wc'][:, n_a:].T, dc_hat) + \
+                         p.dot(self.parameters['Wi'][:, n_a:].T, di) + p.dot(self.parameters['Wo'][:, n_a:].T, do)
+
+        return gradient

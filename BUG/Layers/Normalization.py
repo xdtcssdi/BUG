@@ -4,24 +4,22 @@ from BUG.load_package import p
 class BatchNormal:
     def __init__(self, epsilon=1e-6):
         self.epsilon = epsilon
-        self.gamma = None
-        self.beta = None
-        self.dbeta = None
-        self.dgamma = None
+        self.parameters = {}
+        self.gradients = {}
         self.caches = None
         self.running_mean = None
         self.running_var = None
 
     def save_params(self, filename):
-        p.savez_compressed(filename, epsilon=self.epsilon, gamma=self.gamma,
-                           beta=self.beta, running_mean=self.running_mean,
+        p.savez_compressed(filename, epsilon=self.epsilon, gamma=self.parameters['gamma'],
+                           beta=self.parameters['beta'], running_mean=self.running_mean,
                            running_var=self.running_var)
 
     def load_params(self, filename):
         r = p.load(filename)
         self.epsilon = r['epsilon']
-        self.gamma = r['gamma']
-        self.beta = r['beta']
+        self.parameters['gamma'] = r['gamma']
+        self.parameters['beta'] = r['beta']
         self.running_mean = r['running_mean']
         self.running_var = r['running_var']
 
@@ -44,14 +42,6 @@ class BatchNormal:
         else:
             raise ValueError
 
-    @property
-    def params(self):
-        return self.gamma, self.beta
-
-    @property
-    def grads(self):
-        return self.dgamma, self.dbeta
-
     def fourDims_batchnorm_forward(self, A_pre, mode='train', momentum=0.9):
         N, C, H, W = A_pre.shape
         x_flat = A_pre.reshape(N * H * W, C)
@@ -68,9 +58,9 @@ class BatchNormal:
 
     def twoDims_batchnormal_forward(self, A_pre, mode='train', momentum=0.9):
         if mode == 'train':
-            if self.beta is None:
-                self.beta = p.zeros((A_pre.shape[-1],))
-                self.gamma = p.ones_like(self.beta)
+            if 'beta' not in self.parameters:
+                self.parameters['beta'] = p.zeros((A_pre.shape[-1],))
+                self.parameters['gamma'] = p.ones_like(self.parameters['beta'])
             mean = p.mean(A_pre, axis=0)
             xmu = A_pre - mean
             var = p.mean(xmu ** 2, axis=0)
@@ -84,12 +74,12 @@ class BatchNormal:
             self.sqrtvar = p.sqrt(var + self.epsilon)
             ivar = 1. / self.sqrtvar
             xhat = xmu * ivar
-            gammax = self.gamma * xhat
-            out = gammax + self.beta
+            gammax = self.parameters['gamma'] * xhat
+            out = gammax + self.parameters['beta']
             self.caches = (xhat, xmu, ivar, self.sqrtvar)
         elif mode == 'test':
-            scale = self.gamma / self.sqrtvar
-            out = A_pre * scale + (self.beta - self.running_mean * scale)
+            scale = self.parameters['gamma'] / self.sqrtvar
+            out = A_pre * scale + (self.parameters['beta'] - self.running_mean * scale)
         else:
             raise ValueError
         return out
@@ -98,10 +88,10 @@ class BatchNormal:
         xhat, xmu, ivar, sqrtvar = self.caches
         del self.caches
         m, nx = pre_grad.shape
-        self.dbeta = p.sum(pre_grad, axis=0)
+        self.gradients['dbeta'] = p.sum(pre_grad, axis=0)
         dgammax = pre_grad
-        self.dgamma = p.sum(xhat * dgammax, axis=0)
-        dxhat = self.gamma * dgammax
+        self.gradients['dgamma'] = p.sum(xhat * dgammax, axis=0)
+        dxhat = self.parameters['gamma'] * dgammax
         divar = p.sum(xmu * dxhat, axis=0)
         dxmu1 = dxhat * ivar
         dsqrtvar = -1. / (sqrtvar ** 2) * divar

@@ -24,7 +24,7 @@ class SoftCategoricalCross_entropy:
         self.epsilon = epsilon
 
     def forward(self, targets, outputs):
-        p.clip(targets, self.epsilon, 1.0-self.epsilon, out=targets)
+        p.clip(outputs, self.epsilon, 1.0-self.epsilon, out=outputs)
         if targets.ndim == 3:
             loss = []
             for targets, outputs in zip(targets, outputs):

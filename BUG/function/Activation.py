@@ -11,8 +11,15 @@ def ReluGrad(Z):
     return res
 
 
-def Sigmoid(Z):
-    return .5 * (1 + p.tanh(.5 * Z))
+def Sigmoid(x):
+    pos_mask = (x >= 0)
+    neg_mask = (x < 0)
+    z = p.zeros_like(x)
+    z[pos_mask] = p.exp(-x[pos_mask])
+    z[neg_mask] = p.exp(x[neg_mask])
+    top = p.ones_like(x)
+    top[neg_mask] = z[neg_mask]
+    return top / (1 + z)
 
 
 def SigmoidGrad(Z):

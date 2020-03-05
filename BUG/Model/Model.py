@@ -1,11 +1,12 @@
 import gc
 import os.path
 import pickle
+import time
 
 import numpy as np
 from goto import with_goto
 from tqdm import trange
-
+import matplotlib.pyplot as plt
 from BUG.Layers.Layer import Layer, Core, Convolution
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
@@ -24,8 +25,8 @@ class Model(object):
         self.optimizeMode = None
 
     def add(self, layer):
-        assert (isinstance(layer, Layer))
-        self.layers.append(layer)
+            assert (isinstance(layer, Layer))
+            self.layers.append(layer)
 
     def getLayerNumber(self):
         return len(self.layers)
@@ -117,22 +118,31 @@ class Model(object):
             self.evaluate = self.evaluate_one
         else:
             raise ValueError
-
-        costs = []
-
+        # plt.ion()
+        # ax = []
+        # ay = []
         #  mini_batch
         is_continue = False
+
         label.point
         try:
             with trange(start_it, iterator) as tr:
                 for self.it in tr:
+                    plt.figure(1)
                     tr.set_description("第%d代:" % (self.it + 1))
-                    cost = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
-                    tr.set_postfix(batch_size=batch_size, loss=cost, acc=self.evaluate(X_test, Y_test))
+                    train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
+                    test_cost, acc = self.evaluate(X_test, Y_test)
+                    test_cost, acc = 1, 1
+                    tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
                     if self.it != 0 and self.it % save_epoch == 0:
                         self.interrupt(path, self.permutation, self.it, t)
                         self.save_model(path, filename)
-                    costs.append(cost)
+                    # plt.clf()
+                    # ax.append(self.it)
+                    # ay.append(train_loss)
+                    # plt.plot(ax, ay, '-r')
+                    # plt.pause(0)
+
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
@@ -159,13 +169,15 @@ class Model(object):
         A = X_train
         for layer in self.layers:
             A = layer.forward(A, mode='test')
-        return (p.argmax(A, -1) == p.argmax(Y_train, -1)).sum() / X_train.shape[0]
+        loss = SoftCategoricalCross_entropy().forward(Y_train, A)
+        return loss, (p.argmax(A, -1) == p.argmax(Y_train, -1)).sum() / X_train.shape[0]
 
     # 单输出评估
     def evaluate_one(self, A, Y_train):
         for layer in self.layers:
             A = layer.forward(A, mode='test')
-        return ((A > 0.5) == Y_train).sum() / A.shape[0]
+        loss = CrossEntry().forward(Y_train, A)
+        return loss, ((A > 0.5) == Y_train).sum() / A.shape[0]
 
     # 预测
     def predict(self, x):
@@ -221,7 +233,6 @@ class Model(object):
                 raise ValueError
 
         #  更新参数
-        gc.collect()
         t += 1
         self.optimizer.update(t, learning_rate)
 
