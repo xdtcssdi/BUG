@@ -1,6 +1,11 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
+    <inspection_tool class="DuplicatedCode" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <Languages>
+        <language minSize="69" name="Python" />
+      </Languages>
+    </inspection_tool>
     <inspection_tool class="PyCompatibilityInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ourVersions">
         <value>
@@ -28,6 +33,7 @@
           <option value="builtins.input.shape" />
           <option value="BUG.Model.Model.label" />
           <option value="BUG.Model.Model.goto" />
+          <option value="BUG.Model.LinearModel.label" />
         </list>
       </option>
     </inspection_tool>

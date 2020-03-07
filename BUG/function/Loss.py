@@ -25,18 +25,32 @@ class SoftCategoricalCross_entropy:
 
     def forward(self, targets, outputs):
         p.clip(outputs, self.epsilon, 1.0-self.epsilon, out=outputs)
+        N, T = targets.shape
+
+        if outputs.ndim == 3:
+            N, T, D = outputs.shape
+            outputs = outputs.reshape(N*T, D)
         if targets.ndim == 3:
-            loss = []
-            for targets, outputs in zip(targets, outputs):
-                cost = - targets * p.log(outputs)
-                J = p.squeeze(p.mean(p.sum(cost, axis=1, keepdims=True), axis=0))
-                loss.append(J)
-            J = p.mean(loss)
-        else:
-            cost = - targets * p.log(outputs)
-            J = p.squeeze(p.mean(p.sum(cost, axis=1, keepdims=True), axis=0))
-        return J
+            N, T, D = targets.shape
+            targets = targets.reshape(N*T, D)
+        # target.shape == (N, 1)
+        loss = -p.sum(p.log(outputs[p.arange(N * T), targets.reshape(N*T,)])) / N
+        return loss
 
     def backward(self, targets, outputs):
+        """
+        :param targets:
+        :param outputs: shape=(N,1)
+        :return:
+        """
+        if outputs.shape[-1] != targets.shape[-1]:
+            N, T = targets.shape
+            targets = targets.reshape(N*T)
+            dx_flat = outputs.copy()
+            dx_flat[p.arange(N * T), targets] -= 1
+            dx_flat /= N
+            dx = dx_flat.reshape(N, T, -1)
+            return dx
+
         return outputs - targets
 

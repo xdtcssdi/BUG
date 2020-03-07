@@ -88,9 +88,9 @@ class BatchNormal:
         xhat, xmu, ivar, sqrtvar = self.caches
         del self.caches
         m, nx = pre_grad.shape
-        self.gradients['dbeta'] = p.sum(pre_grad, axis=0)
+        self.gradients['beta'] = p.sum(pre_grad, axis=0)
         dgammax = pre_grad
-        self.gradients['dgamma'] = p.sum(xhat * dgammax, axis=0)
+        self.gradients['gamma'] = p.sum(xhat * dgammax, axis=0)
         dxhat = self.parameters['gamma'] * dgammax
         divar = p.sum(xmu * dxhat, axis=0)
         dxmu1 = dxhat * ivar

@@ -46,6 +46,9 @@ def Leak_ReluGrad(Z):
 
 
 def SoftmaxStep(Z):
+    if Z.ndim == 3:
+        N, T, D = Z.shape
+        Z = Z.reshape(N*T, D)
 
     shift_scores = Z - p.max(Z, axis=1, keepdims=True)  # 在每行中10个数都减去该行中最大的数字
     return p.exp(shift_scores) / p.sum(p.exp(shift_scores), axis=1, keepdims=True)

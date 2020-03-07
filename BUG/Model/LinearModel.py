@@ -1,19 +1,20 @@
-import gc
 import os.path
 import pickle
-import time
 
+import goto
+import matplotlib.pyplot as plt
 import numpy as np
 from goto import with_goto
-from tqdm import trange
-import matplotlib.pyplot as plt
-from BUG.Layers.Layer import Layer, Core, Convolution
+from tqdm import trange, tqdm
+
+from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
+from BUG.function.util import minibatch, decode_captions
 from BUG.load_package import p
 
 
-class Model(object):
+class Linear_model(object):
 
     def __init__(self):
         self.layers = []
@@ -25,8 +26,8 @@ class Model(object):
         self.optimizeMode = None
 
     def add(self, layer):
-            assert (isinstance(layer, Layer))
-            self.layers.append(layer)
+        assert isinstance(layer, Layer) or isinstance(layer, list) or isinstance(layer, tuple), '类型错误'
+        self.layers.append(layer)
 
     def getLayerNumber(self):
         return len(self.layers)
@@ -118,10 +119,7 @@ class Model(object):
             self.evaluate = self.evaluate_one
         else:
             raise ValueError
-        # plt.ion()
-        # ax = []
-        # ay = []
-        #  mini_batch
+
         is_continue = False
 
         label.point
@@ -132,17 +130,10 @@ class Model(object):
                     tr.set_description("第%d代:" % (self.it + 1))
                     train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
                     test_cost, acc = self.evaluate(X_test, Y_test)
-                    test_cost, acc = 1, 1
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
                     if self.it != 0 and self.it % save_epoch == 0:
                         self.interrupt(path, self.permutation, self.it, t)
                         self.save_model(path, filename)
-                    # plt.clf()
-                    # ax.append(self.it)
-                    # ay.append(train_loss)
-                    # plt.plot(ax, ay, '-r')
-                    # plt.pause(0)
-
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
@@ -209,7 +200,6 @@ class Model(object):
         output = x_train
         for layer in self.layers:
             output = layer.forward(output, mode)
-
         # 损失计算
         loss = self.cost.forward(y_train, output)
         # -------
@@ -265,12 +255,12 @@ class Model(object):
     def summary(self):
         for i in range(len(self.layers) - 1):
             layer = self.layers[i]
-            if isinstance(layer, Core) or isinstance(layer, Convolution):
+            if isinstance(layer, Dense) or isinstance(layer, Convolution):
                 print(layer.name + ' -> ' + layer.activation + ' -> ', end='')
             else:
                 print(layer.name + ' -> ', end='')
         layer = self.layers[-1]
-        if isinstance(layer, Core) or isinstance(layer, Convolution):
+        if isinstance(layer, Dense) or isinstance(layer, Convolution):
             print(layer.name + ' -> ' + layer.activation + ' -> ', end='')
         else:
             print(layer.name + ' -> ', end='')
@@ -280,7 +270,6 @@ class Model(object):
     def save_model(self, path, filename):
         for layer in self.layers:
             layer.save_params(path, filename)
-
         with open(path + os.sep + filename + '.obj', 'wb') as f:
             pickle.dump(self.optimizeMode, f)
             pickle.dump(self.lossMode, f)
@@ -322,3 +311,98 @@ class Model(object):
             r = p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
             self.u = r['u']
             self.var = r['var']
+
+
+class LSTM_model(object):
+    def __init__(self, hidden_dim, word_to_idx):
+
+        self.costs = []  # every batch cost
+        self.cost = None  # 损失函数类
+        self.optimizer = None
+        self.optimizeMode = None
+
+        self.A0_layer = Dense(unit_number=hidden_dim, activation=None)  # a0输入
+        self.X_layer = Embedding(vocab_size=len(word_to_idx), word_dim=256)  # X
+        self.lstm_layer = LSTM(n_a=hidden_dim, word_to_idx=word_to_idx)  # 返回a
+        self.output_layer = Dense(unit_number=len(word_to_idx), activation='softmax')
+        self.layers = [self.A0_layer, self.X_layer, self.lstm_layer, self.output_layer]
+
+    # 训练
+    @with_goto
+    def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam'):
+        self.cost = SoftCategoricalCross_entropy()
+        with trange(iterator) as tr:
+            for self.it in tr:
+                cost =[]
+                with tqdm(minibatch(data, batch_size=batch_size)) as batch_data:
+
+                    for captions_in, captions_out, features, urls in batch_data:
+
+                        a0 = self.A0_layer.forward(features)
+                        embedding_out = self.X_layer.forward(captions_in)
+
+                        lstm_out = self.lstm_layer.forward(embedding_out, a0)
+
+                        y_hat = self.output_layer.forward(lstm_out)
+
+                        loss = self.cost.forward(captions_out, y_hat)
+                        cost.append(loss)
+                        batch_data.set_postfix(loss=loss)
+                        dout = self.cost.backward(captions_out, y_hat)
+
+                        dlstm = self.output_layer.backward(dout)
+
+                        dembedding_out, da0 = self.lstm_layer.backward(dlstm)
+
+                        self.X_layer.backward(dembedding_out)
+                        self.A0_layer.backward(da0)
+
+                        #  更新参数
+
+                        if self.optimizer is None:
+                            if optimize == 'Adam':
+                                self.optimizer = Optimize.Adam(self.layers)
+                            elif optimize == 'Momentum':
+                                self.optimizer = Optimize.Momentum(self.layers)
+                            elif optimize == 'BGD':
+                                self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                            else:
+                                raise ValueError
+
+                        self.optimizer.update(self.it + 1, learning_rate)
+                tr.set_postfix(loss=sum(cost)/len(cost))
+
+        for split in ['train', 'val']:
+            gt_captions, gt_captions_out, features, urls = list(minibatch(data, split=split, batch_size=2))[0]
+
+            gt_captions = decode_captions(gt_captions, data['idx_to_word'])
+
+            sample_captions = self.sample(features, self.layers)
+            sample_captions = decode_captions(sample_captions, data['idx_to_word'])
+
+            for gt_caption, sample_caption, url in zip(gt_captions, sample_captions, urls):
+                print(url)
+                print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
+
+    def sample(self, features, layers, max_length=50):
+        d1, e1, l1, d2 = layers
+        N = features.shape[0]
+        captions = l1.null_code * np.ones((N, max_length), dtype=np.int32)
+
+        N, D = features.shape
+        affine_out = d1.forward(features)
+
+        prev_word_idx = [l1.start_code] * N
+        prev_h = affine_out
+        prev_c = np.zeros(prev_h.shape)
+        captions[:, 0] = l1.start_code
+        for i in range(1, max_length):
+            prev_word_embed = e1.parameters['W'][prev_word_idx]
+            next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
+            prev_c = next_c
+            vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512))
+            captions[:, i] = list(np.argmax(vocab_affine_out, axis=1))
+            prev_word_idx = captions[:, i]
+            prev_h = next_h
+
+        return captions

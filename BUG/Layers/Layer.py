@@ -23,7 +23,7 @@ def load_struct_params(path):
 
 class Layer(object):
 
-    def __init__(self, unit_number=0, activation="relu"):
+    def __init__(self, unit_number=0, activation=None):
         self.unit_number = unit_number
         self.activation = activation
         self.parameters = {}
@@ -34,52 +34,51 @@ class Layer(object):
         self.isFirst = False
         self.isLast = False
         self.batch_normal = None
-        self.A_pre = None
+        self.x = None
         self.Z = None
         self.name = 'layer'
 
     def init_params(self, nx):
-        '''
+        """
         根据输入的矩阵，初始化参数
         :param nx: 输入矩阵
         :return: None
-        '''
+        """
         raise NotImplementedError
 
     def forward(self, A_pre, mode='train'):
-        '''
+        """
         前向传播
         :param A_pre: 前一层的激活值
-        :param Y: 训练集
         :param mode: 前向传播模式
         :return: 当前层的激活值
-        '''
+        """
         raise NotImplementedError
 
     def backward(self, pre_grad):
-        '''
+        """
         反向传播
         :param pre_grad: 损失值对当前激活值的导数
         :return: 损失值对前一层激活值的导数
-        '''
+        """
         raise NotImplementedError
 
     def save_params(self, path, filename):
-        '''
+        """
         保存当前类的参数
         :param path: 路径格式为'xxx/'
         :param filename: 文件名
         :return: None
-        '''
+        """
         raise NotImplementedError
 
     def load_params(self, path, filename):
-        '''
+        """
         加载npz文件中的参数
         :param path: 路径格式为'xxx/'
         :param filename: 文件名
         :return: None
-        '''
+        """
         raise NotImplementedError
 
 
@@ -88,14 +87,14 @@ class Convolution(Layer):
 
     def __init__(self, filter_count, filter_shape,
                  stride=1, padding=0, activation='relu', batchNormal=False):
-        '''
+        """
         :param filter_count: 卷积核数量
         :param filter_shape: 卷积核形状
         :param stride: 步长
         :param padding: pad
         :param activation: 激活函数名字
         :param batchNormal: 是否归一化输出
-        '''
+        """
         super(Convolution, self).__init__(activation=activation)
         Convolution.count += 1
         self.name = 'Convolution_' + str(Convolution.count)
@@ -121,10 +120,10 @@ class Convolution(Layer):
                 n_x, d_x, h_x, w_x = A_pre.shape  # 'xavier'
                 self.parameters['W'] = p.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
 
-            self.gradient['dW'] = p.zeros_like(self.parameters['W'])
+            self.gradients['W'] = p.zeros_like(self.parameters['W'])
         if 'b' not in self.parameters:
             self.parameters['b'] = p.zeros(self.filter_count)
-            self.gradient['db'] = p.zeros_like(self.parameters['W'])
+            self.gradients['b'] = p.zeros_like(self.parameters['W'])
 
     def save_params(self, path, filename):
         if not os.path.exists(path):
@@ -151,7 +150,7 @@ class Convolution(Layer):
     # 没问题
     def forward(self, A_pre, Y=None, mode='train'):
         self.init_params(A_pre)
-        self.A_pre = A_pre
+        self.x = A_pre
         output_data = self.conv(A_pre, self.parameters['W'], self.parameters['b'], self.stride, self.padding)
         self.Z = self.batch_normal.forward(output_data, mode) if self.batch_normal else output_data
         return ac_get(self.Z, self.activation)
@@ -161,20 +160,20 @@ class Convolution(Layer):
         dZ = ac_get_grad(dout, self.Z, self.activation)
         if self.batch_normal:
             dZ = self.batch_normal.backward(dZ)
-        self.gradients['db'] = p.sum(dZ, axis=(0, 2, 3))
+        self.gradients['b'] = p.sum(dZ, axis=(0, 2, 3))
         num_filters, _, filter_height, filter_width = self.parameters['W'].shape
         dout_reshaped = dZ.transpose(1, 2, 3, 0).reshape(num_filters, -1)
-        self.gradients['dW'] = dout_reshaped.dot(self.X_col.T).reshape(self.parameters['W'].shape)
+        self.gradients['W'] = dout_reshaped.dot(self.X_col.T).reshape(self.parameters['W'].shape)
         dx_cols = self.parameters['W'].reshape(num_filters, -1).T.dot(dout_reshaped)
         if isinstance(dZ, numpy.ndarray):
-            dx = col2im_indices_cpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
+            dx = col2im_indices_cpu(dx_cols, self.x.shape, filter_height, filter_width, self.padding, self.stride)
         else:
-            dx = col2im_indices_gpu(dx_cols, self.A_pre.shape, filter_height, filter_width, self.padding, self.stride)
-        del self.A_pre, self.X_col
+            dx = col2im_indices_gpu(dx_cols, self.x.shape, filter_height, filter_width, self.padding, self.stride)
+        del self.x, self.X_col
         return dx
 
     def conv(self, X, W, b, stride=1, padding=0):
-        '''
+        """
         卷积的计算过程，向前传播的具体计算
         :param X: 前一层的激活值
         :param W: 过滤器
@@ -182,7 +181,7 @@ class Convolution(Layer):
         :param stride: 步长
         :param padding: pad
         :return:
-        '''
+        """
         n_filters, d_filter, kernel_size, _ = W.shape
         n_x, d_x, h_x, w_x = X.shape
         h_out = (h_x - kernel_size + 2 * padding) // stride + 1
@@ -196,22 +195,30 @@ class Convolution(Layer):
         return out
 
 
-class Core(Layer):
+class Dense(Layer):
     count = 0
 
-    def __init__(self, unit_number, activation="relu", batchNormal=False):
-        super(Core, self).__init__(unit_number, activation)
-        Core.count += 1
-        self.name = 'Core_' + str(Core.count)
+    def __init__(self, unit_number, activation=None, batchNormal=False, flatten=False):
+        super(Dense, self).__init__(unit_number, activation)
+        Dense.count += 1
+        self.name = 'Core_' + str(Dense.count)
+        self.flatten = flatten
         self.batch_normal = BatchNormal() if batchNormal else None
         self.args = {'unit_number': unit_number, 'activation': activation, 'batchNormal': batchNormal}
 
     def forward(self, x, Y=None, mode='train'):
-        self.original_x_shape = x.shape
-        x = x.reshape(x.shape[0], -1)
-        self.init_params(x)
+        self.x_shape = x.shape
+        if self.flatten:
+            x = x.reshape(x.shape[0], -1)
         self.x = x
-        self.Z = p.dot(self.x, self.parameters['W']) + self.parameters['b']
+        self.init_params(x.shape[-1])
+        if x.ndim == 3:
+            N, T, D = x.shape
+            self.Z = x.reshape(N * T, D).dot(self.parameters['W']).reshape(N, T, self.unit_number) + self.parameters[
+                'b']
+        else:
+            self.Z = p.dot(x, self.parameters['W']) + self.parameters['b']
+
         if self.batch_normal:
             self.Z = self.batch_normal.forward(self.Z)
         return ac_get(self.Z, self.activation)
@@ -220,14 +227,21 @@ class Core(Layer):
         dout = ac_get_grad(dout, self.Z, self.activation)
         if self.batch_normal:
             dout = self.batch_normal.backward(dout)
-        dx = p.dot(dout, self.parameters['W'].T)
-        self.gradients['dW'] = p.dot(self.x.T, dout)
-        self.gradients['db'] = p.sum(dout, axis=0)
-        dx = dx.reshape(self.original_x_shape)  # 还原输入数据的形状（对应张量）
+        if self.x.ndim == 3:
+            N, T, D = self.x.shape
+            dx = dout.reshape(N * T, self.unit_number).dot(self.parameters['W'].T).reshape(N, T, D)
+            self.gradients['W'] = dout.reshape(N * T, self.unit_number).T.dot(self.x.reshape(N * T, D)).T
+            self.gradients['b'] = dout.sum(axis=(0, 1))
+        else:
+            dx = p.dot(dout, self.parameters['W'].T)
+            self.gradients['W'] = p.dot(self.x.T, dout)
+            self.gradients['b'] = p.sum(dout, axis=0)
+        if self.flatten:
+            dx = dx.reshape(self.x_shape)  # 还原输入数据的形状（对应张量）
         return dx
 
-    def init_params(self, A_pre):
-        pre_unit = A_pre.shape[1]
+    def init_params(self, dim):
+        pre_unit = dim
         if 'W' not in self.parameters:
             if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
                 self.parameters['W'] = p.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
@@ -240,7 +254,7 @@ class Core(Layer):
                 self.parameters['W'] = p.random.normal(0, math.sqrt(2. / pre_unit), size=(pre_unit, self.unit_number))
             # self.W = p.random.randn(pre_unit, self.unit_number) * 0.01
         if 'b' not in self.parameters:
-            self.parameters['b'] = p.zeros((1, self.unit_number))
+            self.parameters['b'] = p.zeros(self.unit_number)
 
     def save_params(self, path, filename):
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
@@ -342,26 +356,26 @@ class SimpleRNN(Layer):
         self.parameters['Waa'] = p.random.randn(self.n_a, self.n_a) * 0.01
         self.parameters['Wax'] = p.random.randn(self.n_a, self.n_x) * 0.01
         self.parameters['Wya'] = p.random.randn(self.n_y, self.n_a) * 0.01
-        self.gradients['dWaa'] = p.zeros_like(self.parameters['Waa'])
-        self.gradients['dWax'] = p.zeros_like(self.parameters['Wax'])
-        self.gradients['dWya'] = p.zeros_like(self.parameters['Wya'])
+        self.gradients['Waa'] = p.zeros_like(self.parameters['Waa'])
+        self.gradients['Wax'] = p.zeros_like(self.parameters['Wax'])
+        self.gradients['Wya'] = p.zeros_like(self.parameters['Wya'])
         self.parameters['b'] = p.zeros((self.n_a, 1))
         self.parameters['by'] = p.zeros((self.n_y, 1))
-        self.gradients['db'] = p.zeros_like(self.parameters['b'])
-        self.gradients['dby'] = p.zeros_like(self.parameters['by'])
+        self.gradients['b'] = p.zeros_like(self.parameters['b'])
+        self.gradients['by'] = p.zeros_like(self.parameters['by'])
 
     def softmax(self, x):
         e_x = p.exp(x - p.max(x))
         return e_x / e_x.sum(axis=0)
 
     def forward(self, X, a0=None, mode='train'):
-        '''
+        """
         :param X: shape = (batch_size, time_steps, vocab_size)
         :param a0:
         :param mode:
         :return:
-        '''
-        self.X = X
+        """
+        self.x = X
         self.a0 = a0 if a0 is not None else p.zeros([self.n_a, X.shape[0]])
         m, T_x, n_x = X.shape
         self.y_hat = p.zeros([X.shape[0], T_x, self.n_y])
@@ -376,14 +390,14 @@ class SimpleRNN(Layer):
         return self.at, self.y_hat
 
     def backward(self, dout):
-        self.gradients['dWaa'] = p.zeros_like(self.parameters['Waa'])
-        self.gradients['dWax'] = p.zeros_like(self.parameters['Wax'])
-        self.gradients['dWya'] = p.zeros_like(self.parameters['Wya'])
-        self.gradients['db'] = p.zeros_like(self.parameters['b'])
-        self.gradients['dby'] = p.zeros_like(self.parameters['by'])
+        self.gradients['Waa'] = p.zeros_like(self.parameters['Waa'])
+        self.gradients['Wax'] = p.zeros_like(self.parameters['Wax'])
+        self.gradients['Wya'] = p.zeros_like(self.parameters['Wya'])
+        self.gradients['b'] = p.zeros_like(self.parameters['b'])
+        self.gradients['by'] = p.zeros_like(self.parameters['by'])
         da_next = self.at
-        for t in reversed(range(self.X.shape[1])):
-            da_next = self.rnn_step_backward(dout[:, t, :], self.X[:, t, :], self.a[:, t, :],
+        for t in reversed(range(self.x.shape[1])):
+            da_next = self.rnn_step_backward(dout[:, t, :], self.x[:, t, :], self.a[:, t, :],
                                              self.a[:, t - 1, :] if t != 0 else self.a0, da_next)
         return da_next
 
@@ -394,94 +408,34 @@ class SimpleRNN(Layer):
         return a_next, y_hat.T
 
     def rnn_step_backward(self, dout, x, a, a_prev, da_next):
-        self.gradients['dWya'] += p.dot(a, dout).T
-        self.gradients['dby'] += p.mean(dout.T, axis=1, keepdims=True)
+        self.gradients['Wya'] += p.dot(a, dout).T
+        self.gradients['by'] += p.mean(dout.T, axis=1, keepdims=True)
         da = p.dot(dout, self.parameters['Wya']).T + da_next
         daraw = (1 - a * a) * da
-        self.gradients['db'] += p.mean(daraw, axis=1, keepdims=True)
-        self.gradients['dWax'] += p.dot(daraw, x)
-        self.gradients['dWaa'] += p.dot(daraw, a_prev.T)
+        self.gradients['b'] += p.mean(daraw, axis=1, keepdims=True)
+        self.gradients['Wax'] += p.dot(daraw, x)
+        self.gradients['Waa'] += p.dot(daraw, a_prev.T)
         da_next = p.dot(self.parameters['Waa'].T, daraw)
         return da_next
 
 
 class LSTM(Layer):
-
-    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, n_a=50):
+    def __init__(self, word_to_idx, n_a=50):
         super(LSTM, self).__init__()
+        self.cache = {}
+        self.name = 'LSTM'
+        self.word_to_idx = word_to_idx
+        self.idx_to_word = {i: w for w, i in word_to_idx.items()}
+        self.null_code = word_to_idx['<NULL>']
+        self.start_code = word_to_idx.get('<START>', None)
+        self.end_code = word_to_idx.get('<END>', None)
         self.n_a = n_a
-        self.ix_to_char = ix_to_char
-        self.char_to_ix = char_to_ix
-        self.gradients = {}
-        self.parameters = {}
-        self.init_params([n_a, n_x, n_y])
 
-    def init_params(self, n_a_x_y):
-        n_a, n_x, self.n_y = n_a_x_y
-        self.parameters['Wf'] = p.random.randn(n_a, n_a + n_x)
-        self.parameters['bf'] = p.random.randn(n_a, 1)
-        self.parameters['Wi'] = p.random.randn(n_a, n_a + n_x)
-        self.parameters['bi'] = p.random.randn(n_a, 1)
-        self.parameters['Wo'] = p.random.randn(n_a, n_a + n_x)
-        self.parameters['bo'] = p.random.randn(n_a, 1)
-        self.parameters['Wc'] = p.random.randn(n_a, n_a + n_x)
-        self.parameters['bc'] = p.random.randn(n_a, 1)
-        self.parameters['Wy'] = p.random.randn(self.n_y, n_a)
-        self.parameters['by'] = p.random.randn(self.n_y, 1)
-
-    def softmax(self, x):
-        e_x = p.exp(x - p.max(x))
-        return e_x / e_x.sum(axis=0)
-
-    def forward(self, X, a0=None, mode='train'):
-        self.x = X
-        n_x, m, T_x = X.shape
-        n_y, n_a = self.parameters['Wy'].shape
-        self.a = p.zeros((n_a, m, T_x))
-        c = p.zeros((n_a, m, T_x))
-        y = p.zeros((n_y, m, T_x))
-        a_next = a0
-        c_next = p.zeros_like(a_next)
-        for t in range(T_x):
-            a_next, c_next, yt_pred = self.lstm_step_forward(a_next, X[..., t], c_next, )
-            self.a[..., t] = a_next
-            y[..., t] = yt_pred
-            c[..., t] = c_next
-
-        return a_next, y, c
-
-    def backward(self, dout):
-        n_x, m, T_x = self.x.shape
-        self.gradients['dx'] = p.zeros([n_x, m, T_x])
-        self.gradients['dWf'] = p.zeros([self.n_a, self.n_a + n_x])
-        self.gradients['dWi'] = p.zeros([self.n_a, self.n_a + n_x])
-        self.gradients['dWc'] = p.zeros([self.n_a, self.n_a + n_x])
-        self.gradients['dWo'] = p.zeros([self.n_a, self.n_a + n_x])
-        self.gradients['dWy'] = p.zeros([self.n_y, self.n_a])
-        self.gradients['dby'] = p.zeros([self.n_y, 1])
-        self.gradients['dbf'] = p.zeros([self.n_a, 1])
-        self.gradients['dbi'] = p.zeros([self.n_a, 1])
-        self.gradients['dbc'] = p.zeros([self.n_a, 1])
-        self.gradients['dbo'] = p.zeros([self.n_a, 1])
-
-        da_prev = p.zeros([self.n_a, m])
-        dc_prev = p.zeros([self.n_a, m])
-        for t in reversed(range(T_x)):
-            gradients = self.lstm_step_backward(dout[:, :, t], self.x[..., t], self.a[..., t], da_prev, dc_prev)
-            self.gradients['dx'][:, :, t] = gradients['dx']
-            self.gradients['dWf'] += gradients['dWf']
-            self.gradients['dWi'] += gradients['dWi']
-            self.gradients['dWc'] += gradients['dWc']
-            self.gradients['dWo'] += gradients['dWo']
-            self.gradients['dbf'] += gradients['dbf']
-            self.gradients['dbi'] += gradients['dbi']
-            self.gradients['dbc'] += gradients['dbc']
-            self.gradients['dbo'] += gradients['dbo']
-            self.gradients['dWy'] += gradients['dWy']
-            self.gradients['dby'] += gradients['dby']
-            da_prev = gradients['da_prev']
-            dc_prev = gradients['dc_prev']
-        # da0 = gradients['da_prev']
+    def init_params(self, n_x):
+        if 'Wx' not in self.parameters:
+            self.parameters['Wx'] = p.random.randn(n_x, 4 * self.n_a) / p.sqrt(n_x)
+            self.parameters['Wa'] = p.random.randn(self.n_a, 4 * self.n_a) / p.sqrt(self.n_a)
+            self.parameters['b'] = p.zeros(4 * self.n_a)
 
     def save_params(self, path, filename):
         pass
@@ -489,43 +443,125 @@ class LSTM(Layer):
     def load_params(self, path, filename):
         pass
 
-    def lstm_step_forward(self, a_prev, x, c_prev):
-        # print(a_prev.shape, x.shape)
-        merge = p.concatenate([a_prev, x], axis=0)
-        f = ac_get(p.dot(self.parameters['Wf'], merge) + self.parameters['bf'], 'sigmoid')
-        i = ac_get(p.dot(self.parameters['Wi'], merge) + self.parameters['bi'], 'sigmoid')
-        c_hat = p.tanh(p.dot(self.parameters['Wc'], merge) + self.parameters['bc'])
-        c = f * c_prev + i * c_hat
-        o = ac_get(p.dot(self.parameters['Wo'], merge) + self.parameters['bo'], 'sigmoid')
-        a = o * p.tanh(c)
-        y = ac_get(p.dot(self.parameters['Wy'], a) + self.parameters['by'], 'softmax')
-        self.caches = (f, i, c_hat, c_prev, c, o, a_prev, a)
-        return a, c, y
+    def forward(self, x, a0=None, mode='train'):
+        """
+        :param x: 二维矩阵 [m, n_x]
+        :param a0:
+        :param mode:
+        :return:
+        """
+        self.init_params(x.shape[-1])
+        m, time_steps, n_x = x.shape
+        n_a = int(self.parameters['b'].shape[0] / 4)
+        a = p.zeros([m, time_steps, n_a])
+        a_prev = a0 if a0 is not None else p.zeros([m, n_a])
+        c_prev = p.zeros([m, n_a])
 
-    def lstm_step_backward(self, dout, xt, at, da_next, dc_next):
-        f, i, c_hat, c_prev, c_next, o, a_prev, a_next = self.caches
-        n_a, m = a_next.shape
-        do = da_next * p.tanh(c_next) * o * (1 - o)
-        dc_hat = (dc_next * i + o * (1 - p.square(p.tanh(c_next))) * i * da_next) * (1 - p.square(c_hat))
-        di = (dc_next * c_hat + o * (1 - p.square(p.tanh(c_next))) * c_hat * da_next) * i * (1 - i)
-        df = (dc_next * c_prev + o * (1 - p.square(p.tanh(c_next))) * c_prev * da_next) * f * (1 - f)
-        concat = p.concatenate((a_prev, xt), axis=0).T
-        gradient = {}
-        gradient['dWy'] = p.dot(dout, at.T)
-        gradient['dby'] = p.mean(dout, axis=1, keepdims=True)
-        gradient['dWf'] = p.dot(df, concat)
-        gradient['dWi'] = p.dot(di, concat)
-        gradient['dWc'] = p.dot(dc_hat, concat)
-        gradient['dWo'] = p.dot(do, concat)
-        gradient['dbf'] = p.sum(df, axis=1, keepdims=True)
-        gradient['dbi'] = p.sum(di, axis=1, keepdims=True)
-        gradient['dbc'] = p.sum(dc_hat, axis=1, keepdims=True)
-        gradient['dbo'] = p.sum(do, axis=1, keepdims=True)
-        gradient['da_prev'] = p.dot(self.parameters['Wf'][:, :n_a].T, df) + p.dot(self.parameters['Wc'][:, :n_a].T,
-                                                                                  dc_hat) + \
-                              p.dot(self.parameters['Wi'][:, :n_a].T, di) + p.dot(self.parameters['Wo'][:, :n_a].T, do)
-        gradient['dc_prev'] = dc_next * f + o * (1 - p.square(p.tanh(c_next))) * f * da_next
-        gradient['dx'] = p.dot(self.parameters['Wf'][:, n_a:].T, df) + p.dot(self.parameters['Wc'][:, n_a:].T, dc_hat) + \
-                         p.dot(self.parameters['Wi'][:, n_a:].T, di) + p.dot(self.parameters['Wo'][:, n_a:].T, do)
+        for t in range(time_steps):
+            xt = x[:, t, :]
+            a_next, c_next, self.cache[t] = self.lstm_step_forward(xt, a_prev, c_prev)
+            a_prev = a_next
+            c_prev = c_next
+            a[:, t, :] = a_prev
+        return a
 
-        return gradient
+    def backward(self, dout):
+        m, time_steps, n_a = dout.shape
+        z_i, z_f, z_o, z_g, z_t, prev_c, prev_a, x = self.cache[time_steps - 1]
+        n_x = x.shape[1]
+
+        da_prev = p.zeros((m, n_a))
+        dc_prev = p.zeros((m, n_a))
+        dx = p.zeros((m, time_steps, n_x))
+        dWx = p.zeros((n_x, 4 * n_a))
+        dWa = p.zeros((n_a, 4 * n_a))
+        db = p.zeros((4 * n_a,))
+
+        for t in range(time_steps):
+            t = time_steps - 1 - t
+            da_next = dout[:, t, :] + da_prev
+            dc_next = dc_prev
+            dx[:, t, :], da_prev, dc_prev, dWxt, dWat, dbt = self.lstm_step_backward(da_next, dc_next, self.cache[t])
+            dWx, dWa, db = dWx + dWxt, dWa + dWat, db + dbt
+
+        da0 = da_prev
+        self.gradients['a'] = da0
+        self.gradients['x'] = dx
+        self.gradients['Wx'] = dWx
+        self.gradients['Wa'] = dWa
+        self.gradients['b'] = db
+        return dx, da0
+
+    def lstm_step_forward(self, x, a_prev, c_prev):
+        n_a = self.parameters['Wa'].shape[0]
+        a = x.dot(self.parameters['Wx']) + a_prev.dot(self.parameters['Wa']) + self.parameters['b']
+
+        z_i = ac_get(a[:, :n_a], 'sigmoid')
+        z_f = ac_get(a[:, n_a:2 * n_a], 'sigmoid')
+        z_o = ac_get(a[:, 2 * n_a:3 * n_a], 'sigmoid')
+        z_g = p.tanh(a[:, 3 * n_a:])
+
+        c_next = z_f * c_prev + z_i * z_g
+        z_t = p.tanh(c_next)
+        a_next = z_o * z_t
+        cache = (z_i, z_f, z_o, z_g, z_t, c_prev, a_prev, x)
+        return a_next, c_next, cache
+
+    def lstm_step_backward(self, da_next, dc_next, cache):
+
+        z_i, z_f, z_o, z_g, z_t, c_prev, a_prev, x = cache
+
+        dz_o = z_t * da_next
+        dc_t = z_o * (1 - z_t * z_t) * da_next + dc_next
+        dz_f = c_prev * dc_t
+        dz_i = z_g * dc_t
+        dc_prev = z_f * dc_t
+        dz_g = z_i * dc_t
+
+        da_i = (1 - z_i) * z_i * dz_i
+        da_f = (1 - z_f) * z_f * dz_f
+        da_o = (1 - z_o) * z_o * dz_o
+        da_g = (1 - z_g * z_g) * dz_g
+        da = p.hstack((da_i, da_f, da_o, da_g))
+
+        dWx = x.T.dot(da)
+        dWa = a_prev.T.dot(da)
+
+        db = p.sum(da, axis=0)
+        dx = da.dot(self.parameters['Wx'].T)
+        da_prev = da.dot(self.parameters['Wa'].T)
+
+        return dx, da_prev, dc_prev, dWx, dWa, db
+
+
+class Embedding(Layer):
+    def __init__(self, vocab_size, word_dim):
+        super(Embedding, self).__init__()
+        self.init_params([vocab_size, word_dim])
+        self.name = 'Embedding'
+
+    def init_params(self, nx):
+        vocab_size, word_dim = nx
+        self.parameters['W'] = p.random.randn(vocab_size, word_dim) / 100
+
+    def forward(self, x, mode='train'):
+        self.x = x
+        N, T = x.shape
+        V, D = self.parameters['W'].shape
+        out = p.zeros((N, T, D))
+
+        for i in range(N):
+            for j in range(T):
+                out[i, j] = self.parameters['W'][x[i, j]]
+        return out
+
+    def backward(self, dout):
+        dW = p.zeros_like(self.parameters['W'])
+        p.add.at(dW, self.x, dout)
+        self.gradients['W'] = dW
+
+    def save_params(self, path, filename):
+        pass
+
+    def load_params(self, path, filename):
+        pass

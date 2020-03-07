@@ -1,7 +1,7 @@
 import numpy as np
 
-from BUG.Layers.Layer import Core
-from BUG.Model.Model import Model
+from BUG.Layers.Layer import Dense
+from BUG.Model.LinearModel import Linear_model
 from BUG.function.util import load_data, one_hot
 from tensorflow import keras
 import matplotlib.pyplot as plt
@@ -18,11 +18,11 @@ def f2():
     Y_test = test_set_y_orig.T
 
     # 创建网络架构
-    net = Model()
-    net.add(Core(64, batchNormal=True))
-    net.add(Core(16, batchNormal=False))
-    net.add(Core(8, batchNormal=False))
-    net.add(Core(1, "sigmoid"))
+    net = Linear_model()
+    net.add(Dense(64, batchNormal=True, flatten=True))
+    net.add(Dense(16, batchNormal=False))
+    net.add(Dense(8, batchNormal=False))
+    net.add(Dense(1, "sigmoid"))
     net.compile()
     net.fit(X_train, Y_train, X_test, Y_test, batch_size=X_train.shape[0]//10,
             is_normalizing=False, lossMode='CrossEntry',save_epoch=1000,
@@ -36,7 +36,7 @@ def f3():
     Y_train = train_set_y_orig.T
     Y_test = test_set_y_orig.T
 
-    net = Model()
+    net = LinearModel()
     net.load_model('model.h5')
     res = net.predict(X_test)
     print(res)
