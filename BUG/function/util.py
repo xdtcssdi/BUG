@@ -275,7 +275,7 @@ def data_iter_consecutive(txt, batch_size, time_steps, vocab_size):
         yield one_hot(X, vocab_size), one_hot(Y, vocab_size)
 
 
-def load_coco_data(base_dir='/Users/oswin/cs231n-master/assignment3/cs231n/datasets',
+def load_coco_data(base_dir='/content/sample_data/coco_captioning/',
                    max_train=None,
                    pca_features=True):
     data = {}
@@ -333,7 +333,7 @@ def decode_captions(captions, idx_to_word):
     for i in range(N):
         words = []
         for t in range(T):
-            word = idx_to_word[captions[i, t]]
+            word = idx_to_word[int(captions[i, t])]
             if word != '<NULL>':
                 words.append(word)
             if word == '<END>':
@@ -351,4 +351,5 @@ def minibatch(data, batch_size=100, split='train'):
         image_idxs = data['%s_image_idxs' % split][i*batch_size:(i+1)*batch_size]
         image_features = data['%s_features' % split][image_idxs]
         urls = data['%s_urls' % split][image_idxs]
-        yield captions[:, :-1], captions[:, 1:], image_features, urls
+
+        yield p.asarray(captions[:, :-1]), p.asarray(captions[:, 1:]), p.asarray(image_features), urls

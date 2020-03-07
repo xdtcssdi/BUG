@@ -3,10 +3,10 @@ import pickle
 
 import goto
 import matplotlib.pyplot as plt
-import numpy as np
+
 from goto import with_goto
 from tqdm import trange, tqdm
-
+import numpy as np
 from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
@@ -249,7 +249,7 @@ class Linear_model(object):
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
-        return np.mean(in_cost)
+        return sum(in_cost) / len(in_cost)
 
     # 网络详情
     def summary(self):
@@ -387,21 +387,21 @@ class LSTM_model(object):
     def sample(self, features, layers, max_length=50):
         d1, e1, l1, d2 = layers
         N = features.shape[0]
-        captions = l1.null_code * np.ones((N, max_length), dtype=np.int32)
+        captions = l1.null_code * p.ones((N, max_length), dtype=p.int32)
 
         N, D = features.shape
         affine_out = d1.forward(features)
 
         prev_word_idx = [l1.start_code] * N
         prev_h = affine_out
-        prev_c = np.zeros(prev_h.shape)
+        prev_c = p.zeros(prev_h.shape)
         captions[:, 0] = l1.start_code
         for i in range(1, max_length):
             prev_word_embed = e1.parameters['W'][prev_word_idx]
             next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
             prev_c = next_c
             vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512))
-            captions[:, i] = list(np.argmax(vocab_affine_out, axis=1))
+            captions[:, i] = p.array(p.argmax(vocab_affine_out, axis=1))
             prev_word_idx = captions[:, i]
             prev_h = next_h
 
