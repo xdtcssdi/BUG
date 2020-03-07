@@ -557,7 +557,10 @@ class Embedding(Layer):
 
     def backward(self, dout):
         dW = p.zeros_like(self.parameters['W'])
-        p.add.at(dW, self.x, dout)
+        if isinstance(dW, numpy.ndarray):
+            p.add.at(dW, self.x, dout)
+        else:
+            p.scatter_add(dW, self.x, dout)
         self.gradients['W'] = dW
 
     def save_params(self, path, filename):
