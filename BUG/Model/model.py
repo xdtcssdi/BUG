@@ -88,7 +88,7 @@ class Linear_model(object):
 
     # 训练
     @with_goto
-    def fit(self, X_train, Y_train,accuracy, X_test=None, Y_test=None, batch_size=15, is_normalizing=True,
+    def fit(self, X_train, Y_train, accuracy, X_test=None, Y_test=None, batch_size=15, is_normalizing=True,
             testing_percentage=0.2, validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
             lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='train_params',
             path='data', regularization='L2', lambd=0):
