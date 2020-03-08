@@ -3,11 +3,11 @@ import pickle
 
 import goto
 import matplotlib.pyplot as plt
-
+import numpy as np
 from goto import with_goto
 from tqdm import trange, tqdm
-import numpy as np
-from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding
+
+from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding, Pooling
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy, CrossEntry
 from BUG.function.util import minibatch, decode_captions
@@ -68,12 +68,30 @@ class Linear_model(object):
             else:
                 raise ValueError
 
+    def compute_reg_loss(self, m, regularization='L2', lambd=0.1):
+        if lambd == 0:
+            return 0
+
+        reg_loss = .0
+        if regularization == 'L2':
+            for layer in self.layers:
+                if not isinstance(Layer, Pooling):
+                    reg_loss += p.sum(p.square(layer.parameters['W']))
+        elif regularization == 'L1':
+            for layer in self.layers:
+                if not isinstance(Layer, Pooling):
+                    reg_loss += p.sum(p.abs(layer.parameters['W']))
+        else:
+            raise ValueError
+
+        return reg_loss * lambd / (2 * m)
+
     # 训练
     @with_goto
-    def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True,
+    def fit(self, X_train, Y_train,accuracy, X_test=None, Y_test=None, batch_size=15, is_normalizing=True,
             testing_percentage=0.2, validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
             lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='train_params',
-            path='data'):
+            path='data', regularization='L2', lambd=0):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, Y_train.shape = %s" % (X_train.shape, Y_train.shape))
@@ -112,10 +130,8 @@ class Linear_model(object):
         # 初始化损失结构
         if lossMode == 'SoftmaxCrossEntry':
             self.cost = SoftCategoricalCross_entropy()
-            self.evaluate = self.evaluate_many
         elif lossMode == 'CrossEntry':
             self.cost = CrossEntry()
-            self.evaluate = self.evaluate_one
         else:
             raise ValueError
 
@@ -125,10 +141,10 @@ class Linear_model(object):
         try:
             with trange(start_it, iterator) as tr:
                 for self.it in tr:
-                    plt.figure(1)
                     tr.set_description("第%d代:" % (self.it + 1))
-                    train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize)
-                    test_cost, acc = self.evaluate(X_test, Y_test)
+                    train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t, optimize,
+                                                 regularization, lambd)
+                    test_cost, acc = accuracy(X_test, Y_test, self.layers)
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
                     if self.it != 0 and self.it % save_epoch == 0:
                         self.interrupt(path, self.permutation, self.it, t)
@@ -154,20 +170,7 @@ class Linear_model(object):
             pickle.dump((start_it, t), f)
         p.savez_compressed(path + os.sep + 'caches.npz', permutation=permutation)
 
-    # 多输出评估
-    def evaluate_many(self, X_train, Y_train):
-        A = X_train
-        for layer in self.layers:
-            A = layer.forward(A, mode='test')
-        loss = SoftCategoricalCross_entropy().forward(Y_train, A)
-        return loss, (p.argmax(A, -1) == p.argmax(Y_train, -1)).sum() / X_train.shape[0]
 
-    # 单输出评估
-    def evaluate_one(self, A, Y_train):
-        for layer in self.layers:
-            A = layer.forward(A, mode='test')
-        loss = CrossEntry().forward(Y_train, A)
-        return loss, ((A > 0.5) == Y_train).sum() / A.shape[0]
 
     # 预测
     def predict(self, x):
@@ -194,13 +197,14 @@ class Linear_model(object):
         self.layers[-1].isLast = True
 
     # 单步训练
-    def train_step(self, x_train, y_train, mode, learning_rate, t, optimize):
+    def train_step(self, x_train, y_train,mode, learning_rate, t, optimize, regularization, lambd):
         # 前向传播
+        batch_size = x_train.shape[0]
         output = x_train
         for layer in self.layers:
-            output = layer.forward(output, mode)
+            output = layer.forward(output, None, mode)
         # 损失计算
-        loss = self.cost.forward(y_train, output)
+        loss = self.cost.forward(y_train, output) + self.compute_reg_loss(batch_size, regularization, lambd)
         # -------
 
         # 反向传播
@@ -210,6 +214,12 @@ class Linear_model(object):
         for layer in reversed(self.layers):
             dout = layer.backward(dout)
         # -----------
+
+        # 添加正则惩罚loss的梯度
+        if lambd > .0:
+            for layer in self.layers:
+                if not isinstance(Layer, Pooling):
+                    layer.gradients['W'] += lambd / batch_size * layer.parameters['W']
 
         if self.optimizer is None:
             if optimize == 'Adam':
@@ -228,7 +238,7 @@ class Linear_model(object):
         return loss
 
     # mini-batch
-    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, optimize):
+    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, optimize, regularization, lambd):
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
         with trange(num_complete) as tr:
@@ -237,14 +247,14 @@ class Linear_model(object):
                 be = (b + 1) * batch_size
                 x_train = X_train[bs:be]
                 y_train = Y_train[bs:be]
-                cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize)
+                cost = self.train_step(x_train, y_train, mode, learning_rate, t, optimize, regularization, lambd)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
             s = num_complete * batch_size
             if s < X_train.shape[0]:
                 cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
-                                       mode, learning_rate, t, optimize)
+                                       mode, learning_rate, t, optimize, regularization, lambd)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
@@ -297,10 +307,8 @@ class Linear_model(object):
             self.lossMode = pickle.load(f)
             if self.lossMode == 'SoftmaxCrossEntry':
                 self.cost = SoftCategoricalCross_entropy()
-                self.evaluate = self.evaluate_many
             elif self.lossMode == 'CrossEntry':
                 self.cost = CrossEntry()
-                self.evaluate = self.evaluate_one
             else:
                 raise ValueError
 
@@ -346,7 +354,7 @@ class LSTM_model(object):
         try:
             with trange(start_it, iterator) as tr:
                 for self.it in tr:
-                    cost =[]
+                    cost = []
                     with tqdm(minibatch(data, batch_size=batch_size)) as batch_data:
 
                         for captions_in, captions_out, features, urls in batch_data:
@@ -385,10 +393,11 @@ class LSTM_model(object):
                             self.optimizer.update(self.it + 1, learning_rate)
 
                     if self.it and self.it % save_epoch == 0:
+                        print(cost)
                         self.interrupt(path, self.it)
                         self.save_model(path, filename)
 
-                    tr.set_postfix(loss=sum(cost)/len(cost))
+                    tr.set_postfix(loss=sum(cost) / len(cost))
             self.predict(data)
 
         except KeyboardInterrupt:

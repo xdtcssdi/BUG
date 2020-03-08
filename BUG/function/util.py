@@ -12,6 +12,7 @@ from BUG.function.zhtools.langconv import Converter
 from BUG.load_package import p
 import numpy as np
 
+
 def load_data(path):
     train_dataset = h5py.File(path[0], "r")
     train_set_x_orig = np.array(train_dataset["train_set_x"][:])  # your train set features
@@ -23,8 +24,8 @@ def load_data(path):
 
     classes = np.array(test_dataset["list_classes"][:])  # the list of classes
 
-    train_set_y_orig = train_set_y_orig.reshape((1, train_set_y_orig.shape[0]))
-    test_set_y_orig = test_set_y_orig.reshape((1, test_set_y_orig.shape[0]))
+    train_set_y_orig = train_set_y_orig.reshape(train_set_y_orig.shape[0])
+    test_set_y_orig = test_set_y_orig.reshape(test_set_y_orig.shape[0])
     try:
         return p.asarray(train_set_x_orig), p.asarray(train_set_y_orig), p.asarray(test_set_x_orig), p.asarray(
             test_set_y_orig), classes
@@ -60,10 +61,7 @@ def load_CIFAR10(ROOT):
         return p.asarray(Xtr), p.asarray(Ytr), p.asarray(Xte), p.asarray(Yte)
     except:
         return Xtr, Ytr, Xte, Yte
-#
-# def one_hot(labels, nb_classes):
-#     one_hot_labels = p.zeros(labels.shape+(nb_classes, ))
-#
+
 
 def one_hot(labels, nb_classes=None):
     '''
@@ -353,3 +351,12 @@ def minibatch(data, batch_size=100, split='train'):
         urls = data['%s_urls' % split][image_idxs]
 
         yield p.asarray(captions[:, :-1]), p.asarray(captions[:, 1:]), p.asarray(image_features), urls
+
+
+def load_mnist():
+    from keras.datasets import mnist
+    import matplotlib.pyplot as plt
+    # load (downloaded if needed) the MNIST dataset
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+    classes = 10
+    return X_train, y_train, X_test, y_test, classes

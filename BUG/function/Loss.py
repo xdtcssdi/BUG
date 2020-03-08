@@ -6,15 +6,17 @@ class CrossEntry:
         self.epsilon = epsilon
 
     def forward(self, Y_train, Y_hat):
-        m = Y_train.shape[0]
+        target = Y_train.reshape(Y_hat.shape)
+        m = target.shape[0]
         p.clip(Y_hat, self.epsilon, 1.0 - self.epsilon, out=Y_hat)
-        cost = - Y_train * p.log(Y_hat) - (1 - Y_train) * p.log(1 - Y_hat)
-        J = p.mean(cost, axis=0, keepdims=True)
+        cost = - target * p.log(Y_hat) - (1 - target) * p.log(1 - Y_hat)
+        J = p.sum(cost, axis=0, keepdims=True) / m
         return p.squeeze(J)
 
     def backward(self, Y_train, Y_hat):
+        target = Y_train.reshape(Y_hat.shape)
         p.clip(Y_hat, self.epsilon, 1.0 - self.epsilon, out=Y_hat)
-        return -Y_train / Y_hat + (1 - Y_train) / (1 - Y_hat)
+        return Y_hat - target
 
 
 class SoftCategoricalCross_entropy:
@@ -45,7 +47,7 @@ class SoftCategoricalCross_entropy:
         :param outputs: shape=(N,1)
         :return:
         """
-        if outputs.shape[-1] != targets.shape[-1]:
+        if outputs.shape[-1] != targets.shape[-1] and targets.ndim == 2:
             N, T = targets.shape
             targets = targets.reshape(N * T)
             dx_flat = outputs.copy()
@@ -54,5 +56,5 @@ class SoftCategoricalCross_entropy:
             dx = dx_flat.reshape(N, T, -1)
             return dx
         dx_flat = outputs.copy()
-        dx_flat[range(outputs.shape[0]), targets] -= 1
+        dx_flat[p.arange(outputs.shape[0]), targets] -= 1
         return dx_flat

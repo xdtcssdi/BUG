@@ -2,9 +2,8 @@ from tensorflow import keras
 
 from BUG.Layers.Layer import Convolution, Pooling, Dense
 from BUG.Model.model import Linear_model
-from BUG.function.util import one_hot
 from BUG.load_package import p
-import matplotlib.pyplot as plt
+
 
 def LeNet5():
     fashion_mnist = keras.datasets.fashion_mnist
@@ -23,8 +22,8 @@ def LeNet5():
     net.add(Dense(84, batchNormal=True))
     net.add(Dense(10, batchNormal=True, activation="softmax"))
     net.compile()
-    net.fit(X_train, Y_train, X_test, Y_test, batch_size=10,iterator=100,
-            learning_rate=0.0001, is_normalizing=False,
+    net.fit(X_train, Y_train, X_test, Y_test, batch_size=10, iterator=100,
+            learning_rate=0.0075, is_normalizing=False,
             lossMode='SoftmaxCrossEntry', optimize='Adam')
 
 

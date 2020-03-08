@@ -214,8 +214,8 @@ class Dense(Layer):
         self.init_params(x.shape[-1])
         if x.ndim == 3:
             N, T, D = x.shape
-            self.Z = x.reshape(N * T, D).dot(self.parameters['W']).reshape(N, T, self.unit_number) + self.parameters[
-                'b']
+            self.Z = x.reshape(N * T, D).dot(self.parameters['W']).reshape(N, T, self.unit_number) + \
+                     self.parameters['b']
         else:
             self.Z = p.dot(x, self.parameters['W']) + self.parameters['b']
 
@@ -230,28 +230,28 @@ class Dense(Layer):
         if self.x.ndim == 3:
             N, T, D = self.x.shape
             dx = dout.reshape(N * T, self.unit_number).dot(self.parameters['W'].T).reshape(N, T, D)
-            self.gradients['W'] = dout.reshape(N * T, self.unit_number).T.dot(self.x.reshape(N * T, D)).T
-            self.gradients['b'] = dout.sum(axis=(0, 1))
+            self.gradients['W'] = 1. / N * dout.reshape(N * T, self.unit_number).T.dot(self.x.reshape(N * T, D)).T
+            self.gradients['b'] = 1. / N * dout.sum(axis=(0, 1))
         else:
+            N, D = self.x.shape
             dx = p.dot(dout, self.parameters['W'].T)
-            self.gradients['W'] = p.dot(self.x.T, dout)
-            self.gradients['b'] = p.sum(dout, axis=0)
+            self.gradients['W'] = 1. / N * p.dot(self.x.T, dout)
+            self.gradients['b'] = 1. / N * p.sum(dout, axis=0)
         if self.flatten:
             dx = dx.reshape(self.x_shape)  # 还原输入数据的形状（对应张量）
         return dx
 
     def init_params(self, dim):
-        pre_unit = dim
         if 'W' not in self.parameters:
             if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
-                self.parameters['W'] = p.random.uniform(-math.sqrt(6. / (pre_unit + self.unit_number)),
-                                                        math.sqrt(6. / (pre_unit + self.unit_number)),
-                                                        (pre_unit, self.unit_number))
+                self.parameters['W'] = p.random.uniform(-math.sqrt(6. / (dim + self.unit_number)),
+                                                        math.sqrt(6. / (dim + self.unit_number)),
+                                                        (dim, self.unit_number))
             elif self.activation == 'tanh' or self.activation == 'sigmoid':
-                self.parameters['W'] = p.random.uniform(-1., 1., (pre_unit, self.unit_number)) \
-                                       * p.sqrt(6. / (pre_unit + self.unit_number))
+                self.parameters['W'] = p.random.uniform(-1., 1., (dim, self.unit_number)) \
+                                       * p.sqrt(6. / (dim + self.unit_number))
             else:  # 'MSRA'
-                self.parameters['W'] = p.random.normal(0, math.sqrt(2. / pre_unit), size=(pre_unit, self.unit_number))
+                self.parameters['W'] = p.random.normal(0, math.sqrt(2. / dim), size=(dim, self.unit_number))
             # self.W = p.random.randn(pre_unit, self.unit_number) * 0.01
         if 'b' not in self.parameters:
             self.parameters['b'] = p.zeros(self.unit_number)
@@ -530,7 +530,8 @@ class LSTM(Layer):
 
     def save_params(self, path, filename):
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name + '_' + filename, Wx=self.parameters['Wx'], Wa=self.parameters['Wa'], b=self.parameters['b'])
+        p.savez_compressed(path + os.sep + self.name + '_' + filename, Wx=self.parameters['Wx'],
+                           Wa=self.parameters['Wa'], b=self.parameters['b'])
 
     def load_params(self, path, filename):
         dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
@@ -541,6 +542,7 @@ class LSTM(Layer):
         self.parameters['Wx'] = r['Wx']
         self.parameters['Wa'] = r['Wa']
         self.parameters['b'] = r['b']
+
 
 class Embedding(Layer):
     def __init__(self, vocab_size, word_dim):

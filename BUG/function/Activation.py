@@ -23,8 +23,7 @@ def Sigmoid(x):
 
 
 def SigmoidGrad(Z):
-    tmp = Sigmoid(Z)
-    return tmp * (1 - tmp)
+    return p.ones_like(Z)
 
 
 def TanH(Z):
