@@ -71,8 +71,7 @@ class Linear_model(object):
     # 训练
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, is_normalizing=True,
-            testing_percentage=0.2,
-            validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
+            testing_percentage=0.2, validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
             lossMode='CrossEntry', shuffle=True, optimize='BGD', mode='train', start_it=0, filename='train_params',
             path='data'):
         assert not isinstance(X_train, p.float)
@@ -329,60 +328,88 @@ class LSTM_model(object):
 
     # 训练
     @with_goto
-    def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam'):
+    def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam',
+            save_epoch=10, filename='train_params', path='data'):
+
+        if not os.path.exists(path):
+            os.mkdir(path)
+
         self.cost = SoftCategoricalCross_entropy()
-        with trange(iterator) as tr:
-            for self.it in tr:
-                cost =[]
-                with tqdm(minibatch(data, batch_size=batch_size)) as batch_data:
+        start_it = 0
+        if os.path.isfile(path + os.sep + 'caches.obj'):
+            with open(path + os.sep + 'caches.obj', 'rb+') as f:
+                start_it = pickle.load(f)
+            self.load_model(path, filename)
 
-                    for captions_in, captions_out, features, urls in batch_data:
+        is_continue = False
+        label.point
+        try:
+            with trange(start_it, iterator) as tr:
+                for self.it in tr:
+                    cost =[]
+                    with tqdm(minibatch(data, batch_size=batch_size)) as batch_data:
 
-                        a0 = self.A0_layer.forward(features)
-                        embedding_out = self.X_layer.forward(captions_in)
+                        for captions_in, captions_out, features, urls in batch_data:
 
-                        lstm_out = self.lstm_layer.forward(embedding_out, a0)
+                            a0 = self.A0_layer.forward(features)
+                            embedding_out = self.X_layer.forward(captions_in)
 
-                        y_hat = self.output_layer.forward(lstm_out)
+                            lstm_out = self.lstm_layer.forward(embedding_out, a0)
 
-                        loss = self.cost.forward(captions_out, y_hat)
-                        cost.append(loss)
-                        batch_data.set_postfix(loss=loss)
-                        dout = self.cost.backward(captions_out, y_hat)
+                            y_hat = self.output_layer.forward(lstm_out)
 
-                        dlstm = self.output_layer.backward(dout)
+                            loss = self.cost.forward(captions_out, y_hat)
+                            cost.append(loss)
+                            batch_data.set_postfix(loss=loss)
+                            dout = self.cost.backward(captions_out, y_hat)
 
-                        dembedding_out, da0 = self.lstm_layer.backward(dlstm)
+                            dlstm = self.output_layer.backward(dout)
 
-                        self.X_layer.backward(dembedding_out)
-                        self.A0_layer.backward(da0)
+                            dembedding_out, da0 = self.lstm_layer.backward(dlstm)
 
-                        #  更新参数
+                            self.X_layer.backward(dembedding_out)
+                            self.A0_layer.backward(da0)
 
-                        if self.optimizer is None:
-                            if optimize == 'Adam':
-                                self.optimizer = Optimize.Adam(self.layers)
-                            elif optimize == 'Momentum':
-                                self.optimizer = Optimize.Momentum(self.layers)
-                            elif optimize == 'BGD':
-                                self.optimizer = Optimize.BatchGradientDescent(self.layers)
-                            else:
-                                raise ValueError
+                            #  更新参数
 
-                        self.optimizer.update(self.it + 1, learning_rate)
-                tr.set_postfix(loss=sum(cost)/len(cost))
+                            if self.optimizer is None:
+                                if optimize == 'Adam':
+                                    self.optimizer = Optimize.Adam(self.layers)
+                                elif optimize == 'Momentum':
+                                    self.optimizer = Optimize.Momentum(self.layers)
+                                elif optimize == 'BGD':
+                                    self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                                else:
+                                    raise ValueError
 
-        for split in ['train', 'val']:
-            gt_captions, gt_captions_out, features, urls = list(minibatch(data, split=split, batch_size=2))[0]
+                            self.optimizer.update(self.it + 1, learning_rate)
 
-            gt_captions = decode_captions(gt_captions, data['idx_to_word'])
+                    if self.it and self.it % save_epoch == 0:
+                        self.interrupt(path, self.it)
+                        self.save_model(path, filename)
 
-            sample_captions = self.sample(features, self.layers)
-            sample_captions = decode_captions(sample_captions, data['idx_to_word'])
+                    tr.set_postfix(loss=sum(cost)/len(cost))
+            self.predict(data)
 
-            for gt_caption, sample_caption, url in zip(gt_captions, sample_captions, urls):
-                print(url)
-                print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
+        except KeyboardInterrupt:
+            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
+            if c == 'Y' or c == 'y':
+                self.interrupt(path, self.it)
+                self.save_model(path, filename)
+                print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
+            elif c == 'C' or c == 'c':
+                is_continue = True
+            else:
+                print('结束执行')
+        if is_continue:
+            start_it = self.it
+            is_continue = False
+            goto.point
+
+    # 中断处理
+    def interrupt(self, path, start_it):
+        with open(path + os.sep + 'caches.obj', 'wb+') as f:
+            pickle.dump(start_it, f)
 
     def sample(self, features, layers, max_length=50):
         d1, e1, l1, d2 = layers
@@ -406,3 +433,27 @@ class LSTM_model(object):
             prev_h = next_h
 
         return captions
+
+    def predict(self, data):
+        for split in ['train', 'val']:
+            gt_captions, gt_captions_out, features, urls = list(minibatch(data, split=split, batch_size=2))[0]
+
+            gt_captions = decode_captions(gt_captions, data['idx_to_word'])
+
+            sample_captions = self.sample(features, self.layers)
+            sample_captions = decode_captions(sample_captions, data['idx_to_word'])
+
+            for gt_caption, sample_caption, url in zip(gt_captions, sample_captions, urls):
+                print(url)
+                print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
+
+    # 保存模型参数
+    def save_model(self, path, filename):
+        for layer in self.layers:
+            layer.save_params(path, filename)
+
+    # 加载模型参数
+    def load_model(self, path, filename):
+
+        for layer in self.layers:
+            layer.load_params(path, filename)

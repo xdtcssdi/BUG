@@ -1,7 +1,7 @@
 import numpy as np
 
 from BUG.Layers.Layer import Dense
-from BUG.Model.LinearModel import Linear_model
+from BUG.Model.model import Linear_model
 from BUG.function.util import load_data, one_hot
 from tensorflow import keras
 import matplotlib.pyplot as plt

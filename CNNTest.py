@@ -1,7 +1,7 @@
 from tensorflow import keras
 
 from BUG.Layers.Layer import Convolution, Pooling, Dense
-from BUG.Model.LinearModel import Linear_model
+from BUG.Model.model import Linear_model
 from BUG.function.util import one_hot
 from BUG.load_package import p
 import matplotlib.pyplot as plt
@@ -11,9 +11,9 @@ def LeNet5():
     (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
 
     X_train = p.reshape(train_images, (train_images.shape[0], 1, 28, 28))[:100] / 255.
-    X_test = p.reshape(test_images, (test_images.shape[0], 1, 28, 28))[:10000] / 255.
-    Y_train = one_hot(train_labels, 10)[:100]
-    Y_test = one_hot(test_labels, 10)[:10000]
+    X_test = p.reshape(test_images, (test_images.shape[0], 1, 28, 28))[:100] / 255.
+    Y_train = train_labels[:100]
+    Y_test = test_labels[:100]
     net = Linear_model()
     net.add(Convolution(filter_count=6, filter_shape=(5, 5), batchNormal=True))
     net.add(Pooling(filter_shape=(2, 2), stride=2, mode='max', paddingMode='valid'))

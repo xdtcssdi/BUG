@@ -289,16 +289,6 @@ class Pooling(Layer):
                      'stride': stride, 'mode': mode}
         assert (self.mode in ['max', 'average'])
 
-    def save_params(self, path, filename):
-        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-
-    def load_params(self, path, filename):
-        r = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
-        self.filter_shape = r['filter_shape']
-        self.padding = r['padding']
-        self.stride = r['stride']
-        self.mode = r['mode']
-
     def init_params(self, nx):
         pass
 
@@ -333,6 +323,16 @@ class Pooling(Layer):
                                     padding=self.padding, stride=self.stride)
         dx = dx.reshape(x.shape)
         return dx
+
+    def save_params(self, path, filename):
+        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
+
+    def load_params(self, path, filename):
+        r = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+        self.filter_shape = r['filter_shape']
+        self.padding = r['padding']
+        self.stride = r['stride']
+        self.mode = r['mode']
 
 
 class SimpleRNN(Layer):
@@ -430,18 +430,13 @@ class LSTM(Layer):
         self.start_code = word_to_idx.get('<START>', None)
         self.end_code = word_to_idx.get('<END>', None)
         self.n_a = n_a
+        self.args = {'word_to_idx': word_to_idx, 'n_a': n_a}
 
     def init_params(self, n_x):
         if 'Wx' not in self.parameters:
             self.parameters['Wx'] = p.random.randn(n_x, 4 * self.n_a) / p.sqrt(n_x)
             self.parameters['Wa'] = p.random.randn(self.n_a, 4 * self.n_a) / p.sqrt(self.n_a)
             self.parameters['b'] = p.zeros(4 * self.n_a)
-
-    def save_params(self, path, filename):
-        pass
-
-    def load_params(self, path, filename):
-        pass
 
     def forward(self, x, a0=None, mode='train'):
         """
@@ -533,22 +528,36 @@ class LSTM(Layer):
 
         return dx, da_prev, dc_prev, dWx, dWa, db
 
+    def save_params(self, path, filename):
+        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name + '_' + filename, Wx=self.parameters['Wx'], Wa=self.parameters['Wa'], b=self.parameters['b'])
+
+    def load_params(self, path, filename):
+        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+        self.word_to_idx = dic['word_to_idx']
+        self.n_a = dic['n_a']
+
+        r = p.load(path + os.sep + self.name + '_' + filename + '.npz')
+        self.parameters['Wx'] = r['Wx']
+        self.parameters['Wa'] = r['Wa']
+        self.parameters['b'] = r['b']
 
 class Embedding(Layer):
     def __init__(self, vocab_size, word_dim):
         super(Embedding, self).__init__()
-        self.init_params([vocab_size, word_dim])
+        self.vocab_size = vocab_size
+        self.word_dim = word_dim
+        self.init_params([self.vocab_size, self.word_dim])
         self.name = 'Embedding'
+        self.args = {'vocab_size': vocab_size, 'word_dim': word_dim}
 
-    def init_params(self, nx):
-        vocab_size, word_dim = nx
-        self.parameters['W'] = p.random.randn(vocab_size, word_dim) / 100
+    def init_params(self, dim):
+        self.parameters['W'] = p.random.randn(*dim) / 100
 
     def forward(self, x, mode='train'):
         self.x = x
         N, T = x.shape
-        V, D = self.parameters['W'].shape
-        out = p.zeros((N, T, D))
+        out = p.zeros((N, T, self.word_dim))
 
         for i in range(N):
             for j in range(T):
@@ -564,7 +573,14 @@ class Embedding(Layer):
         self.gradients['W'] = dW
 
     def save_params(self, path, filename):
-        pass
+        if not os.path.exists(path):
+            os.mkdir(path)
+        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'])
 
     def load_params(self, path, filename):
-        pass
+        params = p.load(path + os.sep + self.name + '_' + filename + '.npz')
+        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+        self.vocab_size = dic['vocab_size']
+        self.word_dim = dic['word_dim']
+        self.parameters['W'] = params['W']

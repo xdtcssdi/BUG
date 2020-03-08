@@ -1,4 +1,4 @@
-from BUG.Model.LinearModel import LSTM_model
+from BUG.Model.model import LSTM_model
 from BUG.function.util import load_coco_data, minibatch
 
 if __name__ == '__main__':
