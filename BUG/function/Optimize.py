@@ -34,13 +34,14 @@ class Momentum(Optimize):
             for key in layer.parameters.keys():
                 self.v['V_' + key + str(i)] = beta * self.v['V_' + key + str(i)] + (1 - beta) * layer.gradients[key]
                 layer.parameters[key] -= learning_rate * self.v['V_' + key + str(i)]
-
+                del layer.gradients[key]
             if layer.batch_normal is not None:
                 gradients_clip(layer.batch_normal.gradients)
                 for key in layer.batch_normal.parameters.keys():
                     self.v['V_' + key + str(i)] = beta * self.v['V_' + key + str(i)] + (1 - beta) * \
                                                    layer.batch_normal.gradients[key]
                     layer.batch_normal.parameters[key] -= learning_rate * self.v['V_' + key + str(i)]
+                    del layer.batch_normal.gradients[key]
 
 
 class Adam(Optimize):
@@ -72,7 +73,7 @@ class Adam(Optimize):
                 self.s['S_' + key + str(i)] = beta2 * self.s['S_' + key + str(i)] + (1 - beta2) * p.square(layer.gradients[key])
                 layer.parameters[key] -= learning_rate * self.v['V_' + key + str(i)] / (1 - p.power(beta1, t)) / (
                             p.sqrt(self.s['S_' + key + str(i)] / (1 - p.power(beta2, t))) + epsilon)
-
+                del layer.gradients[key]
             if layer.batch_normal is not None:
                 gradients_clip(layer.batch_normal.gradients)
                 for key in layer.batch_normal.parameters.keys():
@@ -83,6 +84,7 @@ class Adam(Optimize):
                     layer.batch_normal.parameters[key] -= learning_rate * self.v['V_' + key + str(i)] / (
                                 1 - p.power(beta1, t)) / (p.sqrt(
                         self.s['S_' + key + str(i)] / (1 - p.power(beta2, t))) + epsilon)
+                    del layer.batch_normal.gradients[key]
 
 
 class BatchGradientDescent(Optimize):
@@ -97,11 +99,13 @@ class BatchGradientDescent(Optimize):
             gradients_clip(layer.gradients)
             for key in layer.parameters.keys():
                 layer.parameters[key] -= learning_rate * layer.gradients[key]
+                del layer.gradients[key]
 
             if layer.batch_normal is not None:
                 gradients_clip(layer.batch_normal.gradients)
                 for key in layer.batch_normal.parameters.keys():
                     layer.batch_normal.parameters[key] -= learning_rate * layer.batch_normal.gradients[key]
+                    del layer.batch_normal.gradients[key]
 
 
 #  梯度裁剪

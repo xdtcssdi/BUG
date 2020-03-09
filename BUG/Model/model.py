@@ -75,7 +75,7 @@ class Linear_model(object):
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
             shuffle=True, mode='train', filename='train_params',
-            path='data', regularization='L2', lambd=0):
+            path='fashion_mnist_parameters', regularization='L2', lambd=0):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, type = %s" % (X_train.shape, type(X_train)))
@@ -164,11 +164,11 @@ class Linear_model(object):
         reg_loss = .0
         if regularization == 'L2':
             for layer in self.layers:
-                if not isinstance(Layer, Pooling):
+                if not isinstance(layer, Pooling):
                     reg_loss += p.sum(p.square(layer.parameters['W']))
         elif regularization == 'L1':
             for layer in self.layers:
-                if not isinstance(Layer, Pooling):
+                if not isinstance(layer, Pooling):
                     reg_loss += p.sum(p.abs(layer.parameters['W']))
         else:
             raise ValueError
@@ -227,7 +227,7 @@ class Linear_model(object):
         # 添加正则惩罚loss的梯度
         if lambd > .0:
             for layer in self.layers:
-                if not isinstance(Layer, Pooling):
+                if not isinstance(layer, Pooling):
                     layer.gradients['W'] += lambd / batch_size * layer.parameters['W']
 
         if self.optimizer is None:
