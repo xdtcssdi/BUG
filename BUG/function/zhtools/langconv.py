@@ -167,7 +167,7 @@ class StatesMachine(object):
             new = self.feed(char, map)
         elif self.state == FAIL:
             raise StatesMachineException('Translate States Machine '
-                    'have error with input data %s' % node)
+                    'have error with input mnist_dnn_parameters %s' % node)
         return new
 
     def __len__(self):

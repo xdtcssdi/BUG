@@ -46,7 +46,7 @@ class Layer(object):
         """
         raise NotImplementedError
 
-    def forward(self, A_pre, mode='train'):
+    def forward(self, A_pre, Y=None, mode='train'):
         """
         前向传播
         :param A_pre: 前一层的激活值
@@ -102,6 +102,7 @@ class Convolution(Layer):
         self.filter_shape = filter_shape  # 卷积核形状
         self.stride = stride  # 步长
         self.padding = padding  # pad
+        self.batchNormal = batchNormal
         self.batch_normal = BatchNormal() if batchNormal else None
         self.args = {'filter_count': filter_count, 'filter_shape': filter_shape,
                      'stride': stride, 'padding': padding, 'activation': activation,
@@ -132,6 +133,7 @@ class Convolution(Layer):
         p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'], b=self.parameters['b'])
         if self.batch_normal:
             self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
+        return self.name
 
     def load_params(self, path, filename):
         params = p.load(path + os.sep + self.name + '_' + filename + '.npz')
@@ -198,13 +200,16 @@ class Convolution(Layer):
 class Dense(Layer):
     count = 0
 
-    def __init__(self, unit_number, activation=None, batchNormal=False, flatten=False):
+    def __init__(self, unit_number, activation=None, batchNormal=False, flatten=False, keep_prob=1.):
         super(Dense, self).__init__(unit_number, activation)
         Dense.count += 1
-        self.name = 'Core_' + str(Dense.count)
+        self.name = 'Dense_' + str(Dense.count)
         self.flatten = flatten
         self.batch_normal = BatchNormal() if batchNormal else None
-        self.args = {'unit_number': unit_number, 'activation': activation, 'batchNormal': batchNormal}
+        self.keep_prob = keep_prob
+        self.drop_mask = None
+        self.args = {'unit_number': unit_number, 'activation': activation,
+                     'batchNormal': batchNormal, 'flatten': flatten, 'keep_prob': keep_prob}
 
     def forward(self, x, Y=None, mode='train'):
         self.x_shape = x.shape
@@ -220,10 +225,17 @@ class Dense(Layer):
             self.Z = p.dot(x, self.parameters['W']) + self.parameters['b']
 
         if self.batch_normal:
-            self.Z = self.batch_normal.forward(self.Z)
-        return ac_get(self.Z, self.activation)
+            self.Z = self.batch_normal.forward(self.Z, mode)
+        A = ac_get(self.Z, self.activation)
+        if self.keep_prob < 1.:
+            self.drop_mask = p.random.rand(*self.Z.shape)
+            return A * self.drop_mask / self.keep_prob
+        else:
+            return A
 
     def backward(self, dout):
+        if self.keep_prob < 1.:
+            dout = dout * self.drop_mask / self.keep_prob
         dout = ac_get_grad(dout, self.Z, self.activation)
         if self.batch_normal:
             dout = self.batch_normal.backward(dout)
@@ -252,7 +264,7 @@ class Dense(Layer):
                                        * p.sqrt(6. / (dim + self.unit_number))
             else:  # 'MSRA'
                 self.parameters['W'] = p.random.normal(0, math.sqrt(2. / dim), size=(dim, self.unit_number))
-            # self.W = p.random.randn(pre_unit, self.unit_number) * 0.01
+            # self.parameters['W'] = p.random.randn(pre_unit, self.unit_number) * 0.01
         if 'b' not in self.parameters:
             self.parameters['b'] = p.zeros(self.unit_number)
 
@@ -261,6 +273,7 @@ class Dense(Layer):
         p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'], b=self.parameters['b'])
         if self.batch_normal:
             self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
+        return self.name
 
     def load_params(self, path, filename):
         dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
@@ -285,7 +298,7 @@ class Pooling(Layer):
         self.stride = stride
         self.padding = 0 if paddingMode == 'valid' else (filter_shape[0] - 1) // 2
         self.mode = mode
-        self.args = {'filter_shape': filter_shape, 'padding': self.padding,
+        self.args = {'filter_shape': filter_shape, 'paddingMode': paddingMode,
                      'stride': stride, 'mode': mode}
         assert (self.mode in ['max', 'average'])
 
@@ -326,11 +339,12 @@ class Pooling(Layer):
 
     def save_params(self, path, filename):
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
+        return self.name
 
     def load_params(self, path, filename):
         r = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
         self.filter_shape = r['filter_shape']
-        self.padding = r['padding']
+        self.padding = 0 if r['paddingMode'] == 'valid' else (self.filter_shape[0] - 1) // 2
         self.stride = r['stride']
         self.mode = r['mode']
 
@@ -420,17 +434,15 @@ class SimpleRNN(Layer):
 
 
 class LSTM(Layer):
-    def __init__(self, word_to_idx, n_a=50):
+    def __init__(self, word_to_idx, point, n_a=50):
         super(LSTM, self).__init__()
         self.cache = {}
         self.name = 'LSTM'
         self.word_to_idx = word_to_idx
         self.idx_to_word = {i: w for w, i in word_to_idx.items()}
-        self.null_code = word_to_idx['<NULL>']
-        self.start_code = word_to_idx.get('<START>', None)
-        self.end_code = word_to_idx.get('<END>', None)
+        self.start_code, self.end_code, self.null_code = point
         self.n_a = n_a
-        self.args = {'word_to_idx': word_to_idx, 'n_a': n_a}
+        self.args = {'word_to_idx': word_to_idx, 'point': point, 'n_a': n_a}
 
     def init_params(self, n_x):
         if 'Wx' not in self.parameters:
@@ -532,6 +544,7 @@ class LSTM(Layer):
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
         p.savez_compressed(path + os.sep + self.name + '_' + filename, Wx=self.parameters['Wx'],
                            Wa=self.parameters['Wa'], b=self.parameters['b'])
+        return self.name
 
     def load_params(self, path, filename):
         dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
@@ -556,7 +569,7 @@ class Embedding(Layer):
     def init_params(self, dim):
         self.parameters['W'] = p.random.randn(*dim) / 100
 
-    def forward(self, x, mode='train'):
+    def forward(self, x, Y=None, mode='train'):
         self.x = x
         N, T = x.shape
         out = p.zeros((N, T, self.word_dim))
@@ -579,6 +592,7 @@ class Embedding(Layer):
             os.mkdir(path)
         save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
         p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'])
+        return self.name
 
     def load_params(self, path, filename):
         params = p.load(path + os.sep + self.name + '_' + filename + '.npz')
@@ -586,3 +600,20 @@ class Embedding(Layer):
         self.vocab_size = dic['vocab_size']
         self.word_dim = dic['word_dim']
         self.parameters['W'] = params['W']
+
+
+def generate_layer(str, arg):
+    if str == 'Dense':
+        return Dense(**arg)
+    elif str == 'Convolution':
+        return Convolution(**arg)
+    elif str == 'Pooling':
+        return Pooling(**arg)
+    elif str == 'SimpleRNN':
+        return SimpleRNN(**arg)
+    elif str == 'LSTM':
+        return LSTM(**arg)
+    elif str == 'Embedding':
+        return Embedding(**arg)
+    else:
+        raise ValueError

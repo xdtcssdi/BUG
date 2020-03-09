@@ -13,7 +13,7 @@ from BUG.load_package import p
 import numpy as np
 
 
-def load_data(path):
+def load_data_cat(path):
     train_dataset = h5py.File(path[0], "r")
     train_set_x_orig = np.array(train_dataset["train_set_x"][:])  # your train set features
     train_set_y_orig = np.array(train_dataset["train_set_y"][:])  # your train set labels
@@ -37,7 +37,7 @@ def load_CIFAR_batch(filename):
     """ load single batch of cifar """
     with open(filename, 'rb') as f:
         datadict = pickle.load(f, encoding='iso-8859-1')
-        X = datadict['data']
+        X = datadict['mnist_dnn_parameters']
         Y = datadict['labels']
         X = X.reshape(10000, 3, 32, 32).transpose(0, 2, 3, 1).astype("float")
         Y = np.array(Y)
@@ -311,7 +311,7 @@ def load_coco_data(base_dir='/content/sample_data/coco_captioning/',
         val_urls = np.asarray([line.strip() for line in f])
     data['val_urls'] = val_urls
 
-    # Maybe subsample the training data
+    # Maybe subsample the training mnist_dnn_parameters
     if max_train is not None:
         num_train = data['train_captions'].shape[0]
         mask = np.random.randint(num_train, size=max_train)

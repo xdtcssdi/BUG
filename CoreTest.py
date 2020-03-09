@@ -1,34 +1,80 @@
+import matplotlib.pyplot as plt
 import numpy as np
-
+from PIL import Image
 from BUG.Layers.Layer import Dense
 from BUG.Model.model import Linear_model
+from BUG.function.Loss import SoftCategoricalCross_entropy
 from BUG.function.evaluate import evaluate_many
-from BUG.function.util import load_data, load_mnist
+from BUG.function.util import load_mnist
+
+np.set_printoptions(threshold=np.inf, suppress=True)
 
 
 def mnist():
     # 数据预处理
     X_train, y_train, X_test, y_test, classes = load_mnist()
 
-    X_train = X_train.reshape(X_train.shape[0], -1) / 255.
-    Y_train = y_train
+    X_train = X_train.reshape(X_train.shape[0], -1).astype(np.float32)[:60000] / 255.
+    Y_train = y_train[:60000]
 
-    X_test = X_test.reshape(X_test.shape[0], -1) / 255.
+    X_test = X_test.reshape(X_test.shape[0], -1).astype(np.float32) / 255.
     y_test = y_test
 
     accuracy = evaluate_many
     # 创建网络架构
     net = Linear_model()
-    net.add(Dense(64, batchNormal=True))
-    net.add(Dense(32, batchNormal=True))
-    net.add(Dense(16, batchNormal=True))
-    net.add(Dense(classes, "softmax"))
+    net.add(Dense(1024, activation='relu', batchNormal=True))
+    net.add(Dense(512, activation='relu', batchNormal=True))
+    net.add(Dense(256, activation='relu', batchNormal=True))
+    net.add(Dense(classes, activation="softmax"))
     net.compile()
-    net.fit(X_train, Y_train, accuracy, X_test, y_test, batch_size=512,
-            is_normalizing=False, lossMode='SoftmaxCrossEntry', save_epoch=1000,
-            learning_rate=0.005, iterator=1000, optimize='Adam', lambd=0)
+    net.fit(X_train, Y_train, accuracy, SoftCategoricalCross_entropy(),
+            X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=1,
+            iterator=20, optimize='Adam')
+
+
+def pre_pic(picName):
+    # 先打开传入的原始图片
+    img = Image.open(picName)
+    # 使用消除锯齿的方法resize图片
+    reIm = img.resize((28, 28), Image.ANTIALIAS)
+
+    # 变成灰度图，转换成矩阵
+    im_arr = np.array(reIm.convert("L"))
+
+    threshold = 30
+    # 对图像进行二值化处理
+    tmp_im = 255 - im_arr
+    mask = tmp_im > threshold
+    im_arr *= mask
+    img = im_arr
+    # reshape
+    nm_arr = im_arr.reshape([1, 784])
+    nm_arr = nm_arr.astype(np.float32)
+    img_ready = np.multiply(nm_arr, 1.0 / 255.0)
+
+    return img_ready, img
+
+
+def predict():
+    data, img = pre_pic("/Users/oswin/Documents/BS/test_data/img4.png")
+
+    net = Linear_model()
+    net.add(Dense(1024, activation='relu', batchNormal=True))
+    net.add(Dense(512, activation='relu', batchNormal=True))
+    net.add(Dense(256, activation='relu', batchNormal=True))
+    net.add(Dense(10, activation="softmax"))
+    net.compile()
+    net.load_model(path='Test/mnist_dnn_parameters', filename='train_params')
+    y_hat = net.predict(data.reshape(1, -1))
+    idx = y_hat.argmax(-1)
+    print('识别为： %d, 概率为%.2f%%'%(idx, y_hat[0, idx]*100))
+    plt.figure()
+    plt.imshow(img)
+    plt.show()
 
 
 if __name__ == '__main__':
     np.random.seed(1)
-    mnist()
+    # mnist()
+    predict()

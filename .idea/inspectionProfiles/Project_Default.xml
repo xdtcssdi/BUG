@@ -34,6 +34,7 @@
           <option value="BUG.Model.Model.label" />
           <option value="BUG.Model.Model.goto" />
           <option value="BUG.Model.LinearModel.label" />
+          <option value="BUG.Model.model.label" />
         </list>
       </option>
     </inspection_tool>
