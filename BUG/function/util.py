@@ -344,14 +344,15 @@ def decode_captions(captions, idx_to_word):
 
 def minibatch(data, batch_size=100, split='train'):
     split_size = data['%s_captions' % split].shape[0]
+    batch = []
     for i in range(split_size//batch_size):
         captions = data['%s_captions' % split][i*batch_size:(i+1)*batch_size]
         image_idxs = data['%s_image_idxs' % split][i*batch_size:(i+1)*batch_size]
         image_features = data['%s_features' % split][image_idxs]
         urls = data['%s_urls' % split][image_idxs]
 
-        yield p.asarray(captions[:, :-1]), p.asarray(captions[:, 1:]), p.asarray(image_features), urls
-
+        batch.append((p.asarray(captions[:, :-1]), p.asarray(captions[:, 1:]), p.asarray(image_features), urls))
+    return batch
 
 def load_mnist():
     from keras.datasets import mnist

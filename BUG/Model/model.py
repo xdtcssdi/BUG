@@ -337,23 +337,23 @@ class Linear_model(object):
 
 
 class LSTM_model(object):
-    def __init__(self, hidden_dim, word_to_idx):
+    def __init__(self, hidden_dim, word_to_idx, point):
 
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimizer = None
         self.optimizeMode = None
 
-        self.A0_layer = Dense(unit_number=hidden_dim, activation=None)  # a0输入
-        self.X_layer = Embedding(vocab_size=len(word_to_idx), word_dim=256)  # X
-        self.lstm_layer = LSTM(n_a=hidden_dim, word_to_idx=word_to_idx)  # 返回a
-        self.output_layer = Dense(unit_number=len(word_to_idx), activation='softmax')
+        self.A0_layer = Dense(unit_number=hidden_dim, activation='relu')  # a0输入
+        self.X_layer = Embedding(vocab_size=len(word_to_idx), word_dim=256)  # 词向量
+        self.lstm_layer = LSTM(n_a=hidden_dim, word_to_idx=word_to_idx, point=point)  # 返回a
+        self.output_layer = Dense(unit_number=len(word_to_idx), activation='softmax')  # 预测
         self.layers = [self.A0_layer, self.X_layer, self.lstm_layer, self.output_layer]
 
     # 训练
     @with_goto
     def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam',
-            save_epoch=10, filename='train_params', path='mnist_dnn_parameters'):
+            save_epoch=10, filename='train_params', path='data'):
 
         if not os.path.exists(path):
             os.mkdir(path)
@@ -366,60 +366,64 @@ class LSTM_model(object):
             self.load_model(path, filename)
 
         is_continue = False
+        cur_it = 0
+        in_bar = tqdm()
+        bar = tqdm()
         label.point
         try:
-            with trange(start_it, iterator) as tr:
-                for self.it in tr:
-                    cost = []
-                    with tqdm(minibatch(data, batch_size=batch_size)) as batch_data:
+            bar = tqdm(range(start_it, iterator))
 
-                        for captions_in, captions_out, features, urls in batch_data:
+            for it in bar:
+                cost = []
+                in_bar = tqdm(minibatch(data, batch_size=batch_size))
+                for captions_in, captions_out, features, urls in in_bar:
 
-                            a0 = self.A0_layer.forward(features)
-                            embedding_out = self.X_layer.forward(captions_in)
+                    a0 = self.A0_layer.forward(features)
+                    embedding_out = self.X_layer.forward(captions_in)
 
-                            lstm_out = self.lstm_layer.forward(embedding_out, a0)
+                    lstm_out = self.lstm_layer.forward(embedding_out, a0)
 
-                            y_hat = self.output_layer.forward(lstm_out)
+                    y_hat = self.output_layer.forward(lstm_out)
 
-                            loss = self.cost.forward(captions_out, y_hat)
-                            cost.append(loss)
-                            batch_data.set_postfix(loss=loss)
-                            dout = self.cost.backward(captions_out, y_hat)
+                    loss = self.cost.forward(captions_out, y_hat)
+                    cost.append(loss)
+                    in_bar.set_postfix(loss=loss)
+                    dout = self.cost.backward(captions_out, y_hat)
 
-                            dlstm = self.output_layer.backward(dout)
+                    dlstm = self.output_layer.backward(dout)
 
-                            dembedding_out, da0 = self.lstm_layer.backward(dlstm)
+                    dembedding_out, da0 = self.lstm_layer.backward(dlstm)
 
-                            self.X_layer.backward(dembedding_out)
-                            self.A0_layer.backward(da0)
+                    self.X_layer.backward(dembedding_out)
+                    self.A0_layer.backward(da0)
 
-                            #  更新参数
+                    #  更新参数
 
-                            if self.optimizer is None:
-                                if optimize == 'Adam':
-                                    self.optimizer = Optimize.Adam(self.layers)
-                                elif optimize == 'Momentum':
-                                    self.optimizer = Optimize.Momentum(self.layers)
-                                elif optimize == 'BGD':
-                                    self.optimizer = Optimize.BatchGradientDescent(self.layers)
-                                else:
-                                    raise ValueError
+                    if self.optimizer is None:
+                        if optimize == 'Adam':
+                            self.optimizer = Optimize.Adam(self.layers)
+                        elif optimize == 'Momentum':
+                            self.optimizer = Optimize.Momentum(self.layers)
+                        elif optimize == 'BGD':
+                            self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                        else:
+                            raise ValueError
 
-                            self.optimizer.update(self.it + 1, learning_rate)
+                    self.optimizer.update(it + 1, learning_rate)
 
-                    if self.it and self.it % save_epoch == 0:
-                        print(cost)
-                        self.interrupt(path, self.it)
-                        self.save_model(path, filename)
+                if it > 0 and it % save_epoch == 0:
+                    self.interrupt(path, it)
+                    self.save_model(path, filename)
+                    self.predict(data)
 
-                    tr.set_postfix(loss=sum(cost) / len(cost))
-            self.predict(data)
+                in_bar.close()
+                bar.set_postfix(loss=sum(cost) / len(cost))
+                cur_it = it
 
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.interrupt(path, self.it)
+                self.interrupt(path, cur_it)
                 self.save_model(path, filename)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
@@ -427,9 +431,12 @@ class LSTM_model(object):
             else:
                 print('结束执行')
         if is_continue:
-            start_it = self.it
+            start_it = cur_it
             is_continue = False
             goto.point
+        bar.close()
+        in_bar.close()
+
 
     # 中断处理
     def interrupt(self, path, start_it):
@@ -479,6 +486,5 @@ class LSTM_model(object):
 
     # 加载模型参数
     def load_model(self, path, filename):
-
         for layer in self.layers:
             layer.load_params(path, filename)
