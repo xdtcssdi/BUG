@@ -1,15 +1,16 @@
 import os.path
 import pickle
+import random
 
 import goto
 import numpy as np
 from goto import with_goto
 from tqdm import trange, tqdm
 
-from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding, Pooling, generate_layer
+from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding, Pooling, generate_layer, SimpleRNN
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy
-from BUG.function.util import minibatch, decode_captions
+from BUG.function.util import minibatch, decode_captions, minibatch_poetry
 from BUG.load_package import p
 
 
@@ -74,15 +75,15 @@ class Linear_model(object):
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
-            shuffle=True, mode='train', filename='train_params',
-            path='fashion_mnist_parameters', regularization='L2', lambd=0):
+            mode='train', filename='train_params',
+            path='data', regularization='L2', lambd=0):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, type = %s" % (X_train.shape, type(X_train)))
         print("Y_train.shape = %s, type = %s" % (Y_train.shape, type(Y_train)))
         self.args = {'batch_size': batch_size, 'testing_percentage': testing_percentage,
                      'validation_percentage': validation_percentage, 'learning_rate': learning_rate,
-                     'iterator': iterator, 'save_epoch': save_epoch, 'shuffle': shuffle, 'mode': mode,
+                     'iterator': iterator, 'save_epoch': save_epoch, 'mode': mode,
                      'filename': filename, 'path': path, 'regularization': regularization, 'lambd': lambd}
         t = 0
         start_it = 0
@@ -92,22 +93,12 @@ class Linear_model(object):
         if os.path.isfile(path + os.sep + 'caches.npz'):
             with open(path + os.sep + 'caches.obj', 'rb+') as f:
                 start_it, t = pickle.load(f)
-            self.permutation = p.load(path + os.sep + 'caches.npz')['permutation']
             self.load_model(path, filename)
 
         #  Normalizing inputs
         if self.is_normalizing:
             X_train, X_test = self.normalizing_inputs(X_train, X_test)
         #  Normalizing inputs
-
-        #  shuffle start
-        if shuffle:
-            if not os.path.isfile(path + os.sep + 'caches.npz'):
-                self.permutation = np.random.permutation(X_train.shape[0])
-
-            X_train = X_train[self.permutation]
-            Y_train = Y_train[self.permutation]
-        #  shuffle end
 
         #  划分数据
         if X_test is None and Y_test is None:
@@ -126,13 +117,13 @@ class Linear_model(object):
                                                  regularization, lambd)
                     test_cost, acc = self.accuracy(X_test, Y_test, self.layers)
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
-                    if self.it != 0 and self.it % save_epoch == 0:
-                        self.interrupt(path, self.permutation, self.it, t)
+                    if (self.it + 1) % save_epoch == 0:
+                        self.interrupt(path, self.it, t)
                         self.save_model(path, filename)
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.interrupt(path, self.permutation, self.it, t)
+                self.interrupt(path, self.it, t)
                 self.save_model(path, filename)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
@@ -145,10 +136,9 @@ class Linear_model(object):
             goto.point
 
     # 中断处理
-    def interrupt(self, path, permutation, start_it, t):
+    def interrupt(self, path, start_it, t):
         with open(path + os.sep + 'caches.obj', 'wb+') as f:
             pickle.dump((start_it, t), f)
-        p.savez_compressed(path + os.sep + 'caches.npz', permutation=permutation)
 
     def compute_reg_loss(self, m, regularization='L2', lambd=0.1):
         """
@@ -207,6 +197,7 @@ class Linear_model(object):
 
     # 单步训练
     def train_step(self, x_train, y_train, mode, learning_rate, t, regularization, lambd):
+
         # 前向传播
         batch_size = x_train.shape[0]
         output = x_train
@@ -254,15 +245,20 @@ class Linear_model(object):
             for b in tr:
                 bs = b * batch_size
                 be = (b + 1) * batch_size
-                x_train = X_train[bs:be]
-                y_train = Y_train[bs:be]
+                permutation = np.random.permutation(batch_size)
+                x_train = X_train[bs:be][permutation]
+                y_train = Y_train[bs:be][permutation]
+
                 cost = self.train_step(x_train, y_train, mode, learning_rate, t, regularization, lambd)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
 
             s = num_complete * batch_size
             if s < X_train.shape[0]:
-                cost = self.train_step(X_train[num_complete * batch_size:], Y_train[num_complete * batch_size:],
+                permutation = np.random.permutation(X_train.shape[0] - num_complete * batch_size)
+
+                cost = self.train_step(X_train[num_complete * batch_size:][permutation],
+                                       Y_train[num_complete * batch_size:][permutation],
                                        mode, learning_rate, t, regularization, lambd)
                 tr.set_postfix(loss=cost)
                 in_cost.append(cost)
@@ -303,9 +299,9 @@ class Linear_model(object):
 
     #  加载模型参数
     def load_model(self, path, filename):
-        Dense.count=0
-        Convolution.count=0
-        Pooling.count=0
+        Dense.count = 0
+        Convolution.count = 0
+        Pooling.count = 0
         self.layers.clear()
         with open(path + os.sep + filename + '.obj', 'rb') as f:
             layers = pickle.load(f)
@@ -378,6 +374,11 @@ class LSTM_model(object):
                 in_bar = tqdm(minibatch(data, batch_size=batch_size))
                 for captions_in, captions_out, features, urls in in_bar:
 
+                    permutation = np.random.permutation(captions_in.shape[0])
+                    captions_in = captions_in[permutation]
+                    captions_out = captions_out[permutation]
+                    features = features[permutation]
+
                     a0 = self.A0_layer.forward(features)
                     embedding_out = self.X_layer.forward(captions_in)
 
@@ -410,8 +411,10 @@ class LSTM_model(object):
                             raise ValueError
 
                     self.optimizer.update(it + 1, learning_rate)
+                if len(cost) == 0:
+                    continue
 
-                if it > 0 and it % save_epoch == 0:
+                if (it + 1) % save_epoch == 0:
                     self.interrupt(path, it)
                     self.save_model(path, filename)
                     self.predict(data)
@@ -436,7 +439,6 @@ class LSTM_model(object):
             goto.point
         bar.close()
         in_bar.close()
-
 
     # 中断处理
     def interrupt(self, path, start_it):
@@ -468,7 +470,158 @@ class LSTM_model(object):
 
     def predict(self, data):
         for split in ['train', 'val']:
-            gt_captions, gt_captions_out, features, urls = list(minibatch(data, split=split, batch_size=2))[0]
+            gt_captions, gt_captions_out, features, urls = minibatch(data, split=split, batch_size=2)[
+                random.randint(0, 10000)]
+
+            gt_captions = decode_captions(gt_captions, data['idx_to_word'])
+
+            sample_captions = self.sample(features, self.layers)
+            sample_captions = decode_captions(sample_captions, data['idx_to_word'])
+
+            for gt_caption, sample_caption, url in zip(gt_captions, sample_captions, urls):
+                print(url)
+                print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
+
+    # 保存模型参数
+    def save_model(self, path, filename):
+        for layer in self.layers:
+            layer.save_params(path, filename)
+
+    # 加载模型参数
+    def load_model(self, path, filename):
+        for layer in self.layers:
+            layer.load_params(path, filename)
+
+
+class RNN_model(object):
+    def __init__(self, hidden_dim, word_to_idx):
+        self.costs = []  # every batch cost
+        self.cost = None  # 损失函数类
+        self.optimizer = None
+        self.optimizeMode = None
+        self.word_to_idx = word_to_idx
+
+        self.X_layer = Embedding(vocab_size=len(word_to_idx), word_dim=256)  # 词向量
+        self.lstm_layer = SimpleRNN(n_a=hidden_dim, char_to_ix=word_to_idx)  # 返回a
+        self.output_layer = Dense(unit_number=len(word_to_idx), activation='softmax')  # 预测
+        self.layers = [self.X_layer, self.lstm_layer, self.output_layer]
+
+    # 训练
+    @with_goto
+    def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam',
+            save_epoch=10, filename='train_params', path='data'):
+        if not os.path.exists(path):
+            os.mkdir(path)
+
+        self.cost = SoftCategoricalCross_entropy()
+        start_it = 0
+        if os.path.isfile(path + os.sep + 'caches.obj'):
+            with open(path + os.sep + 'caches.obj', 'rb+') as f:
+                start_it = pickle.load(f)
+            self.load_model(path, filename)
+
+        is_continue = False
+        cur_it = 0
+        in_bar = tqdm()
+        bar = tqdm()
+        label.point
+        try:
+            bar = tqdm(range(start_it, iterator))
+
+            for it in bar:
+                cost = []
+                in_bar = tqdm(minibatch_poetry(data, word_to_ix=self.word_to_idx,batch_size=batch_size))
+                for X, Y in in_bar:
+                    embedding_out = self.X_layer.forward(X)
+                    lstm_out = self.lstm_layer.forward(embedding_out)
+
+                    y_hat = self.output_layer.forward(lstm_out)
+
+                    loss = self.cost.forward(Y, y_hat)
+                    cost.append(loss)
+                    in_bar.set_postfix(loss=loss)
+                    dout = self.cost.backward(Y, y_hat)
+
+                    dlstm = self.output_layer.backward(dout)
+
+                    dembedding_out, da0 = self.lstm_layer.backward(dlstm)
+
+                    self.X_layer.backward(dembedding_out)
+
+                    #  更新参数
+
+                    if self.optimizer is None:
+                        if optimize == 'Adam':
+                            self.optimizer = Optimize.Adam(self.layers)
+                        elif optimize == 'Momentum':
+                            self.optimizer = Optimize.Momentum(self.layers)
+                        elif optimize == 'BGD':
+                            self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                        else:
+                            raise ValueError
+
+                    self.optimizer.update(it + 1, learning_rate)
+                if len(cost) == 0:
+                    continue
+
+                if (it + 1) % save_epoch == 0:
+                    self.interrupt(path, it)
+                    self.save_model(path, filename)
+                    #self.predict(data)
+
+                in_bar.close()
+                bar.set_postfix(loss=sum(cost) / len(cost))
+                cur_it = it
+
+        except KeyboardInterrupt:
+            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
+            if c == 'Y' or c == 'y':
+                self.interrupt(path, cur_it)
+                self.save_model(path, filename)
+                print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
+            elif c == 'C' or c == 'c':
+                is_continue = True
+            else:
+                print('结束执行')
+        if is_continue:
+            start_it = cur_it
+            is_continue = False
+            goto.point
+        bar.close()
+        in_bar.close()
+
+    # 中断处理
+    def interrupt(self, path, start_it):
+        with open(path + os.sep + 'caches.obj', 'wb+') as f:
+            pickle.dump(start_it, f)
+
+    def sample(self, features, layers, max_length=50):
+        d1, e1, l1, d2 = layers
+        N = features.shape[0]
+        captions = l1.null_code * p.ones((N, max_length), dtype=p.int32)
+
+        N, D = features.shape
+        affine_out = d1.forward(features)
+
+        prev_word_idx = [l1.start_code] * N
+        prev_h = affine_out
+        prev_c = p.zeros(prev_h.shape)
+        captions[:, 0] = l1.start_code
+        for i in range(1, max_length):
+            prev_word_embed = e1.parameters['W'][prev_word_idx]
+            next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
+            prev_c = next_c
+            vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512))
+            captions[:, i] = p.array(p.argmax(vocab_affine_out, axis=1))
+            prev_word_idx = captions[:, i]
+            prev_h = next_h
+
+        return captions
+
+    def predict(self, data):
+        for split in ['train', 'val']:
+            gt_captions, gt_captions_out, features, urls = minibatch(data, split=split, batch_size=2)[
+                random.randint(0, 10000)]
 
             gt_captions = decode_captions(gt_captions, data['idx_to_word'])
 

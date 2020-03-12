@@ -1,16 +1,19 @@
+import json
 import os
 import pickle
-import zipfile
-import requests
-import json
 import re
-from bs4 import BeautifulSoup
+import zipfile
+
 import h5py
+import numpy as np
+import requests
+from bs4 import BeautifulSoup
+from keras.datasets import mnist
+
 from BUG.Layers.Layer import SimpleRNN
 from BUG.function.Activation import ac_get
 from BUG.function.zhtools.langconv import Converter
 from BUG.load_package import p
-import numpy as np
 
 
 def load_data_cat(path):
@@ -72,12 +75,12 @@ def one_hot(labels, nb_classes=None):
     '''
     if labels.ndim == 2:
         # array : batch_size, classes, time_steps
-        array = p.zeros([labels.shape[0], nb_classes, labels.shape[-1]])
+        array = p.zeros([labels.shape[0], labels.shape[1], nb_classes])
         for i in range(labels.shape[0]):
             for j in range(labels.shape[1]):
-                array[i, labels[i, j], j] = 1
+                array[i, j, labels[i, j]] = 1
 
-        return array.transpose(0, 2, 1)
+        return array
     try:
         numpy_labels = p.asnumpy(labels)
         classes = np.unique(numpy_labels)
@@ -139,6 +142,7 @@ def lyric_download():
     根据歌手id下载歌词
     :return:
     '''
+
     def download_by_music_id(music_id):
         # 根据歌词id下载
         url = 'http://music.163.com/api/song/lyric?' + 'id=' + str(music_id) + '&lv=1&kv=1&tv=-1'
@@ -186,7 +190,6 @@ def lyric_download():
 
 
 def load_data_jay_lyrics():
-
     with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/jaychou_lyrics.zip') as zin:
         with zin.open('jaychou_lyrics.txt') as f:
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
@@ -198,8 +201,8 @@ def load_data_jay_lyrics():
 
     return example, char_to_idx, idx_to_char, vocab_size
 
-def load_data_gem_lyrics():
 
+def load_data_gem_lyrics():
     with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
         with zin.open('gem_lyrics.txt') as f:
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
@@ -262,8 +265,8 @@ def data_iter_consecutive(txt, batch_size, time_steps, vocab_size):
     data_len = len(txt)
     txt = p.array(txt)
     batch_len = data_len // batch_size
-    indices = txt[: batch_size*batch_len].reshape([batch_size, batch_len])
-    epoch_size = (batch_len-1) // time_steps
+    indices = txt[: batch_size * batch_len].reshape([batch_size, batch_len])
+    epoch_size = (batch_len - 1) // time_steps
     if epoch_size == 0:
         raise ValueError
     for i in range(epoch_size):
@@ -345,19 +348,48 @@ def decode_captions(captions, idx_to_word):
 def minibatch(data, batch_size=100, split='train'):
     split_size = data['%s_captions' % split].shape[0]
     batch = []
-    for i in range(split_size//batch_size):
-        captions = data['%s_captions' % split][i*batch_size:(i+1)*batch_size]
-        image_idxs = data['%s_image_idxs' % split][i*batch_size:(i+1)*batch_size]
+    for i in range(split_size // batch_size):
+        captions = data['%s_captions' % split][i * batch_size:(i + 1) * batch_size]
+        image_idxs = data['%s_image_idxs' % split][i * batch_size:(i + 1) * batch_size]
         image_features = data['%s_features' % split][image_idxs]
         urls = data['%s_urls' % split][image_idxs]
 
         batch.append((p.asarray(captions[:, :-1]), p.asarray(captions[:, 1:]), p.asarray(image_features), urls))
     return batch
 
+
 def load_mnist():
-    from keras.datasets import mnist
-    import matplotlib.pyplot as plt
-    # load (downloaded if needed) the MNIST dataset
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
     classes = 10
     return X_train, y_train, X_test, y_test, classes
+
+
+def load_poetry(max_train=None):
+    with open('/Users/oswin/Documents/BS/BUG/datasets/poetry.txt', "r", encoding='utf-8') as f:
+        poetry_list = [line for line in f]
+    if max_train:
+        poetry_list = poetry_list[:max_train]
+    words = sorted(set(''.join(poetry_list)+' '))
+
+    ix_to_word = {i: word for i, word in enumerate(words)}
+    word_to_ix = {v: k for k, v in ix_to_word.items()}
+    to_int = lambda word: word_to_ix.get(word)
+    poetry_vectors = [list(map(to_int, poetry)) for poetry in poetry_list]
+    return poetry_vectors, ix_to_word, word_to_ix
+
+
+def minibatch_poetry(poetry_vectors, word_to_ix, batch_size=32):
+    start = 0
+    end = batch_size
+    for _ in range(len(poetry_vectors)//batch_size):
+        batches = poetry_vectors[start:end]
+        # 输入数据 按每块数据中诗句最大长度初始化数组，缺失数据补全
+        x_batch = np.full((batch_size, max(map(len, batches))), word_to_ix[' '], np.int32)
+        for row in range(batch_size):
+            x_batch[row, :len(batches[row])] = batches[row]
+        # 标签数据 根据上一个字符预测下一个字符 所以这里y_batch数据应为x_batch数据向后移一位
+        y_batch = np.copy(x_batch)
+        y_batch[:, :-1], y_batch[:, -1] = x_batch[:, 1:], x_batch[:, 0]
+        yield x_batch, y_batch
+        start += batch_size
+        end += batch_size

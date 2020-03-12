@@ -1,10 +1,12 @@
 from tensorflow import keras
-
+import matplotlib.pyplot as plt
 from BUG.Layers.Layer import Convolution, Pooling, Dense
 from BUG.Model.model import Linear_model
 from BUG.function import Loss
 from BUG.function.evaluate import evaluate_many
 from BUG.load_package import p
+
+label = ['T恤', '裤子', '套衫', '裙子', '外套', '凉鞋', '汗衫', '运动鞋', '包', '踝靴']
 
 
 def LeNet5():
@@ -24,11 +26,7 @@ def LeNet5():
     net.add(Dense(10, batchNormal=False, activation="softmax"))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
     net.fit(X_train, Y_train, X_test, Y_test, batch_size=1024, iterator=1000, learning_rate=0.0075, lambd=0.1,
-            path='/content/drive/My Drive/Colab Notebooks/fashion_mnist_parameters/')
-
-
-label = ['T恤', '裤子', '套衫', '裙子', '外套', '凉鞋', '汗衫', '运动鞋', '包', '踝靴']
-import matplotlib.pyplot as plt
+            path='fashion_mnist_parameters')
 
 
 def predict():
@@ -50,5 +48,5 @@ def predict():
 
 if __name__ == '__main__':
     p.random.seed(1)
-    # LeNet5()
-    predict()
+    LeNet5()
+    # predict()
