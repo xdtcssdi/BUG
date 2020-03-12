@@ -74,7 +74,7 @@ def one_hot(labels, nb_classes=None):
     :return: one_hot 矩阵
     '''
     if labels.ndim == 2:
-        # array : batch_size, classes, time_steps
+        # array : batch_size, time_steps, classes,
         array = p.zeros([labels.shape[0], labels.shape[1], nb_classes])
         for i in range(labels.shape[0]):
             for j in range(labels.shape[1]):
@@ -205,15 +205,28 @@ def load_data_jay_lyrics():
 def load_data_gem_lyrics():
     with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
         with zin.open('gem_lyrics.txt') as f:
-            corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
+            txts = f.readlines()
+            corpus_chars = [Converter('zh-hans').convert(txt.decode('utf-8')).replace(' ', '').strip(' ') for txt in
+                            txts]
 
-    idx_to_char = list(set(corpus_chars))
-    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
-    vocab_size = len(char_to_idx)
+    corpus_chars = [re.sub("[A-Za-z0-9\!\%\[\]\,\。]", "", str) for str in corpus_chars]
+    s = set(corpus_chars)
+    s.add(' ')
+    corpus_chars = list(s)
+    ix_to_word = {i: ch for i, ch in enumerate(''.join(corpus_chars))}
+    word_to_ix = {ch: i for i, ch in enumerate(''.join(corpus_chars))}
+    corpus_chars.remove('\n')
+    vocab_size = len(ix_to_word)
 
-    example = [char_to_idx[ch] for ch in corpus_chars]
+    def to_ix(X):
+        return [word_to_ix[x] for x in X]
 
-    return example, char_to_idx, idx_to_char, vocab_size
+    example = list(map(to_ix, corpus_chars))
+    return example, word_to_ix, ix_to_word, vocab_size
+
+
+if __name__ == '__main__':
+    load_data_gem_lyrics()
 
 
 def load_data_dinos_names():
@@ -252,28 +265,6 @@ def chs_to_cht(sentence):  # 传入参数为列表
     sentence = Converter('zh-hant').convert(sentence)
     sentence.encode('utf-8')
     return sentence.split(",")
-
-
-def data_iter_consecutive(txt, batch_size, time_steps, vocab_size):
-    '''
-    batch数据生成器
-    :param txt: int of list
-    :param batch_size:
-    :param time_steps:
-    :return: X : [batch_size, batch_len]
-    '''
-    data_len = len(txt)
-    txt = p.array(txt)
-    batch_len = data_len // batch_size
-    indices = txt[: batch_size * batch_len].reshape([batch_size, batch_len])
-    epoch_size = (batch_len - 1) // time_steps
-    if epoch_size == 0:
-        raise ValueError
-    for i in range(epoch_size):
-        i = i * time_steps
-        X = indices[:, i: i + time_steps]
-        Y = indices[:, i + 1: i + time_steps + 1]
-        yield one_hot(X, vocab_size), one_hot(Y, vocab_size)
 
 
 def load_coco_data(base_dir='/content/sample_data/coco_captioning/',
@@ -369,7 +360,7 @@ def load_poetry(max_train=None):
         poetry_list = [line for line in f]
     if max_train:
         poetry_list = poetry_list[:max_train]
-    words = sorted(set(''.join(poetry_list)+' '))
+    words = sorted(set(''.join(poetry_list) + ' '))
 
     ix_to_word = {i: word for i, word in enumerate(words)}
     word_to_ix = {v: k for k, v in ix_to_word.items()}
@@ -378,10 +369,10 @@ def load_poetry(max_train=None):
     return poetry_vectors, ix_to_word, word_to_ix
 
 
-def minibatch_poetry(poetry_vectors, word_to_ix, batch_size=32):
+def minibatch_list(poetry_vectors, word_to_ix, batch_size=32):
     start = 0
     end = batch_size
-    for _ in range(len(poetry_vectors)//batch_size):
+    for _ in range(len(poetry_vectors) // batch_size):
         batches = poetry_vectors[start:end]
         # 输入数据 按每块数据中诗句最大长度初始化数组，缺失数据补全
         x_batch = np.full((batch_size, max(map(len, batches))), word_to_ix[' '], np.int32)

@@ -10,7 +10,7 @@ from tqdm import trange, tqdm
 from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding, Pooling, generate_layer, SimpleRNN
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy
-from BUG.function.util import minibatch, decode_captions, minibatch_poetry
+from BUG.function.util import minibatch, decode_captions, minibatch_poetry, one_hot
 from BUG.load_package import p
 
 
@@ -494,17 +494,17 @@ class LSTM_model(object):
 
 
 class RNN_model(object):
-    def __init__(self, hidden_dim, word_to_idx):
+    def __init__(self, hidden_dim, word_to_idx, idx_to_word):
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimizer = None
         self.optimizeMode = None
         self.word_to_idx = word_to_idx
+        self.idx_to_word = idx_to_word
 
-        self.X_layer = Embedding(vocab_size=len(word_to_idx), word_dim=256)  # 词向量
-        self.lstm_layer = SimpleRNN(n_a=hidden_dim, char_to_ix=word_to_idx)  # 返回a
+        self.rnn_layer = SimpleRNN(n_a=hidden_dim, char_to_ix=word_to_idx)  # 返回a
         self.output_layer = Dense(unit_number=len(word_to_idx), activation='softmax')  # 预测
-        self.layers = [self.X_layer, self.lstm_layer, self.output_layer]
+        self.layers = [self.rnn_layer, self.output_layer]
 
     # 训练
     @with_goto
@@ -532,10 +532,9 @@ class RNN_model(object):
                 cost = []
                 in_bar = tqdm(minibatch_poetry(data, word_to_ix=self.word_to_idx,batch_size=batch_size))
                 for X, Y in in_bar:
-                    embedding_out = self.X_layer.forward(X)
-                    lstm_out = self.lstm_layer.forward(embedding_out)
+                    rnn_out = self.rnn_layer.forward(one_hot(X, len(self.word_to_idx)))
 
-                    y_hat = self.output_layer.forward(lstm_out)
+                    y_hat = self.output_layer.forward(rnn_out)
 
                     loss = self.cost.forward(Y, y_hat)
                     cost.append(loss)
@@ -544,9 +543,7 @@ class RNN_model(object):
 
                     dlstm = self.output_layer.backward(dout)
 
-                    dembedding_out, da0 = self.lstm_layer.backward(dlstm)
-
-                    self.X_layer.backward(dembedding_out)
+                    dembedding_out, da0 = self.rnn_layer.backward(dlstm)
 
                     #  更新参数
 
@@ -567,7 +564,7 @@ class RNN_model(object):
                 if (it + 1) % save_epoch == 0:
                     self.interrupt(path, it)
                     self.save_model(path, filename)
-                    #self.predict(data)
+                    self.sample()
 
                 in_bar.close()
                 bar.set_postfix(loss=sum(cost) / len(cost))
@@ -595,42 +592,26 @@ class RNN_model(object):
         with open(path + os.sep + 'caches.obj', 'wb+') as f:
             pickle.dump(start_it, f)
 
-    def sample(self, features, layers, max_length=50):
-        d1, e1, l1, d2 = layers
-        N = features.shape[0]
-        captions = l1.null_code * p.ones((N, max_length), dtype=p.int32)
+    def sample(self, max_length=16):
+        indicts = []
+        x_pre = p.zeros([1, 1, len(self.word_to_idx)], dtype=np.int)
 
-        N, D = features.shape
-        affine_out = d1.forward(features)
+        for i in range(max_length):
+            lstm_out = self.rnn_layer.forward(x_pre)
 
-        prev_word_idx = [l1.start_code] * N
-        prev_h = affine_out
-        prev_c = p.zeros(prev_h.shape)
-        captions[:, 0] = l1.start_code
-        for i in range(1, max_length):
-            prev_word_embed = e1.parameters['W'][prev_word_idx]
-            next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
-            prev_c = next_c
-            vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512))
-            captions[:, i] = p.array(p.argmax(vocab_affine_out, axis=1))
-            prev_word_idx = captions[:, i]
-            prev_h = next_h
+            y_hat = self.output_layer.forward(lstm_out)
 
-        return captions
+            # indicts.append(idx)
+            if (i+1) % 4:
+                indicts.append(self.word_to_idx['，'])
+            x_pre = y_hat
+        return indicts
 
-    def predict(self, data):
-        for split in ['train', 'val']:
-            gt_captions, gt_captions_out, features, urls = minibatch(data, split=split, batch_size=2)[
-                random.randint(0, 10000)]
-
-            gt_captions = decode_captions(gt_captions, data['idx_to_word'])
-
-            sample_captions = self.sample(features, self.layers)
-            sample_captions = decode_captions(sample_captions, data['idx_to_word'])
-
-            for gt_caption, sample_caption, url in zip(gt_captions, sample_captions, urls):
-                print(url)
-                print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
+    def show_poetry(self, indicts):
+        str = ''
+        for idx in indicts:
+            str += self.idx_to_word[idx]
+        print(str)
 
     # 保存模型参数
     def save_model(self, path, filename):
