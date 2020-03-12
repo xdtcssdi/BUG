@@ -3,7 +3,7 @@ import numpy as np
 from BUG.Layers.Layer import SimpleRNN
 from BUG.function.Loss import SoftCategoricalCross_entropy
 from BUG.function.Optimize import Adam
-from BUG.function.util import load_data_gem_lyrics, minibatch_list, one_hot
+from BUG.function.util import load_data_gem_lyrics, data_iter_consecutive
 from BUG.load_package import p
 
 
@@ -22,8 +22,8 @@ def print_sample(sample_ix, ix_to_char):
 
 
 def sample(net, X, seed):
-    vocab_size = net.parameters['by'].shape[0]  # n_x
-    n_a = net.parameters['Waa'].shape[1]  # n_a
+    vocab_size = net.by.shape[0]  # n_x
+    n_a = net.Waa.shape[1]  # n_a
 
     x = p.zeros((vocab_size, 1))
     indices = []
@@ -38,8 +38,8 @@ def sample(net, X, seed):
     newline_character = net.char_to_ix['\n']
 
     while counter < 100:
-        a = p.tanh(p.dot(net.parameters['Waa'], a_prev) + p.dot(net.parameters['Wax'], x) + net.parameters['b'])
-        z = p.dot(net.parameters['Wya'], a) + net.parameters['by']
+        a = p.tanh(p.dot(net.Waa, a_prev) + p.dot(net.Wax, x) + net.b)
+        z = p.dot(net.Wya, a) + net.by
         y = net.softmax(z)
         p.random.seed(counter + seed)
         idx = p.random.choice(list(range(vocab_size)), p=y.ravel())
@@ -67,29 +67,29 @@ if __name__ == '__main__':
     num_iterator = 1000000
     length = 50
     n_a = 50
-    batch_size = 10
+    batch_size = 300
     time_steps = 30
-    net = SimpleRNN(vocab_size, vocab_size, idx_to_char, char_to_idx, n_a=n_a)
+    net = SimpleRNN(vocab_size, vocab_size, idx_to_char, char_to_idx, n_a=n_a, time_steps=time_steps)
     loss = get_initial_loss(vocab_size, length)
     curr_loss = 0
     opt = Adam([net])
     a = p.zeros((n_a, batch_size))
-
-    data = list(minibatch_list(example, char_to_idx, batch_size))
-
+    data = list(data_iter_consecutive(example, batch_size, time_steps, vocab_size))
     lo = SoftCategoricalCross_entropy()
     for j in range(num_iterator):
+
         for X, Y in data:
-            a, y_hat = net.forward(one_hot(X, vocab_size), a)
+            a, y_hat = net.forward(X, a)
             curr_loss = lo.forward(Y, y_hat)
             dout = lo.backward(Y, y_hat)
             da_next = net.backward(dout)
             opt.update(learning_rate=0.005, t=j + 1)
         loss = smooth(loss, curr_loss)
 
-        if (j+1) % 10 == 0:
+        if j % 10 == 0:
             print('%s iterator loss = %s' % (j, loss))
             seed = 0
-            indices = sample(net, [ch for ch in "差不多"], seed)
-            print_sample(indices, idx_to_char)
-            seed += 1
+            while seed < 5:
+                indices = sample(net, None, seed)
+                print_sample(indices, idx_to_char)
+                seed += 1

@@ -357,8 +357,9 @@ class SimpleRNN(Layer):
     def load_params(self, path, filename):
         pass
 
-    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, n_a=50, learning_rate=0.01, activation='softmax'):
-        super(SimpleRNN, self).__init__(activation=activation)
+    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, time_steps, n_a=50, learning_rate=0.01):
+        super(SimpleRNN, self).__init__()
+        self.time_steps = time_steps
         self.n_a = n_a
         self.ix_to_char = ix_to_char
         self.char_to_ix = char_to_ix
@@ -367,16 +368,16 @@ class SimpleRNN(Layer):
 
     def init_params(self, n_x_y):
         self.n_x, self.n_y = n_x_y
-        self.parameters['Waa'] = p.random.randn(self.n_a, self.n_a) * 0.01
-        self.parameters['Wax'] = p.random.randn(self.n_a, self.n_x) * 0.01
-        self.parameters['Wya'] = p.random.randn(self.n_y, self.n_a) * 0.01
-        self.gradients['Waa'] = p.zeros_like(self.parameters['Waa'])
-        self.gradients['Wax'] = p.zeros_like(self.parameters['Wax'])
-        self.gradients['Wya'] = p.zeros_like(self.parameters['Wya'])
-        self.parameters['b'] = p.zeros((self.n_a, 1))
-        self.parameters['by'] = p.zeros((self.n_y, 1))
-        self.gradients['b'] = p.zeros_like(self.parameters['b'])
-        self.gradients['by'] = p.zeros_like(self.parameters['by'])
+        self.Waa = p.random.randn(self.n_a, self.n_a) * 0.01
+        self.Wax = p.random.randn(self.n_a, self.n_x) * 0.01
+        self.Wya = p.random.randn(self.n_y, self.n_a) * 0.01
+        self.dWaa = p.zeros_like(self.Waa)
+        self.dWax = p.zeros_like(self.Wax)
+        self.dWya = p.zeros_like(self.Wya)
+        self.b = p.zeros((self.n_a, 1))
+        self.by = p.zeros((self.n_y, 1))
+        self.db = p.zeros_like(self.b)
+        self.dby = p.zeros_like(self.by)
 
     def softmax(self, x):
         e_x = p.exp(x - p.max(x))
@@ -389,47 +390,46 @@ class SimpleRNN(Layer):
         :param mode:
         :return:
         """
-        self.x = X
-        self.a0 = a0 if a0 is not None else p.zeros([self.n_a, X.shape[0]])
-        m, T_x, n_x = X.shape
-        self.y_hat = p.zeros([X.shape[0], T_x, self.n_y])
-        self.a = p.zeros([self.n_a, T_x, X.shape[0]])
+        self.X = X
+        self.y_hat = p.zeros([X.shape[0], self.time_steps, self.n_y])
+        self.a = p.zeros([self.n_a, self.time_steps, X.shape[0]])
         if a0 is not None:
             self.a[:, 0, :] = a0
-
-        for t in range(T_x - 1):
+        for t in range(self.time_steps - 1):
             at, self.y_hat[:, t, :] = self.rnn_step_forward(self.a[:, t, :], X[:, t, :])
             self.a[:, t + 1, :] = at
-        self.at, self.y_hat[:, T_x - 1, :] = self.rnn_step_forward(self.a[:, T_x - 1, :], X[:, T_x - 1, :])
+        self.at, self.y_hat[:, self.time_steps - 1, :] = self.rnn_step_forward(self.a[:, self.time_steps - 1, :],
+                                                                               X[:, self.time_steps - 1, :])
         return self.at, self.y_hat
 
     def backward(self, dout):
-        self.gradients['Waa'] = p.zeros_like(self.parameters['Waa'])
-        self.gradients['Wax'] = p.zeros_like(self.parameters['Wax'])
-        self.gradients['Wya'] = p.zeros_like(self.parameters['Wya'])
-        self.gradients['b'] = p.zeros_like(self.parameters['b'])
-        self.gradients['by'] = p.zeros_like(self.parameters['by'])
-        da_next = self.at
-        for t in reversed(range(self.x.shape[1])):
-            da_next = self.rnn_step_backward(dout[:, t, :], self.x[:, t, :], self.a[:, t, :],
-                                             self.a[:, t - 1, :] if t != 0 else self.a0, da_next)
+        self.dWaa = p.zeros_like(self.Waa)
+        self.dWax = p.zeros_like(self.Wax)
+        self.dWya = p.zeros_like(self.Wya)
+        self.db = p.zeros_like(self.b)
+        self.dby = p.zeros_like(self.by)
+        da_next = p.zeros((self.n_a, dout.shape[0]))
+        da_next = self.rnn_step_backward(dout[:, dout.shape[1] - 1, :], self.X[:, dout.shape[1] - 1, :], self.at,
+                                         self.a[:, dout.shape[1] - 2, :], da_next)
+        for t in reversed(range(dout.shape[1] - 1)):
+            da_next = self.rnn_step_backward(dout[:, t, :], self.X[:, t, :], self.a[:, t, :], self.a[:, t - 1, :],
+                                             da_next)
         return da_next
 
     def rnn_step_forward(self, a_prev, x):
-        a_next = p.tanh(
-            p.dot(self.parameters['Wax'], x.T) + p.dot(self.parameters['Waa'], a_prev) + self.parameters['b'])
-        y_hat = self.softmax(p.dot(self.parameters['Wya'], a_next) + self.parameters['by'])
+        a_next = p.tanh(p.dot(self.Wax, x.T) + p.dot(self.Waa, a_prev) + self.b)
+        y_hat = self.softmax(p.dot(self.Wya, a_next) + self.by)
         return a_next, y_hat.T
 
     def rnn_step_backward(self, dout, x, a, a_prev, da_next):
-        self.gradients['Wya'] += p.dot(a, dout).T
-        self.gradients['by'] += p.mean(dout.T, axis=1, keepdims=True)
-        da = p.dot(dout, self.parameters['Wya']).T + da_next
+        self.dWya += p.dot(a, dout).T
+        self.dby += p.mean(dout.T, axis=1, keepdims=True)
+        da = p.dot(dout, self.Wya).T + da_next
         daraw = (1 - a * a) * da
-        self.gradients['b'] += p.mean(daraw, axis=1, keepdims=True)
-        self.gradients['Wax'] += p.dot(daraw, x)
-        self.gradients['Waa'] += p.dot(daraw, a_prev.T)
-        da_next = p.dot(self.parameters['Waa'].T, daraw)
+        self.db += p.mean(daraw, axis=1, keepdims=True)
+        self.dWax += p.dot(daraw, x)
+        self.dWaa += p.dot(daraw, a_prev.T)
+        da_next = p.dot(self.Waa.T, daraw)
         return da_next
 
 
