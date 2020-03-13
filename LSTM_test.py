@@ -11,7 +11,7 @@ def coco():
     hidden_dim = 512
     net = LSTM_model(hidden_dim=hidden_dim, word_to_idx=word_to_idx,
                      point=[word_to_idx['<START>'], word_to_idx['<END>'], word_to_idx['<NULL>']])
-    net.fit(data, learning_rate=5e-3, batch_size=1024, iterator=100, save_epoch=10)
+    net.fit(data, learning_rate=5e-3, batch_size=1024, iterator=100, save_epoch=1)
 
 
 def predict():

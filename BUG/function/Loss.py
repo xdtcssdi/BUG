@@ -28,7 +28,7 @@ class SoftCategoricalCross_entropy:
 
         if targets.ndim == 1 and outputs.ndim == 2:
             N, T = outputs.shape
-            loss = -p.sum(p.log(outputs[p.arange(N), targets])) / (N*T)
+            loss = -p.sum(p.log(outputs[p.arange(N), targets])) / N
             return loss
 
         N, T = targets.shape
@@ -39,7 +39,7 @@ class SoftCategoricalCross_entropy:
             N, T, D = targets.shape
             targets = targets.reshape(N * T, D)
 
-        loss = -p.sum(p.log(outputs[p.arange(N * T), targets.reshape(N * T, )])) / (N*T)
+        loss = -p.sum(p.log(outputs[p.arange(N * T), targets.reshape(N * T, )])) / N
         return loss
 
     def backward(self, targets, outputs):
@@ -55,9 +55,8 @@ class SoftCategoricalCross_entropy:
                 outputs = outputs.reshape(N*T, -1)
             dx_flat = outputs.copy()
             dx_flat[p.arange(N * T), targets] -= 1
-            dx_flat /= (N*T)
             dx = dx_flat.reshape(N, T, -1)
             return dx
         dx_flat = outputs.copy()
         dx_flat[p.arange(outputs.shape[0]), targets] -= 1
-        return dx_flat/dx_flat.shape[0]
+        return dx_flat

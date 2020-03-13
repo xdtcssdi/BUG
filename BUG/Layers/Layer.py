@@ -162,10 +162,11 @@ class Convolution(Layer):
         dZ = ac_get_grad(dout, self.Z, self.activation)
         if self.batch_normal:
             dZ = self.batch_normal.backward(dZ)
-        self.gradients['b'] = p.sum(dZ, axis=(0, 2, 3))
+        N = dZ.shape[0]
+        self.gradients['b'] = 1. / N * p.sum(dZ, axis=(0, 2, 3))
         num_filters, _, filter_height, filter_width = self.parameters['W'].shape
         dout_reshaped = dZ.transpose(1, 2, 3, 0).reshape(num_filters, -1)
-        self.gradients['W'] = dout_reshaped.dot(self.X_col.T).reshape(self.parameters['W'].shape)
+        self.gradients['W'] = 1. / N * dout_reshaped.dot(self.X_col.T).reshape(self.parameters['W'].shape)
         dx_cols = self.parameters['W'].reshape(num_filters, -1).T.dot(dout_reshaped)
         if isinstance(dZ, numpy.ndarray):
             dx = col2im_indices_cpu(dx_cols, self.x.shape, filter_height, filter_width, self.padding, self.stride)
@@ -350,6 +351,27 @@ class Pooling(Layer):
 
 
 class SimpleRNN(Layer):
+    def __init__(self, num_hiddens):
+        super(SimpleRNN, self).__init__()
+        self.num_hiddens = num_hiddens
+
+    def init_params(self, nx):
+        if 'Wxa' not in self.parameters:
+            self.parameters['Wxa'] = self.orthogonal([nx, self.num_hiddens])
+            self.parameters['Waa'] = self.orthogonal([self.num_hiddens, self.num_hiddens])
+            self.parameters['ba'] = p.ones(self.num_hiddens)
+
+    def orthogonal(self, shape):
+
+        flat_shape = (shape[0], numpy.prod(shape[1:]))
+
+        a = numpy.random.normal(0.0, 1.0, flat_shape)
+
+        u, _, v = numpy.linalg.svd(a, full_matrices=False)
+
+        q = u if u.shape == flat_shape else v
+
+        return p.array(q.reshape(shape))
 
     def save_params(self, path, filename):
         pass
@@ -357,80 +379,70 @@ class SimpleRNN(Layer):
     def load_params(self, path, filename):
         pass
 
-    def __init__(self, n_x, n_y, ix_to_char, char_to_ix, time_steps, n_a=50, learning_rate=0.01):
-        super(SimpleRNN, self).__init__()
-        self.time_steps = time_steps
-        self.n_a = n_a
-        self.ix_to_char = ix_to_char
-        self.char_to_ix = char_to_ix
-        self.init_params([n_x, n_y])
-        self.learning_rate = learning_rate
+    def rnn_step_forward(self, x, prev_h):
+        a = prev_h.dot(self.parameters['Waa']) + x.dot(self.parameters['Wxa']) + self.parameters['ba']
+        next_h = p.tanh(a)
+        return next_h
 
-    def init_params(self, n_x_y):
-        self.n_x, self.n_y = n_x_y
-        self.Waa = p.random.randn(self.n_a, self.n_a) * 0.01
-        self.Wax = p.random.randn(self.n_a, self.n_x) * 0.01
-        self.Wya = p.random.randn(self.n_y, self.n_a) * 0.01
-        self.dWaa = p.zeros_like(self.Waa)
-        self.dWax = p.zeros_like(self.Wax)
-        self.dWya = p.zeros_like(self.Wya)
-        self.b = p.zeros((self.n_a, 1))
-        self.by = p.zeros((self.n_y, 1))
-        self.db = p.zeros_like(self.b)
-        self.dby = p.zeros_like(self.by)
+    def rnn_step_backward(self, dnext_h, cache):
+        x, prev_h, next_h = cache
+        da = dnext_h * (1 - next_h * next_h)
+        dx = da.dot(self.parameters['Wxa'].T)
+        dprev_h = da.dot(self.parameters['Waa'].T)
+        dWx = x.T.dot(da)
+        dWh = prev_h.T.dot(da)
+        db = p.sum(da, axis=0)
+        return dx, dprev_h, dWx, dWh, db
 
-    def softmax(self, x):
-        e_x = p.exp(x - p.max(x))
-        return e_x / e_x.sum(axis=0)
+    def forward(self, x, h0=None, mode='train'):
+        self.x = x
+        N, T, D = x.shape
+        self.init_params(D)
 
-    def forward(self, X, a0=None, mode='train'):
-        """
-        :param X: shape = (batch_size, time_steps, vocab_size)
-        :param a0:
-        :param mode:
-        :return:
-        """
-        self.X = X
-        self.y_hat = p.zeros([X.shape[0], self.time_steps, self.n_y])
-        self.a = p.zeros([self.n_a, self.time_steps, X.shape[0]])
-        if a0 is not None:
-            self.a[:, 0, :] = a0
-        for t in range(self.time_steps - 1):
-            at, self.y_hat[:, t, :] = self.rnn_step_forward(self.a[:, t, :], X[:, t, :])
-            self.a[:, t + 1, :] = at
-        self.at, self.y_hat[:, self.time_steps - 1, :] = self.rnn_step_forward(self.a[:, self.time_steps - 1, :],
-                                                                               X[:, self.time_steps - 1, :])
-        return self.at, self.y_hat
+        self.h = p.zeros((N, T, self.num_hiddens))
+        prev_h = h0
+        self.h0 = h0
+        for t in range(T):
+            xt = x[:, t, :]
+            next_h = self.rnn_step_forward(xt, prev_h)
+            prev_h = next_h
+            if prev_h.ndim == 3:
+                prev_h = prev_h.reshape(1, -1)
+            self.h[:, t, :] = prev_h
+        return self.h
 
-    def backward(self, dout):
-        self.dWaa = p.zeros_like(self.Waa)
-        self.dWax = p.zeros_like(self.Wax)
-        self.dWya = p.zeros_like(self.Wya)
-        self.db = p.zeros_like(self.b)
-        self.dby = p.zeros_like(self.by)
-        da_next = p.zeros((self.n_a, dout.shape[0]))
-        da_next = self.rnn_step_backward(dout[:, dout.shape[1] - 1, :], self.X[:, dout.shape[1] - 1, :], self.at,
-                                         self.a[:, dout.shape[1] - 2, :], da_next)
-        for t in reversed(range(dout.shape[1] - 1)):
-            da_next = self.rnn_step_backward(dout[:, t, :], self.X[:, t, :], self.a[:, t, :], self.a[:, t - 1, :],
-                                             da_next)
-        return da_next
+    def backward(self, dh):
+        N, T, H = dh.shape
+        _, _, D = self.x.shape
 
-    def rnn_step_forward(self, a_prev, x):
-        a_next = p.tanh(p.dot(self.Wax, x.T) + p.dot(self.Waa, a_prev) + self.b)
-        y_hat = self.softmax(p.dot(self.Wya, a_next) + self.by)
-        return a_next, y_hat.T
+        next_h = self.h[:, T - 1, :]
 
-    def rnn_step_backward(self, dout, x, a, a_prev, da_next):
-        self.dWya += p.dot(a, dout).T
-        self.dby += p.mean(dout.T, axis=1, keepdims=True)
-        da = p.dot(dout, self.Wya).T + da_next
-        daraw = (1 - a * a) * da
-        self.db += p.mean(daraw, axis=1, keepdims=True)
-        self.dWax += p.dot(daraw, x)
-        self.dWaa += p.dot(daraw, a_prev.T)
-        da_next = p.dot(self.Waa.T, daraw)
-        return da_next
+        dprev_h = p.zeros((N, H))
+        dx = p.zeros((N, T, D))
+        dh0 = p.zeros((N, H))
+        dWx = p.zeros((D, H))
+        dWh = p.zeros((H, H))
+        db = p.zeros((H,))
+
+        for t in range(T):
+            t = T - 1 - t
+            xt = self.x[:, t, :]
+
+            if t == 0:
+                prev_h = self.h0
+            else:
+                prev_h = self.h[:, t - 1, :]
+
+            step_cache = (xt, prev_h, next_h)
+            next_h = prev_h
+            dnext_h = dh[:, t, :] + dprev_h
+            dx[:, t, :], dprev_h, dWxt, dWht, dbt = self.rnn_step_backward(dnext_h, step_cache)
+            dWx, dWh, db = dWx + dWxt, dWh + dWht, db + dbt
+        self.gradients['Wxa'] = 1. / N * dWx
+        self.gradients['Waa'] = 1. / N * dWh
+        self.gradients['ba'] = 1. / N * db
+        dh0 = dprev_h
+        return dx, dh0
 
 
 class LSTM(Layer):
@@ -494,9 +506,9 @@ class LSTM(Layer):
         da0 = da_prev
         self.gradients['a'] = da0
         self.gradients['x'] = dx
-        self.gradients['Wx'] = dWx
-        self.gradients['Wa'] = dWa
-        self.gradients['b'] = db
+        self.gradients['Wx'] = 1. / m * dWx
+        self.gradients['Wa'] = 1. / m * dWa
+        self.gradients['b'] = 1. / m * db
         return dx, da0
 
     def lstm_step_forward(self, x, a_prev, c_prev):
@@ -507,7 +519,6 @@ class LSTM(Layer):
         z_f = ac_get(a[:, n_a:2 * n_a], 'sigmoid')
         z_o = ac_get(a[:, 2 * n_a:3 * n_a], 'sigmoid')
         z_g = p.tanh(a[:, 3 * n_a:])
-
         c_next = z_f * c_prev + z_i * z_g
         z_t = p.tanh(c_next)
         a_next = z_o * z_t

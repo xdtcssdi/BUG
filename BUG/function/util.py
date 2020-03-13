@@ -10,8 +10,6 @@ import requests
 from bs4 import BeautifulSoup
 from keras.datasets import mnist
 
-from BUG.Layers.Layer import SimpleRNN
-from BUG.function.Activation import ac_get
 from BUG.function.zhtools.langconv import Converter
 from BUG.load_package import p
 
@@ -66,39 +64,20 @@ def load_CIFAR10(ROOT):
         return Xtr, Ytr, Xte, Yte
 
 
-def one_hot(labels, nb_classes=None):
-    '''
-    二维矩阵转换成one_hot
-    :param labels: 矩阵
-    :param nb_classes: 分类数
-    :return: one_hot 矩阵
-    '''
-    if labels.ndim == 2:
-        # array : batch_size, time_steps, classes,
-        array = p.zeros([labels.shape[0], labels.shape[1], nb_classes])
-        for i in range(labels.shape[0]):
-            for j in range(labels.shape[1]):
-                array[i, j, labels[i, j]] = 1
-
-        return array
-    try:
-        numpy_labels = p.asnumpy(labels)
-        classes = np.unique(numpy_labels)
-        if nb_classes is None:
-            nb_classes = classes.size
-        one_hot_labels = np.zeros((numpy_labels.shape[0], nb_classes))
-
-        for i, c in enumerate(classes):
-            one_hot_labels[numpy_labels == c, i] = 1.
-        return p.asarray(one_hot_labels)
-    except:
-        classes = np.unique(labels)
-        if nb_classes is None:
-            nb_classes = classes.size
-        one_hot_labels = np.zeros((labels.shape[0], nb_classes))
-        for i, c in enumerate(classes):
-            one_hot_labels[labels == c, i] = 1.
-        return one_hot_labels
+def one_hot(y, num_classes=None, dtype='float32'):
+    y = np.array(y, dtype='int')
+    input_shape = y.shape
+    if input_shape and input_shape[-1] == 1 and len(input_shape) > 1:
+        input_shape = tuple(input_shape[:-1])
+    y = y.ravel()
+    if not num_classes:
+        num_classes = np.max(y) + 1
+    n = y.shape[0]
+    categorical = np.zeros((n, num_classes), dtype=dtype)
+    categorical[np.arange(n), y] = 1
+    output_shape = input_shape + (num_classes,)
+    categorical = np.reshape(categorical, output_shape)
+    return categorical
 
 
 def unhot(one_hot_labels):
@@ -109,32 +88,6 @@ def words_between_idx(doc):
     chars = list(set(doc))
     chars.sort()
     return {ch: i for i, ch in enumerate(chars)}, {i: ch for i, ch in enumerate(chars)}
-
-
-def sample(layer, words_between_idx, max_chars=50, seed=0):
-    if not isinstance(layer, SimpleRNN):
-        raise AttributeError
-    n_a, n_x = layer.Wax.shape
-    a_prev = p.zeros((n_a, 1))
-    x = p.zeros_like((n_x, 1))
-
-    count = 0
-    idx = -1
-    indices = []
-    newschar = words_between_idx['\n']
-    while newschar != idx and count != max_chars:
-        p.random.seed(count + seed)
-        a_next = p.tanh(p.dot(layer.Waa, a_prev) + p.dot(layer.Wax, x) + layer.b)
-        y = ac_get(p.dot(layer.Wya, a_next) + layer.by, 'softmax')  # 每个字符的概率
-        idx = p.random.choice(list(range(n_x)), p=y.ravel())
-        indices.append(idx)
-        x = y
-        x[idx] = 1
-        a_prev = a_next
-
-        count += 1
-        seed += 1
-    return indices
 
 
 def lyric_download():
@@ -187,116 +140,6 @@ def lyric_download():
     print("请输入歌手的id：")
     singer_id = input()
     download_lyric(singer_id)
-
-
-def load_data_jay_lyrics():
-    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/jaychou_lyrics.zip') as zin:
-        with zin.open('jaychou_lyrics.txt') as f:
-            corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
-
-    idx_to_char = list(set(corpus_chars))
-    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
-    vocab_size = len(char_to_idx)
-    example = [char_to_idx[ch] for ch in corpus_chars]
-
-    return example, char_to_idx, idx_to_char, vocab_size
-
-
-def load_data_gem_lyrics():
-    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
-        with zin.open('gem_lyrics.txt') as f:
-            corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
-    # corpus_chars = re.sub("[A-Za-z0-9]", "", corpus_chars)
-    idx_to_char = list(set(corpus_chars))
-    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
-    vocab_size = len(char_to_idx)
-
-    example = [char_to_idx[ch] for ch in corpus_chars]
-
-    return example, char_to_idx, idx_to_char, vocab_size
-
-# def load_data_gem_lyrics():
-#     with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
-#         with zin.open('gem_lyrics.txt') as f:
-#             txts = f.readlines()
-#             corpus_chars = [Converter('zh-hans').convert(txt.decode('utf-8')).replace(' ', '').strip(' ') for txt in
-#                             txts]
-#
-#     corpus_chars = [re.sub("[A-Za-z0-9\!\%\[\]\,\。]", "", str) for str in corpus_chars]
-#     s = set(corpus_chars)
-#     s.add(' ')
-#     corpus_chars = list(s)
-#     ix_to_word = {i: ch for i, ch in enumerate(''.join(corpus_chars))}
-#     word_to_ix = {ch: i for i, ch in enumerate(''.join(corpus_chars))}
-#     corpus_chars.remove('\n')
-#     vocab_size = len(ix_to_word)
-#
-#     def to_ix(X):
-#         return [word_to_ix[x] for x in X]
-#
-#     example = list(map(to_ix, corpus_chars))
-#     return example, word_to_ix, ix_to_word, vocab_size
-
-
-def load_data_dinos_names():
-    p.random.seed(1)
-    with open('/Users/oswin/Documents/BS/BUG/datasets/dinos.txt') as f:
-        data = f.readlines()
-        example = [seq.lower().strip() for seq in data]
-    with open('/Users/oswin/Documents/BS/BUG/datasets/dinos.txt') as f:
-        L = list(set(f.read().lower()))
-        L.sort()
-        vocab_size = len(L)
-        char_to_ix = {ch: i for i, ch in enumerate(L)}
-        ix_to_char = {i: ch for i, ch in enumerate(L)}
-    return example, char_to_ix, ix_to_char, vocab_size
-
-
-def cat_to_chs(sentence):  # 传入参数为列表
-    """
-    将繁体转换成简体
-    :param line:
-    :return:
-    """
-    sentence = ",".join(sentence)
-    sentence = Converter('zh-hans').convert(sentence)
-    sentence.encode('utf-8')
-    return sentence.split(",")
-
-
-def chs_to_cht(sentence):  # 传入参数为列表
-    """
-    将简体转换成繁体
-    :param sentence:
-    :return:
-    """
-    sentence = ",".join(sentence)
-    sentence = Converter('zh-hant').convert(sentence)
-    sentence.encode('utf-8')
-    return sentence.split(",")
-
-
-def data_iter_consecutive(txt, batch_size, time_steps, vocab_size):
-    """
-    batch数据生成器
-    :param vocab_size:
-    :param txt: int of list
-    :param batch_size:
-    :param time_steps:
-    :return: X : [batch_size, batch_len]
-    """
-    data_len = len(txt)
-    txt = p.array(txt)
-    batch_len = data_len // batch_size
-    indices = txt[: batch_size * batch_len].reshape([batch_size, batch_len])
-    epoch_size = (batch_len - 1) // time_steps
-    if epoch_size == 0:
-        raise ValueError
-    for i in range(epoch_size):
-        i = i * time_steps
-        X = indices[:, i: i + time_steps]
-        Y = indices[:, i + 1: i + time_steps + 1]
-        yield one_hot(X, vocab_size), Y
 
 
 def load_coco_data(base_dir='/content/sample_data/coco_captioning/',
@@ -387,32 +230,56 @@ def load_mnist():
     return X_train, y_train, X_test, y_test, classes
 
 
-def load_poetry(max_train=None):
+def load_poetry():
     with open('/Users/oswin/Documents/BS/BUG/datasets/poetry.txt', "r", encoding='utf-8') as f:
-        poetry_list = [line for line in f]
-    if max_train:
-        poetry_list = poetry_list[:max_train]
-    words = sorted(set(''.join(poetry_list) + ' '))
+        data = f.readlines()
 
-    ix_to_word = {i: word for i, word in enumerate(words)}
-    word_to_ix = {v: k for k, v in ix_to_word.items()}
-    to_int = lambda word: word_to_ix.get(word)
-    poetry_vectors = [list(map(to_int, poetry)) for poetry in poetry_list]
-    return poetry_vectors, ix_to_word, word_to_ix
+    content = ''.join([line.split(':')[1] for line in data])
+
+    corpus_chars = content.replace('\n', ' ').replace('\r', ' ').replace('，', ' ').replace('。', ' ').replace('_', '')
+
+    corpus_chars = Converter('zh-hans').convert(corpus_chars[:10000])
+
+    idx_to_char = list(set(corpus_chars))
+    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
+    vocab_size = len(char_to_idx)
+    corpus_indices = [char_to_idx[char] for char in corpus_chars]
+    return corpus_indices, char_to_idx, idx_to_char, vocab_size
 
 
-def minibatch_poetry(poetry_vectors, word_to_ix, batch_size=32):
-    start = 0
-    end = batch_size
-    for _ in range(len(poetry_vectors) // batch_size):
-        batches = poetry_vectors[start:end]
-        # 输入数据 按每块数据中诗句最大长度初始化数组，缺失数据补全
-        x_batch = np.full((batch_size, max(map(len, batches))), word_to_ix[' '], np.int32)
-        for row in range(batch_size):
-            x_batch[row, :len(batches[row])] = batches[row]
-        # 标签数据 根据上一个字符预测下一个字符 所以这里y_batch数据应为x_batch数据向后移一位
-        y_batch = np.copy(x_batch)
-        y_batch[:, :-1], y_batch[:, -1] = x_batch[:, 1:], x_batch[:, 0]
-        yield x_batch, y_batch
-        start += batch_size
-        end += batch_size
+def load_data_jay_lyrics():
+    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/jaychou_lyrics.zip') as zin:
+        with zin.open('jaychou_lyrics.txt') as f:
+            corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
+    corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
+    idx_to_char = list(set(corpus_chars))
+    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
+    vocab_size = len(char_to_idx)
+    corpus_indices = [char_to_idx[char] for char in corpus_chars]
+    return corpus_indices, char_to_idx, idx_to_char, vocab_size
+
+
+def load_data_gem_lyrics():
+    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
+        with zin.open('gem_lyrics.txt') as f:
+            corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
+    # corpus_chars = re.sub('[0-9a-zA-Z]', '', corpus_chars)
+    corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
+    idx_to_char = list(set(corpus_chars))
+    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
+    vocab_size = len(char_to_idx)
+    corpus_indices = [char_to_idx[char] for char in corpus_chars]
+    return corpus_indices, char_to_idx, idx_to_char, vocab_size
+
+
+def data_iter_consecutive(corpus_indices, batch_size, num_steps):
+    corpus_indices = np.array(corpus_indices)
+    data_len = len(corpus_indices)
+    batch_len = data_len // batch_size
+    indices = corpus_indices[0: batch_size * batch_len].reshape((batch_size, batch_len))
+    epoch_size = (batch_len - 1) // num_steps
+    for i in range(epoch_size):
+        i = i * num_steps
+        X = indices[:, i: i + num_steps]
+        Y = indices[:, i + 1: i + num_steps + 1]
+        yield X, Y

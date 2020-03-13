@@ -10,7 +10,7 @@ from tqdm import trange, tqdm
 from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding, Pooling, generate_layer, SimpleRNN
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy
-from BUG.function.util import minibatch, decode_captions, minibatch_poetry, one_hot
+from BUG.function.util import minibatch, decode_captions, one_hot, data_iter_consecutive
 from BUG.load_package import p
 
 
@@ -360,7 +360,7 @@ class LSTM_model(object):
             with open(path + os.sep + 'caches.obj', 'rb+') as f:
                 start_it = pickle.load(f)
             self.load_model(path, filename)
-
+        theta = 1e-2
         is_continue = False
         cur_it = 0
         in_bar = tqdm()
@@ -371,8 +371,7 @@ class LSTM_model(object):
 
             for it in bar:
                 cost = []
-                in_bar = tqdm(minibatch(data, batch_size=batch_size))
-                for captions_in, captions_out, features, urls in in_bar:
+                for captions_in, captions_out, features, urls in tqdm(minibatch(data, batch_size=batch_size)):
 
                     permutation = np.random.permutation(captions_in.shape[0])
                     captions_in = captions_in[permutation]
@@ -380,6 +379,7 @@ class LSTM_model(object):
                     features = features[permutation]
 
                     a0 = self.A0_layer.forward(features)
+
                     embedding_out = self.X_layer.forward(captions_in)
 
                     lstm_out = self.lstm_layer.forward(embedding_out, a0)
@@ -388,7 +388,7 @@ class LSTM_model(object):
 
                     loss = self.cost.forward(captions_out, y_hat)
                     cost.append(loss)
-                    in_bar.set_postfix(loss=loss)
+
                     dout = self.cost.backward(captions_out, y_hat)
 
                     dlstm = self.output_layer.backward(dout)
@@ -402,11 +402,11 @@ class LSTM_model(object):
 
                     if self.optimizer is None:
                         if optimize == 'Adam':
-                            self.optimizer = Optimize.Adam(self.layers)
+                            self.optimizer = Optimize.Adam(self.layers, theta)
                         elif optimize == 'Momentum':
-                            self.optimizer = Optimize.Momentum(self.layers)
+                            self.optimizer = Optimize.Momentum(self.layers, theta)
                         elif optimize == 'BGD':
-                            self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                            self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
                         else:
                             raise ValueError
 
@@ -419,7 +419,6 @@ class LSTM_model(object):
                     self.save_model(path, filename)
                     self.predict(data)
 
-                in_bar.close()
                 bar.set_postfix(loss=sum(cost) / len(cost))
                 cur_it = it
 
@@ -452,12 +451,12 @@ class LSTM_model(object):
 
         N, D = features.shape
         affine_out = d1.forward(features)
-
         prev_word_idx = [l1.start_code] * N
         prev_h = affine_out
         prev_c = p.zeros(prev_h.shape)
         captions[:, 0] = l1.start_code
         for i in range(1, max_length):
+
             prev_word_embed = e1.parameters['W'][prev_word_idx]
             next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
             prev_c = next_c
@@ -470,8 +469,7 @@ class LSTM_model(object):
 
     def predict(self, data):
         for split in ['train', 'val']:
-            gt_captions, gt_captions_out, features, urls = minibatch(data, split=split, batch_size=2)[
-                random.randint(0, 10000)]
+            gt_captions, gt_captions_out, features, urls = minibatch(data, split=split, batch_size=2)[0]
 
             gt_captions = decode_captions(gt_captions, data['idx_to_word'])
 
@@ -494,131 +492,87 @@ class LSTM_model(object):
 
 
 class RNN_model(object):
-    def __init__(self, hidden_dim, word_to_idx, idx_to_word):
-        self.costs = []  # every batch cost
-        self.cost = None  # 损失函数类
+    def __init__(self, hidden_unit, vocab_size, char_to_ix, ix_to_char, cell='rnn'):
+        self.hidden_unit = hidden_unit
+        self.vocab_size = vocab_size
+        self.char_to_ix = char_to_ix
+        self.ix_to_char = ix_to_char
+
+        self.out_layer = Dense(vocab_size, activation='softmax')
+        if cell == 'rnn':
+            self.rnn_layer = SimpleRNN(hidden_unit)
+        elif cell == 'lstm':
+            self.rnn_layer = LSTM(char_to_ix, [1,1,1], hidden_unit)
         self.optimizer = None
-        self.optimizeMode = None
-        self.word_to_idx = word_to_idx
-        self.idx_to_word = idx_to_word
 
-        self.rnn_layer = SimpleRNN(n_a=hidden_dim, char_to_ix=word_to_idx)  # 返回a
-        self.output_layer = Dense(unit_number=len(word_to_idx), activation='softmax')  # 预测
-        self.layers = [self.rnn_layer, self.output_layer]
+    def compile(self, optimize='Adam', learning_rate=0.001):
+        self.optimizeMode = optimize
+        self.learning_rate = learning_rate
 
-    # 训练
-    @with_goto
-    def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam',
-            save_epoch=10, filename='train_params', path='data'):
-        if not os.path.exists(path):
-            os.mkdir(path)
-
-        self.cost = SoftCategoricalCross_entropy()
-        start_it = 0
-        if os.path.isfile(path + os.sep + 'caches.obj'):
-            with open(path + os.sep + 'caches.obj', 'rb+') as f:
-                start_it = pickle.load(f)
-            self.load_model(path, filename)
-
-        is_continue = False
-        cur_it = 0
-        in_bar = tqdm()
-        bar = tqdm()
-        label.point
-        try:
-            bar = tqdm(range(start_it, iterator))
-
-            for it in bar:
+    def fit(self, data, batch_size=32, num_steps=32, iterator=2000, pred_len=50, prefix=None, save_epoch=10):
+        if prefix is None:
+            prefix = []
+        loss_obj = SoftCategoricalCross_entropy()
+        theta = 1e-2
+        with tqdm(range(1, iterator + 1)) as out_bar:
+            for i in out_bar:
                 cost = []
-                in_bar = tqdm(minibatch_poetry(data, word_to_ix=self.word_to_idx,batch_size=batch_size))
-                for X, Y in in_bar:
-                    rnn_out = self.rnn_layer.forward(one_hot(X, len(self.word_to_idx)))
+                for X, Y in data_iter_consecutive(data, batch_size, num_steps):
+                    # 前向传播
+                    state = p.zeros([batch_size, self.hidden_unit])  # a0
 
-                    y_hat = self.output_layer.forward(rnn_out)
+                    inputs = one_hot(X, self.vocab_size)
 
-                    loss = self.cost.forward(Y, y_hat)
-                    cost.append(loss)
-                    in_bar.set_postfix(loss=loss)
-                    dout = self.cost.backward(Y, y_hat)
+                    state = self.rnn_layer.forward(inputs, state)
+                    outputs = self.out_layer.forward(state)  # softmax层
 
-                    dlstm = self.output_layer.backward(dout)
+                    # 计算损失
+                    target = Y.reshape(None, )
+                    curr_loss = loss_obj.forward(target, outputs)
+                    cost.append(curr_loss)
 
-                    dembedding_out, da0 = self.rnn_layer.backward(dlstm)
+                    # 反向传播
+                    dout = loss_obj.backward(target, outputs)
+                    dsoft_layer = self.out_layer.backward(dout)
 
-                    #  更新参数
+                    dx, dh0 = self.rnn_layer.backward(dsoft_layer)
 
                     if self.optimizer is None:
-                        if optimize == 'Adam':
-                            self.optimizer = Optimize.Adam(self.layers)
-                        elif optimize == 'Momentum':
-                            self.optimizer = Optimize.Momentum(self.layers)
-                        elif optimize == 'BGD':
-                            self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                        layers = [self.out_layer, self.rnn_layer]
+                        if self.optimizeMode == 'Adam':
+                            self.optimizer = Optimize.Adam(layers, theta)
+                        elif self.optimizeMode == 'Momentum':
+                            self.optimizer = Optimize.Momentum(layers, theta)
+                        elif self.optimizeMode == 'BGD':
+                            self.optimizer = Optimize.BatchGradientDescent(layers, theta)
                         else:
                             raise ValueError
 
-                    self.optimizer.update(it + 1, learning_rate)
-                if len(cost) == 0:
-                    continue
+                    self.optimizer.update(i + 1, self.learning_rate)
 
-                if (it + 1) % save_epoch == 0:
-                    self.interrupt(path, it)
-                    self.save_model(path, filename)
-                    self.sample()
+                out_bar.set_postfix(loss=sum(cost) / len(cost))
+                if i % save_epoch == 0:
+                    print('\n -', self.predict_rnn(prefix, pred_len))
 
-                in_bar.close()
-                bar.set_postfix(loss=sum(cost) / len(cost))
-                cur_it = it
-
-        except KeyboardInterrupt:
-            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
-            if c == 'Y' or c == 'y':
-                self.interrupt(path, cur_it)
-                self.save_model(path, filename)
-                print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
-            elif c == 'C' or c == 'c':
-                is_continue = True
+    def predict_rnn(self, prefix, num_chars):
+        state = p.zeros([1, self.hidden_unit])
+        if len(prefix) > 1:
+            output = [self.char_to_ix[prefix[0]]]
+        else:
+            output = []
+        for t in range(num_chars + len(prefix) - 1):
+            if t == 0:
+                X = p.zeros([1, 1, self.vocab_size])
             else:
-                print('结束执行')
-        if is_continue:
-            start_it = cur_it
-            is_continue = False
-            goto.point
-        bar.close()
-        in_bar.close()
+                X = one_hot(p.array([[output[-1]]]), self.vocab_size).reshape(1, 1, -1)
 
-    # 中断处理
-    def interrupt(self, path, start_it):
-        with open(path + os.sep + 'caches.obj', 'wb+') as f:
-            pickle.dump(start_it, f)
+            state = self.rnn_layer.forward(X, state).reshape(1, -1)
+            Y = self.out_layer.forward(state)
 
-    def sample(self, max_length=16):
-        indicts = []
-        x_pre = p.zeros([1, 1, len(self.word_to_idx)], dtype=np.int)
+            if t < len(prefix) - 1:
+                output.append(self.char_to_ix[prefix[t + 1]])
+            else:
+                output.append(int(Y[0].argmax(axis=-1)))
 
-        for i in range(max_length):
-            lstm_out = self.rnn_layer.forward(x_pre)
+        return ''.join([self.ix_to_char[i] for i in output])
 
-            y_hat = self.output_layer.forward(lstm_out)
-
-            # indicts.append(idx)
-            if (i+1) % 4:
-                indicts.append(self.word_to_idx['，'])
-            x_pre = y_hat
-        return indicts
-
-    def show_poetry(self, indicts):
-        str = ''
-        for idx in indicts:
-            str += self.idx_to_word[idx]
-        print(str)
-
-    # 保存模型参数
-    def save_model(self, path, filename):
-        for layer in self.layers:
-            layer.save_params(path, filename)
-
-    # 加载模型参数
-    def load_model(self, path, filename):
-        for layer in self.layers:
-            layer.load_params(path, filename)

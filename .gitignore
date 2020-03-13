@@ -104,5 +104,5 @@ venv.bak/
 .mypy_cache/
 /datasets/
 /images/
-/BUG_GPU/datasets/
 /BUG/datasets/
+/test_data/
