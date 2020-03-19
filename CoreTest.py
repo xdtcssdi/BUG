@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from BUG.Layers.Layer import Dense
-from BUG.Model.model import Linear_model
+from BUG.Model.model import Sequentual
 from BUG.function import Loss
 from BUG.function.Loss import SoftCategoricalCross_entropy
 from BUG.function.evaluate import evaluate_many
@@ -21,14 +21,13 @@ def mnist():
     X_test = X_test.reshape(X_test.shape[0], -1).astype(np.float32) / 255.
     y_test = y_test
 
-    accuracy = evaluate_many
     # 创建网络架构
-    net = Linear_model()
+    net = Sequentual()
     net.add(Dense(256, activation='relu', batchNormal=True))
     net.add(Dense(classes, activation="softmax"))
-    net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
-    net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=1,path='mnist_parameters',
-            iterator=20)
+    net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='SGD', accuracy=evaluate_many)
+    net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=10,
+            path='mnist_parameters', iterator=20)
 
 
 def pre_pic(picName):
@@ -57,8 +56,8 @@ def pre_pic(picName):
 def predict():
     data, img = pre_pic("/Users/oswin/Documents/BS/test_data/img4.png")
 
-    net = Linear_model()
-    net.load_model(path='mnist_parameters', filename='train_params')
+    net = Sequentual()
+    net.load_model(path='mnist_parameters')
     y_hat = net.predict(data.reshape(1, -1))
     idx = y_hat.argmax(-1)
     print('识别为： %d, 概率为%.2f%%'%(idx, y_hat[0, idx]*100))

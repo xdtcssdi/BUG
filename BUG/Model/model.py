@@ -3,7 +3,7 @@ import pickle
 import random
 
 import goto
-import numpy as np
+import numpy
 from goto import with_goto
 from tqdm import trange, tqdm
 
@@ -14,18 +14,18 @@ from BUG.function.util import minibatch, decode_captions, one_hot, data_iter_con
 from BUG.load_package import p
 
 
-class Linear_model(object):
+class Sequentual(object):
 
     def __init__(self):
         self.layers = []
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimizer = None
-        self.evaluate = None
         self.ndim = 2
         self.optimizeMode = None
         self.accuracy = None
         self.permutation = None
+        self.is_normalizing = False
 
     def add(self, layer):
         assert isinstance(layer, Layer) or isinstance(layer, list) or isinstance(layer, tuple), '类型错误'
@@ -75,8 +75,7 @@ class Linear_model(object):
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
-            mode='train', filename='train_params',
-            path='data', regularization='L2', lambd=0):
+            mode='train', path='data', regularization='L2', lambd=0):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, type = %s" % (X_train.shape, type(X_train)))
@@ -84,16 +83,17 @@ class Linear_model(object):
         self.args = {'batch_size': batch_size, 'testing_percentage': testing_percentage,
                      'validation_percentage': validation_percentage, 'learning_rate': learning_rate,
                      'iterator': iterator, 'save_epoch': save_epoch, 'mode': mode,
-                     'filename': filename, 'path': path, 'regularization': regularization, 'lambd': lambd}
+                     'path': path, 'regularization': regularization, 'lambd': lambd}
         t = 0
         start_it = 0
         if not os.path.exists(path):
             os.mkdir(path)
 
-        if os.path.isfile(path + os.sep + 'caches.npz'):
+        if os.path.isfile(path + os.sep + 'caches.obj'):
             with open(path + os.sep + 'caches.obj', 'rb+') as f:
                 start_it, t = pickle.load(f)
-            self.load_model(path, filename)
+            self.load_model(path)
+            self.optimizer.load_parameters(path)
 
         #  Normalizing inputs
         if self.is_normalizing:
@@ -105,6 +105,15 @@ class Linear_model(object):
             X_train, Y_train, X_test, Y_test, X_valid, Y_valid = \
                 self.partitionDataset(X_train, Y_train, testing_percentage, validation_percentage)
         #  -------------
+        if self.optimizer is None:
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam(self.layers)
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum(self.layers)
+            elif self.optimizeMode == 'SGD':
+                self.optimizer = Optimize.BatchGradientDescent(self.layers)
+            else:
+                raise ValueError
 
         is_continue = False  # flag
 
@@ -119,12 +128,14 @@ class Linear_model(object):
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
                     if (self.it + 1) % save_epoch == 0:
                         self.interrupt(path, self.it, t)
-                        self.save_model(path, filename)
+                        self.save_model(path)
+                        self.optimizer.save_parameters(path)
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
                 self.interrupt(path, self.it, t)
-                self.save_model(path, filename)
+                self.save_model(path)
+                self.optimizer.save_parameters(path)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
@@ -221,16 +232,7 @@ class Linear_model(object):
                 if not isinstance(layer, Pooling):
                     layer.gradients['W'] += lambd / batch_size * layer.parameters['W']
 
-        if self.optimizer is None:
-            if self.optimizeMode == 'Adam':
-                self.optimizer = Optimize.Adam(self.layers)
-            elif self.optimizeMode == 'Momentum':
-                self.optimizer = Optimize.Momentum(self.layers)
-            elif self.optimizeMode == 'BGD':
-                self.optimizer = Optimize.BatchGradientDescent(self.layers)
-            else:
-                raise ValueError
-
+        self.optimizer.init_params(self.layers)
         #  更新参数
         t += 1
         self.optimizer.update(t, learning_rate)
@@ -245,7 +247,7 @@ class Linear_model(object):
             for b in tr:
                 bs = b * batch_size
                 be = (b + 1) * batch_size
-                permutation = np.random.permutation(batch_size)
+                permutation = numpy.random.permutation(batch_size)
                 x_train = X_train[bs:be][permutation]
                 y_train = Y_train[bs:be][permutation]
 
@@ -255,7 +257,7 @@ class Linear_model(object):
 
             s = num_complete * batch_size
             if s < X_train.shape[0]:
-                permutation = np.random.permutation(X_train.shape[0] - num_complete * batch_size)
+                permutation = numpy.random.permutation(X_train.shape[0] - num_complete * batch_size)
 
                 cost = self.train_step(X_train[num_complete * batch_size:][permutation],
                                        Y_train[num_complete * batch_size:][permutation],
@@ -281,13 +283,13 @@ class Linear_model(object):
         print('y_hat')
 
     # 保存模型参数
-    def save_model(self, path, filename):
+    def save_model(self, path):
         layers = []
         for layer in self.layers:
-            name = layer.save_params(path, filename)
+            name = layer.save_params(path)
             layers.append(name)
 
-        with open(path + os.sep + filename + '.obj', 'wb') as f:
+        with open(path + os.sep + 'train.obj', 'wb') as f:
             pickle.dump(layers, f)
             pickle.dump(self.optimizeMode, f)
             pickle.dump(self.is_normalizing, f)
@@ -295,29 +297,29 @@ class Linear_model(object):
             pickle.dump(self.accuracy, f)
             pickle.dump(self.cost, f)
         if self.is_normalizing and self.ndim == 2:
-            p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
+            p.savez_compressed(path + os.sep + 'normalize.npz', u=self.u, var=self.var)
 
     #  加载模型参数
-    def load_model(self, path, filename):
+    def load_model(self, path):
         Dense.count = 0
         Convolution.count = 0
         Pooling.count = 0
         self.layers.clear()
-        with open(path + os.sep + filename + '.obj', 'rb') as f:
+        with open(path + os.sep + 'train.obj', 'rb') as f:
             layers = pickle.load(f)
             for layer_name in layers:
-                with open(path + os.sep + layer_name + '_' + filename + '_struct.obj', 'rb') as ff:
+                with open(path + os.sep + layer_name + '_struct.obj', 'rb') as ff:
                     self.layers.append(generate_layer(layer_name.split('_')[0], pickle.load(ff)))
 
             for layer in self.layers:
-                layer.load_params(path, filename)
+                layer.load_params(path)
 
             self.optimizeMode = pickle.load(f)
             if self.optimizeMode == 'Adam':
                 self.optimizer = Optimize.Adam(self.layers)
             elif self.optimizeMode == 'Momentum':
                 self.optimizer = Optimize.Momentum(self.layers)
-            elif self.optimizeMode == 'BGD':
+            elif self.optimizeMode == 'SGD':
                 self.optimizer = Optimize.BatchGradientDescent(self.layers)
             else:
                 raise ValueError
@@ -327,7 +329,7 @@ class Linear_model(object):
             self.accuracy = pickle.load(f)
             self.cost = pickle.load(f)
         if self.is_normalizing and self.ndim == 2:
-            r = p.load(path + os.sep + filename + '_normalize.npz')
+            r = p.load(path + os.sep + 'normalize.npz')
             self.u = r['u']
             self.var = r['var']
 
@@ -346,24 +348,40 @@ class LSTM_model(object):
         self.output_layer = Dense(unit_number=len(word_to_idx), activation='softmax')  # 预测
         self.layers = [self.A0_layer, self.X_layer, self.lstm_layer, self.output_layer]
 
+    def compile(self, lossMode, optimize):
+        # 优化模式 str
+        self.optimizeMode = optimize
+        # 初始化损失结构
+        self.cost = lossMode
+
     # 训练
     @with_goto
-    def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam',
-            save_epoch=10, filename='train_params', path='data'):
+    def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000,
+            save_epoch=10, path='data'):
 
         if not os.path.exists(path):
             os.mkdir(path)
 
-        self.cost = SoftCategoricalCross_entropy()
         start_it = 0
         if os.path.isfile(path + os.sep + 'caches.obj'):
             with open(path + os.sep + 'caches.obj', 'rb+') as f:
                 start_it = pickle.load(f)
-            self.load_model(path, filename)
+            self.load_model(path)
+            self.optimizer.load_parameters(path)
         theta = 1e-2
         is_continue = False
         cur_it = 0
-        in_bar = tqdm()
+
+        if self.optimizer is None:
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam(self.layers, theta)
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum(self.layers, theta)
+            elif self.optimizeMode == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
+            else:
+                raise ValueError
+
         bar = tqdm()
         label.point
         try:
@@ -371,9 +389,9 @@ class LSTM_model(object):
 
             for it in bar:
                 cost = []
-                for captions_in, captions_out, features, urls in tqdm(minibatch(data, batch_size=batch_size)):
+                for captions_in, captions_out, features, urls in minibatch(data, batch_size=batch_size):
 
-                    permutation = np.random.permutation(captions_in.shape[0])
+                    permutation = numpy.random.permutation(captions_in.shape[0])
                     captions_in = captions_in[permutation]
                     captions_out = captions_out[permutation]
                     features = features[permutation]
@@ -400,23 +418,13 @@ class LSTM_model(object):
 
                     #  更新参数
 
-                    if self.optimizer is None:
-                        if optimize == 'Adam':
-                            self.optimizer = Optimize.Adam(self.layers, theta)
-                        elif optimize == 'Momentum':
-                            self.optimizer = Optimize.Momentum(self.layers, theta)
-                        elif optimize == 'BGD':
-                            self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
-                        else:
-                            raise ValueError
-
                     self.optimizer.update(it + 1, learning_rate)
                 if len(cost) == 0:
                     continue
 
                 if (it + 1) % save_epoch == 0:
                     self.interrupt(path, it)
-                    self.save_model(path, filename)
+                    self.save_model(path)
                     self.predict(data)
 
                 bar.set_postfix(loss=sum(cost) / len(cost))
@@ -426,7 +434,7 @@ class LSTM_model(object):
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
                 self.interrupt(path, cur_it)
-                self.save_model(path, filename)
+                self.save_model(path)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
@@ -437,7 +445,6 @@ class LSTM_model(object):
             is_continue = False
             goto.point
         bar.close()
-        in_bar.close()
 
     # 中断处理
     def interrupt(self, path, start_it):
@@ -450,20 +457,20 @@ class LSTM_model(object):
         captions = l1.null_code * p.ones((N, max_length), dtype=p.int32)
 
         N, D = features.shape
-        affine_out = d1.forward(features)
+        a0 = d1.forward(features)
         prev_word_idx = [l1.start_code] * N
-        prev_h = affine_out
-        prev_c = p.zeros(prev_h.shape)
+        a_prev = a0
+        c_prev = p.zeros(a_prev.shape)
         captions[:, 0] = l1.start_code
         for i in range(1, max_length):
 
             prev_word_embed = e1.parameters['W'][prev_word_idx]
-            next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
-            prev_c = next_c
-            vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512))
-            captions[:, i] = p.array(p.argmax(vocab_affine_out, axis=1))
+            a_next, c_next, _ = l1.lstm_step_forward(prev_word_embed, a_prev, c_prev)
+            c_prev = c_next
+            y_hat = d2.forward(a_next.reshape(-1, 1, 512))
+            captions[:, i] = p.array(p.argmax(y_hat, axis=1))
             prev_word_idx = captions[:, i]
-            prev_h = next_h
+            a_prev = a_next
 
         return captions
 
@@ -481,17 +488,17 @@ class LSTM_model(object):
                 print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
 
     # 保存模型参数
-    def save_model(self, path, filename):
+    def save_model(self, path):
         for layer in self.layers:
-            layer.save_params(path, filename)
+            layer.save_params(path)
 
     # 加载模型参数
-    def load_model(self, path, filename):
+    def load_model(self, path):
         for layer in self.layers:
-            layer.load_params(path, filename)
+            layer.load_params(path)
 
 
-class RNN_model(object):
+class Char_RNN(object):
     def __init__(self, hidden_unit, vocab_size, char_to_ix, ix_to_char, cell='rnn'):
         self.hidden_unit = hidden_unit
         self.vocab_size = vocab_size
@@ -504,55 +511,99 @@ class RNN_model(object):
         elif cell == 'lstm':
             self.rnn_layer = LSTM(char_to_ix, [1,1,1], hidden_unit)
         self.optimizer = None
+        self.layers = [self.out_layer, self.rnn_layer]
 
     def compile(self, optimize='Adam', learning_rate=0.001):
         self.optimizeMode = optimize
         self.learning_rate = learning_rate
 
-    def fit(self, data, batch_size=32, num_steps=32, iterator=2000, pred_len=50, prefix=None, save_epoch=10):
+    @with_goto
+    def fit(self, data, batch_size=32, num_steps=32, iterator=2000, pred_len=50,
+            prefix=None, save_epoch=10, path='data'):
         if prefix is None:
             prefix = []
-        loss_obj = SoftCategoricalCross_entropy()
+        if not os.path.exists(path):
+            os.mkdir(path)
+
+        self.cost = SoftCategoricalCross_entropy()
         theta = 1e-2
-        with tqdm(range(1, iterator + 1)) as out_bar:
-            for i in out_bar:
-                cost = []
-                for X, Y in data_iter_consecutive(data, batch_size, num_steps):
-                    # 前向传播
-                    state = p.zeros([batch_size, self.hidden_unit])  # a0
+        if self.optimizer is None:
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam(self.layers, theta)
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum(self.layers, theta)
+            elif self.optimizeMode == 'SGD':
+                self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
+            else:
+                raise ValueError
+        start_it = 1
+        cur_it = 1
+        if os.path.isfile(path + os.sep + 'caches.obj'):
+            with open(path + os.sep + 'caches.obj', 'rb+') as f:
+                start_it = pickle.load(f)
+            self.load_model(path)
+            self.optimizer.load_parameters(path)
 
-                    inputs = one_hot(X, self.vocab_size)
+        loss_obj = SoftCategoricalCross_entropy()
 
-                    state = self.rnn_layer.forward(inputs, state)
-                    outputs = self.out_layer.forward(state)  # softmax层
+        is_continue = False
 
-                    # 计算损失
-                    target = Y.reshape(None, )
-                    curr_loss = loss_obj.forward(target, outputs)
-                    cost.append(curr_loss)
+        label.point
 
-                    # 反向传播
-                    dout = loss_obj.backward(target, outputs)
-                    dsoft_layer = self.out_layer.backward(dout)
+        try:
+            with tqdm(range(start_it, iterator + 1)) as out_bar:
+                for i in out_bar:
+                    cost = []
+                    cur_it = i
+                    for X, Y in data_iter_consecutive(data, batch_size, num_steps):
+                        # 前向传播
+                        state = p.zeros([batch_size, self.hidden_unit])  # a0
 
-                    dx, dh0 = self.rnn_layer.backward(dsoft_layer)
+                        inputs = one_hot(X, self.vocab_size)
 
-                    if self.optimizer is None:
-                        layers = [self.out_layer, self.rnn_layer]
-                        if self.optimizeMode == 'Adam':
-                            self.optimizer = Optimize.Adam(layers, theta)
-                        elif self.optimizeMode == 'Momentum':
-                            self.optimizer = Optimize.Momentum(layers, theta)
-                        elif self.optimizeMode == 'BGD':
-                            self.optimizer = Optimize.BatchGradientDescent(layers, theta)
-                        else:
-                            raise ValueError
+                        state = self.rnn_layer.forward(inputs, state)
+                        outputs = self.out_layer.forward(state)  # softmax层
 
-                    self.optimizer.update(i + 1, self.learning_rate)
+                        # 计算损失
+                        target = Y.reshape(None, )
+                        curr_loss = loss_obj.forward(target, outputs)
+                        cost.append(curr_loss)
 
-                out_bar.set_postfix(loss=sum(cost) / len(cost))
-                if i % save_epoch == 0:
-                    print('\n -', self.predict_rnn(prefix, pred_len))
+                        # 反向传播
+                        dout = loss_obj.backward(target, outputs)
+                        dsoft_layer = self.out_layer.backward(dout)
+
+                        dx, dh0 = self.rnn_layer.backward(dsoft_layer)
+
+                        self.optimizer.init_params(self.layers)
+                        self.optimizer.update(i + 1, self.learning_rate)
+
+                    out_bar.set_postfix(loss=sum(cost) / len(cost))
+                    if i % save_epoch == 0:
+                        self.interrupt(path, cur_it)
+                        self.save_model(path)
+                        self.optimizer.save_parameters(path)
+                        print('\n -', self.predict_rnn(prefix, pred_len))
+
+        except KeyboardInterrupt:
+            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
+            if c == 'Y' or c == 'y':
+                self.interrupt(path, cur_it)
+                self.save_model(path)
+                print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
+            elif c == 'C' or c == 'c':
+                is_continue = True
+            else:
+                print('结束执行')
+        if is_continue:
+            start_it = cur_it
+            is_continue = False
+            goto.point
+
+        # 中断处理
+    def interrupt(self, path, start_it):
+        with open(path + os.sep + 'caches.obj', 'wb+') as f:
+            pickle.dump(start_it, f)
 
     def predict_rnn(self, prefix, num_chars):
         state = p.zeros([1, self.hidden_unit])
@@ -572,7 +623,20 @@ class RNN_model(object):
             if t < len(prefix) - 1:
                 output.append(self.char_to_ix[prefix[t + 1]])
             else:
-                output.append(int(Y[0].argmax(axis=-1)))
+                if not isinstance(Y, numpy.ndarray):
+                    idx = numpy.random.choice(numpy.arange(Y.shape[-1]), p=p.asnumpy(Y).ravel())
+                else:
+                    idx = numpy.random.choice(p.arange(Y.shape[-1]), p=Y.ravel())
+                output.append(idx)
 
         return ''.join([self.ix_to_char[i] for i in output])
 
+    # 保存模型参数
+    def save_model(self, path):
+        for layer in self.layers:
+            layer.save_params(path)
+
+    # 加载模型参数
+    def load_model(self, path):
+        for layer in self.layers:
+            layer.load_params(path)

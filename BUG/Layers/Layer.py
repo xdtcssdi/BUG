@@ -38,10 +38,10 @@ class Layer(object):
         self.Z = None
         self.name = 'layer'
 
-    def init_params(self, nx):
+    def init_params(self, x):
         """
         根据输入的矩阵，初始化参数
-        :param nx: 输入矩阵
+        :param x: 输入矩阵
         :return: None
         """
         raise NotImplementedError
@@ -63,20 +63,18 @@ class Layer(object):
         """
         raise NotImplementedError
 
-    def save_params(self, path, filename):
+    def save_params(self, path):
         """
         保存当前类的参数
         :param path: 路径格式为'xxx/'
-        :param filename: 文件名
         :return: None
         """
         raise NotImplementedError
 
-    def load_params(self, path, filename):
+    def load_params(self, path):
         """
         加载npz文件中的参数
         :param path: 路径格式为'xxx/'
-        :param filename: 文件名
         :return: None
         """
         raise NotImplementedError
@@ -126,18 +124,18 @@ class Convolution(Layer):
             self.parameters['b'] = p.zeros(self.filter_count)
             self.gradients['b'] = p.zeros_like(self.parameters['W'])
 
-    def save_params(self, path, filename):
+    def save_params(self, path):
         if not os.path.exists(path):
             os.mkdir(path)
-        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'], b=self.parameters['b'])
+        save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name, W=self.parameters['W'], b=self.parameters['b'])
         if self.batch_normal:
-            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
+            self.batch_normal.save_params(path + os.sep + self.name + '_batch_normal')
         return self.name
 
-    def load_params(self, path, filename):
-        params = p.load(path + os.sep + self.name + '_' + filename + '.npz')
-        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+    def load_params(self, path):
+        params = p.load(path + os.sep + self.name + '.npz')
+        dic = load_struct_params(path + os.sep + self.name + '_struct.obj')
         self.filter_count = dic['filter_count']
         self.filter_shape = dic['filter_shape']
         self.stride = dic['stride']
@@ -147,7 +145,7 @@ class Convolution(Layer):
         self.parameters['b'] = params['b']
         if dic['batchNormal']:
             self.batch_normal = BatchNormal()
-            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal.npz')
+            self.batch_normal.load_params(path + os.sep + self.name + '_batch_normal.npz')
 
     # 没问题
     def forward(self, A_pre, Y=None, mode='train'):
@@ -217,7 +215,7 @@ class Dense(Layer):
         if self.flatten:
             x = x.reshape(x.shape[0], -1)
         self.x = x
-        self.init_params(x.shape[-1])
+        self.init_params(x)
         if x.ndim == 3:
             N, T, D = x.shape
             self.Z = x.reshape(N * T, D).dot(self.parameters['W']).reshape(N, T, self.unit_number) + \
@@ -254,7 +252,8 @@ class Dense(Layer):
             dx = dx.reshape(self.x_shape)  # 还原输入数据的形状（对应张量）
         return dx
 
-    def init_params(self, dim):
+    def init_params(self, x):
+        dim = x.shape[-1]
         if 'W' not in self.parameters:
             if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
                 self.parameters['W'] = p.random.uniform(-math.sqrt(6. / (dim + self.unit_number)),
@@ -269,21 +268,21 @@ class Dense(Layer):
         if 'b' not in self.parameters:
             self.parameters['b'] = p.zeros(self.unit_number)
 
-    def save_params(self, path, filename):
-        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'], b=self.parameters['b'])
+    def save_params(self, path):
+        save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name, W=self.parameters['W'], b=self.parameters['b'])
         if self.batch_normal:
-            self.batch_normal.save_params(path + os.sep + self.name + '_' + filename + '_batch_normal')
+            self.batch_normal.save_params(path + os.sep + self.name + '_batch_normal')
         return self.name
 
-    def load_params(self, path, filename):
-        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+    def load_params(self, path):
+        dic = load_struct_params(path + os.sep + self.name + '_struct.obj')
         self.unit_number = dic['unit_number']
         self.activation = dic['activation']
         if dic['batchNormal']:
             self.batch_normal = BatchNormal()
-            self.batch_normal.load_params(path + os.sep + self.name + '_' + filename + '_batch_normal.npz')
-        r = p.load(path + os.sep + self.name + '_' + filename + '.npz')
+            self.batch_normal.load_params(path + os.sep + self.name + '_batch_normal.npz')
+        r = p.load(path + os.sep + self.name + '.npz')
         self.parameters['W'] = r['W']
         self.parameters['b'] = r['b']
 
@@ -303,7 +302,7 @@ class Pooling(Layer):
                      'stride': stride, 'mode': mode}
         assert (self.mode in ['max', 'average'])
 
-    def init_params(self, nx):
+    def init_params(self, x):
         pass
 
     def forward(self, A_pre, Y=None, mode='train'):
@@ -338,12 +337,12 @@ class Pooling(Layer):
         dx = dx.reshape(x.shape)
         return dx
 
-    def save_params(self, path, filename):
-        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
+    def save_params(self, path):
+        save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
         return self.name
 
-    def load_params(self, path, filename):
-        r = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+    def load_params(self, path):
+        r = load_struct_params(path + os.sep + self.name + '_struct.obj')
         self.filter_shape = r['filter_shape']
         self.padding = 0 if r['paddingMode'] == 'valid' else (self.filter_shape[0] - 1) // 2
         self.stride = r['stride']
@@ -353,96 +352,95 @@ class Pooling(Layer):
 class SimpleRNN(Layer):
     def __init__(self, num_hiddens):
         super(SimpleRNN, self).__init__()
-        self.num_hiddens = num_hiddens
+        self.name = 'SimpleRNN'
+        self.unit_number = num_hiddens
+        self.args = {'num_hiddens': num_hiddens}
 
-    def init_params(self, nx):
+    def init_params(self, x):
+        nx = x.shape[-1]
         if 'Wxa' not in self.parameters:
-            self.parameters['Wxa'] = self.orthogonal([nx, self.num_hiddens])
-            self.parameters['Waa'] = self.orthogonal([self.num_hiddens, self.num_hiddens])
-            self.parameters['ba'] = p.ones(self.num_hiddens)
+            self.parameters['Wxa'] = self.orthogonal([nx, self.unit_number])
+            self.parameters['Waa'] = self.orthogonal([self.unit_number, self.unit_number])
+            self.parameters['ba'] = p.zeros(self.unit_number)
 
     def orthogonal(self, shape):
-
         flat_shape = (shape[0], numpy.prod(shape[1:]))
-
         a = numpy.random.normal(0.0, 1.0, flat_shape)
-
         u, _, v = numpy.linalg.svd(a, full_matrices=False)
-
         q = u if u.shape == flat_shape else v
-
         return p.array(q.reshape(shape))
 
-    def save_params(self, path, filename):
-        pass
+    def save_params(self, path):
+        save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name, **self.parameters)
+        return self.name
 
-    def load_params(self, path, filename):
-        pass
+    def load_params(self, path):
+        dic = load_struct_params(path + os.sep + self.name + '_struct.obj')
+        self.num_hiddens = dic['num_hiddens']
 
-    def rnn_step_forward(self, x, prev_h):
-        a = prev_h.dot(self.parameters['Waa']) + x.dot(self.parameters['Wxa']) + self.parameters['ba']
-        next_h = p.tanh(a)
-        return next_h
+        r = p.load(path + os.sep + self.name + '.npz')
+        for key in r.files:
+            self.parameters[key] = r[key]
 
-    def rnn_step_backward(self, dnext_h, cache):
-        x, prev_h, next_h = cache
-        da = dnext_h * (1 - next_h * next_h)
+    def rnn_step_forward(self, x, a_prev):
+        a = a_prev.dot(self.parameters['Waa']) + x.dot(self.parameters['Wxa']) + self.parameters['ba']
+        a_next = p.tanh(a)
+        return a_next
+
+    def rnn_step_backward(self, da_next, cache):
+        x, a_prev, a_next = cache
+        da = da_next * (1 - a_next * a_next)
         dx = da.dot(self.parameters['Wxa'].T)
-        dprev_h = da.dot(self.parameters['Waa'].T)
+        da_prev = da.dot(self.parameters['Waa'].T)
         dWx = x.T.dot(da)
-        dWh = prev_h.T.dot(da)
+        dWh = a_prev.T.dot(da)
         db = p.sum(da, axis=0)
-        return dx, dprev_h, dWx, dWh, db
+        return dx, da_prev, dWx, dWh, db
 
-    def forward(self, x, h0=None, mode='train'):
+    def forward(self, x, a0=None, mode='train'):
         self.x = x
         N, T, D = x.shape
-        self.init_params(D)
+        self.init_params(x)
 
-        self.h = p.zeros((N, T, self.num_hiddens))
-        prev_h = h0
-        self.h0 = h0
+        self.a = p.zeros((N, T, self.num_hiddens))
+        a_prev = a0
+        self.a0 = a0
         for t in range(T):
             xt = x[:, t, :]
-            next_h = self.rnn_step_forward(xt, prev_h)
-            prev_h = next_h
-            if prev_h.ndim == 3:
-                prev_h = prev_h.reshape(1, -1)
-            self.h[:, t, :] = prev_h
-        return self.h
+            a_next = self.rnn_step_forward(xt, a_prev)
+            a_prev = a_next
+            if a_prev.ndim == 3:
+                a_prev = a_prev.reshape(1, -1)
+            self.a[:, t, :] = a_prev
+        return self.a
 
-    def backward(self, dh):
-        N, T, H = dh.shape
+    def backward(self, da):
+        N, T, H = da.shape
         _, _, D = self.x.shape
 
-        next_h = self.h[:, T - 1, :]
+        a_next = self.a[:, T - 1, :]
 
-        dprev_h = p.zeros((N, H))
+        da_prev = p.zeros((N, H))
         dx = p.zeros((N, T, D))
-        dh0 = p.zeros((N, H))
-        dWx = p.zeros((D, H))
-        dWh = p.zeros((H, H))
+        dWxa = p.zeros((D, H))
+        dWaa = p.zeros((H, H))
         db = p.zeros((H,))
 
         for t in range(T):
             t = T - 1 - t
             xt = self.x[:, t, :]
-
-            if t == 0:
-                prev_h = self.h0
-            else:
-                prev_h = self.h[:, t - 1, :]
-
-            step_cache = (xt, prev_h, next_h)
-            next_h = prev_h
-            dnext_h = dh[:, t, :] + dprev_h
-            dx[:, t, :], dprev_h, dWxt, dWht, dbt = self.rnn_step_backward(dnext_h, step_cache)
-            dWx, dWh, db = dWx + dWxt, dWh + dWht, db + dbt
-        self.gradients['Wxa'] = 1. / N * dWx
-        self.gradients['Waa'] = 1. / N * dWh
+            a_prev = self.a0 if t == 0 else self.a[:, t - 1, :]
+            cache = (xt, a_prev, a_next)
+            a_next = a_prev
+            da_next = da[:, t, :] + da_prev
+            dx[:, t, :], da_prev, dWxt, dWat, dbt = self.rnn_step_backward(da_next, cache)
+            dWxa, dWaa, db = dWxa + dWxt, dWaa + dWat, db + dbt
+        self.gradients['Wxa'] = 1. / N * dWxa
+        self.gradients['Waa'] = 1. / N * dWaa
         self.gradients['ba'] = 1. / N * db
-        dh0 = dprev_h
-        return dx, dh0
+        da0 = da_prev
+        return dx, da0
 
 
 class LSTM(Layer):
@@ -456,7 +454,8 @@ class LSTM(Layer):
         self.n_a = n_a
         self.args = {'word_to_idx': word_to_idx, 'point': point, 'n_a': n_a}
 
-    def init_params(self, n_x):
+    def init_params(self, x):
+        n_x = x.shape[-1]
         if 'Wx' not in self.parameters:
             self.parameters['Wx'] = p.random.randn(n_x, 4 * self.n_a) / p.sqrt(n_x)
             self.parameters['Wa'] = p.random.randn(self.n_a, 4 * self.n_a) / p.sqrt(self.n_a)
@@ -469,7 +468,7 @@ class LSTM(Layer):
         :param mode:
         :return:
         """
-        self.init_params(x.shape[-1])
+        self.init_params(x)
         m, time_steps, n_x = x.shape
         n_a = int(self.parameters['b'].shape[0] / 4)
         a = p.zeros([m, time_steps, n_a])
@@ -494,7 +493,7 @@ class LSTM(Layer):
         dx = p.zeros((m, time_steps, n_x))
         dWx = p.zeros((n_x, 4 * n_a))
         dWa = p.zeros((n_a, 4 * n_a))
-        db = p.zeros((4 * n_a,))
+        db = p.zeros(4 * n_a)
 
         for t in range(time_steps):
             t = time_steps - 1 - t
@@ -504,7 +503,7 @@ class LSTM(Layer):
             dWx, dWa, db = dWx + dWxt, dWa + dWat, db + dbt
 
         da0 = da_prev
-        self.gradients['a'] = da0
+        self.gradients['a0'] = da0
         self.gradients['x'] = dx
         self.gradients['Wx'] = 1. / m * dWx
         self.gradients['Wa'] = 1. / m * dWa
@@ -551,21 +550,19 @@ class LSTM(Layer):
 
         return dx, da_prev, dc_prev, dWx, dWa, db
 
-    def save_params(self, path, filename):
-        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name + '_' + filename, Wx=self.parameters['Wx'],
-                           Wa=self.parameters['Wa'], b=self.parameters['b'])
+    def save_params(self, path):
+        save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name, **self.parameters)
         return self.name
 
-    def load_params(self, path, filename):
-        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+    def load_params(self, path):
+        dic = load_struct_params(path + os.sep + self.name + '_struct.obj')
         self.word_to_idx = dic['word_to_idx']
         self.n_a = dic['n_a']
 
-        r = p.load(path + os.sep + self.name + '_' + filename + '.npz')
-        self.parameters['Wx'] = r['Wx']
-        self.parameters['Wa'] = r['Wa']
-        self.parameters['b'] = r['b']
+        r = p.load(path + os.sep + self.name + '.npz')
+        for key in r.files:
+            self.parameters[key] = r[key]
 
 
 class Embedding(Layer):
@@ -598,16 +595,16 @@ class Embedding(Layer):
             p.scatter_add(dW, self.x, dout)
         self.gradients['W'] = dW
 
-    def save_params(self, path, filename):
+    def save_params(self, path):
         if not os.path.exists(path):
             os.mkdir(path)
-        save_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name + '_' + filename, W=self.parameters['W'])
+        save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
+        p.savez_compressed(path + os.sep + self.name, W=self.parameters['W'])
         return self.name
 
-    def load_params(self, path, filename):
-        params = p.load(path + os.sep + self.name + '_' + filename + '.npz')
-        dic = load_struct_params(path + os.sep + self.name + '_' + filename + '_struct.obj')
+    def load_params(self, path):
+        params = p.load(path + os.sep + self.name + '.npz')
+        dic = load_struct_params(path + os.sep + self.name + '_struct.obj')
         self.vocab_size = dic['vocab_size']
         self.word_dim = dic['word_dim']
         self.parameters['W'] = params['W']

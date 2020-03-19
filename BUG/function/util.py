@@ -79,17 +79,6 @@ def one_hot(y, num_classes=None, dtype='float32'):
     categorical = np.reshape(categorical, output_shape)
     return categorical
 
-
-def unhot(one_hot_labels):
-    return np.argmax(one_hot_labels, axis=1)
-
-
-def words_between_idx(doc):
-    chars = list(set(doc))
-    chars.sort()
-    return {ch: i for i, ch in enumerate(chars)}, {i: ch for i, ch in enumerate(chars)}
-
-
 def lyric_download():
     '''
     根据歌手id下载歌词
