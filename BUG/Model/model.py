@@ -366,6 +366,7 @@ class LSTM_model(object):
         if os.path.isfile(path + os.sep + 'caches.obj'):
             with open(path + os.sep + 'caches.obj', 'rb+') as f:
                 start_it = pickle.load(f)
+                self.optimizeMode = pickle.load(f)
             self.load_model(path)
             self.optimizer.load_parameters(path)
         theta = 1e-2
@@ -417,7 +418,7 @@ class LSTM_model(object):
                     self.A0_layer.backward(da0)
 
                     #  更新参数
-
+                    self.optimizer.init_params(self.layers)
                     self.optimizer.update(it + 1, learning_rate)
                 if len(cost) == 0:
                     continue
@@ -450,6 +451,7 @@ class LSTM_model(object):
     def interrupt(self, path, start_it):
         with open(path + os.sep + 'caches.obj', 'wb+') as f:
             pickle.dump(start_it, f)
+            pickle.dump(self.optimizeMode, f)
 
     def sample(self, features, layers, max_length=50):
         d1, e1, l1, d2 = layers
@@ -491,11 +493,22 @@ class LSTM_model(object):
     def save_model(self, path):
         for layer in self.layers:
             layer.save_params(path)
+        self.optimizer.save_parameters(path)
 
     # 加载模型参数
     def load_model(self, path):
         for layer in self.layers:
             layer.load_params(path)
+        if self.optimizer is None:
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam(self.layers)
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum(self.layers)
+            elif self.optimizeMode == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent(self.layers)
+            else:
+                raise ValueError
+        self.optimizer.load_parameters(path)
 
 
 class Char_RNN(object):
