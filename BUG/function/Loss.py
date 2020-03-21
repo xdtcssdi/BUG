@@ -1,7 +1,16 @@
 from BUG.load_package import p
 
 
-class CrossEntry:
+class Loss:
+
+    def forward(self, Y_train, Y_hat):
+        raise NotImplementedError
+
+    def backward(self, Y_train, Y_hat):
+        raise NotImplementedError
+
+
+class CrossEntry(Loss):
     def __init__(self, epsilon=1e-11):
         self.epsilon = epsilon
 
@@ -19,7 +28,7 @@ class CrossEntry:
         return Y_hat - target
 
 
-class SoftCategoricalCross_entropy:
+class SoftCategoricalCross_entropy(Loss):
     def __init__(self, epsilon=1e-11):
         self.epsilon = epsilon
 
