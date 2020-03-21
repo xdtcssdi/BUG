@@ -51,7 +51,7 @@ def mnist():
     net.add(Dense(classes, activation="softmax"))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
     net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=10,
-            path='mnist_parameters', is_print=False, iterator=20)
+            path='mnist_parameters11', is_print=False, iterator=20)
 
 
 def predict():
@@ -69,5 +69,5 @@ def predict():
 
 if __name__ == '__main__':
     np.random.seed(1)
-    #mnist()
-    predict()
+    mnist()
+    #predict()

@@ -282,8 +282,8 @@ class Dense(Layer):
             self.batch_normal = BatchNormal()
             self.batch_normal.load_params(path + os.sep + self.name + '_batch_normal.npz')
         r = p.load(path + os.sep + self.name + '.npz')
-        self.parameters['W']=r['W']
-        self.parameters['b']=r['b']
+        self.parameters['W'] = r['W']
+        self.parameters['b'] = r['b']
 
 
 class Pooling(Layer):
@@ -353,6 +353,7 @@ class SimpleRNN(Layer):
         super(SimpleRNN, self).__init__()
         self.unit_number = num_hiddens
         self.args = {'unit_number': num_hiddens}
+        self.name = 'SimpleRNN'
 
     def init_params(self, nx):
         if 'Wxa' not in self.parameters:
@@ -361,15 +362,10 @@ class SimpleRNN(Layer):
             self.parameters['ba'] = p.ones(self.unit_number)
 
     def orthogonal(self, shape):
-
         flat_shape = (shape[0], numpy.prod(shape[1:]))
-
         a = numpy.random.normal(0.0, 1.0, flat_shape)
-
         u, _, v = numpy.linalg.svd(a, full_matrices=False)
-
         q = u if u.shape == flat_shape else v
-
         return p.array(q.reshape(shape))
 
     def save_params(self, path):

@@ -81,13 +81,13 @@ class Sequentual(object):
                      'iterator': iterator, 'save_epoch': save_epoch, 'mode': mode,
                      'path': path, 'regularization': regularization, 'lambd': lambd}
         print_disable = not is_print
-        t = 0
+
         start_it = 0
         if not os.path.exists(path):
             os.mkdir(path)
 
         if os.path.isfile(path + os.sep + 'caches.obj'):
-            start_it, t = self.load_model(path)
+            start_it = self.load_model(path)
 
         #  Normalizing inputs
         if self.is_normalizing:
@@ -107,16 +107,16 @@ class Sequentual(object):
             with trange(iterator, initial=start_it) as tr:
                 for self.it in tr:
                     tr.set_description("第%d代:" % (self.it + 1))
-                    train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t,
+                    train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, self.it,
                                                  regularization, lambd, print_disable)
                     test_cost, acc = self.accuracy(X_test, Y_test, self.layers)
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
                     if (self.it + 1) % save_epoch == 0:
-                        self.save_model(path, self.it, t)
+                        self.save_model(path, self.it)
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.save_model(path, self.it, t)
+                self.save_model(path, self.it)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
@@ -220,13 +220,12 @@ class Sequentual(object):
 
         #  更新参数
         self.optimizer.init_params(self.layers)
-        t += 1
-        self.optimizer.update(t, learning_rate)
-
+        self.optimizer.update(t+1, learning_rate)
         return loss
 
     # mini-batch
-    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, regularization, lambd, print_disable=False):
+    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, regularization, lambd,
+                   print_disable=False):
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
         with trange(num_complete, disable=print_disable) as tr:
@@ -269,7 +268,7 @@ class Sequentual(object):
         print('y_hat')
 
     # 保存模型参数
-    def save_model(self, path, start_it, t):
+    def save_model(self, path, start_it):
         layers = []
         for layer in self.layers:
             name = layer.save_params(path)
@@ -277,7 +276,6 @@ class Sequentual(object):
 
         with open(path + os.sep + 'caches.obj', 'wb') as f:
             pickle.dump(start_it, f)
-            pickle.dump(t, f)
             pickle.dump(layers, f)
             pickle.dump(self.optimizeMode, f)
             pickle.dump(self.is_normalizing, f)
@@ -297,7 +295,6 @@ class Sequentual(object):
 
         with open(path + os.sep + 'caches.obj', 'rb') as f:
             start_it = pickle.load(f)
-            t = pickle.load(f)
             layers = pickle.load(f)
             for layer_name in layers:
                 with open(path + os.sep + layer_name + '_struct.obj', 'rb') as ff:
@@ -330,7 +327,7 @@ class Sequentual(object):
             r = p.load(path + os.sep + 'train_normalize.npz')
             self.u = r['u']
             self.var = r['var']
-        return start_it, t
+        return start_it
 
 
 class LSTM_model(object):
@@ -360,7 +357,7 @@ class LSTM_model(object):
         if os.path.isfile(path + os.sep + 'caches.obj'):
             with open(path + os.sep + 'caches.obj', 'rb+') as f:
                 start_it = pickle.load(f)
-            self.load_model(path, filename)
+            self.load_model(path)
         theta = 1e-2
         is_continue = False
         cur_it = 0
@@ -372,7 +369,8 @@ class LSTM_model(object):
 
             for it in bar:
                 cost = []
-                for captions_in, captions_out, features, urls in tqdm(minibatch(data, batch_size=batch_size), disable=print_disable):
+                for captions_in, captions_out, features, urls in tqdm(minibatch(data, batch_size=batch_size),
+                                                                      disable=print_disable):
 
                     permutation = np.random.permutation(captions_in.shape[0])
                     captions_in = captions_in[permutation]
@@ -486,75 +484,102 @@ class LSTM_model(object):
             layer.save_params(path)
 
     # 加载模型参数
-    def load_model(self, path, filename):
+    def load_model(self, path):
         for layer in self.layers:
             layer.load_params(path)
 
 
 class Char_RNN(object):
     def __init__(self, hidden_unit, vocab_size, char_to_ix, ix_to_char, cell='rnn'):
+        self.it = 0
         self.hidden_unit = hidden_unit
         self.vocab_size = vocab_size
         self.char_to_ix = char_to_ix
         self.ix_to_char = ix_to_char
-
+        self.optimizeMode = None
         self.out_layer = Dense(vocab_size, activation='softmax')
         if cell == 'rnn':
             self.rnn_layer = SimpleRNN(hidden_unit)
         elif cell == 'lstm':
             self.rnn_layer = LSTM(char_to_ix, [1, 1, 1], hidden_unit)
         self.optimizer = None
-        self.layers = [self.out_layer, self.rnn_layer]
+        self.layers = [self.rnn_layer, self.out_layer]
 
     def compile(self, optimize='Adam', learning_rate=0.001):
         self.optimizeMode = optimize
         self.learning_rate = learning_rate
 
-    def fit(self, data, batch_size=32, num_steps=32, iterator=2000, pred_len=50, prefix=None, save_epoch=10, is_print=False):
+    @with_goto
+    def fit(self, data, batch_size=32, path='data', num_steps=32, iterator=2000, pred_len=50, prefix=None,
+            save_epoch=10, is_print=False):
+
+        start_it = 0
+        if not os.path.exists(path):
+            os.mkdir(path)
+        if os.path.isfile(path + os.sep + 'caches.obj'):
+            start_it = self.load_model(path)
+
         print_disable = not is_print
         if prefix is None:
             prefix = []
         loss_obj = SoftCategoricalCross_entropy()
         theta = 1e-2
-        with trange(iterator) as out_bar:
-            for i in out_bar:
-                cost = []
-                for X, Y in tqdm(data_iter_consecutive(data, batch_size, num_steps),disable=print_disable):
-                    # 前向传播
-                    state = p.zeros([batch_size, self.hidden_unit])  # a0
+        is_continue = False
+        label.point
+        try:
+            with trange(iterator, initial=start_it) as out_bar:
+                for self.it in out_bar:
+                    cost = []
+                    for X, Y in tqdm(data_iter_consecutive(data, batch_size, num_steps), disable=print_disable):
+                        # 前向传播
 
-                    inputs = one_hot(X, self.vocab_size)
+                        state = p.zeros([batch_size, self.hidden_unit])  # a0
 
-                    state = self.rnn_layer.forward(inputs, state)
-                    outputs = self.out_layer.forward(state)  # softmax层
+                        inputs = one_hot(X, self.vocab_size)
 
-                    # 计算损失
-                    target = Y.reshape(None, )
-                    curr_loss = loss_obj.forward(target, outputs)
-                    cost.append(curr_loss)
+                        state = self.rnn_layer.forward(inputs, state)
+                        outputs = self.out_layer.forward(state)  # softmax层
 
-                    # 反向传播
-                    dout = loss_obj.backward(target, outputs)
-                    dsoft_layer = self.out_layer.backward(dout)
+                        # 计算损失
+                        target = Y.reshape(None, )
+                        curr_loss = loss_obj.forward(target, outputs)
+                        cost.append(curr_loss)
 
-                    dx, dh0 = self.rnn_layer.backward(dsoft_layer)
+                        # 反向传播
+                        dout = loss_obj.backward(target, outputs)
+                        dsoft_layer = self.out_layer.backward(dout)
 
-                    if self.optimizer is None:
-                        layers = [self.out_layer, self.rnn_layer]
-                        if self.optimizeMode == 'Adam':
-                            self.optimizer = Optimize.Adam(layers, theta)
-                        elif self.optimizeMode == 'Momentum':
-                            self.optimizer = Optimize.Momentum(layers, theta)
-                        elif self.optimizeMode == 'BGD':
-                            self.optimizer = Optimize.BatchGradientDescent(layers, theta)
-                        else:
-                            raise ValueError
-                    self.optimizer.init_params(self.layers)
-                    self.optimizer.update(i + 1, self.learning_rate)
+                        self.rnn_layer.backward(dsoft_layer)
 
-                out_bar.set_postfix(loss=sum(cost) / len(cost))
-                if (i+1) % save_epoch == 0:
-                    print('\n -', self.predict_rnn(prefix, pred_len))
+                        if self.optimizer is None:
+                            if self.optimizeMode == 'Adam':
+                                self.optimizer = Optimize.Adam(self.layers, theta)
+                            elif self.optimizeMode == 'Momentum':
+                                self.optimizer = Optimize.Momentum(self.layers, theta)
+                            elif self.optimizeMode == 'BGD':
+                                self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
+                            else:
+                                raise ValueError
+                        self.optimizer.init_params(self.layers)
+                        self.optimizer.update(self.it+1, self.learning_rate)
+
+                    out_bar.set_postfix(loss=sum(cost) / len(cost))
+                    if (self.it + 1) % save_epoch == 0:
+                        self.save_model(path, self.it)
+                        print('\n -', self.predict_rnn(prefix, pred_len))
+        except KeyboardInterrupt:
+            c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
+            if c == 'Y' or c == 'y':
+                self.save_model(path, self.it)
+                print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
+            elif c == 'C' or c == 'c':
+                is_continue = True
+            else:
+                print('结束执行')
+        if is_continue:
+            start_it = self.it
+            is_continue = False
+            goto.point
 
     def predict_rnn(self, prefix, num_chars):
         state = p.zeros([1, self.hidden_unit])
@@ -579,13 +604,29 @@ class Char_RNN(object):
         return ''.join([self.ix_to_char[i] for i in output])
 
     # 保存模型参数
-    def save_model(self, path):
+    def save_model(self, path, start_it):
         for layer in self.layers:
             layer.save_params(path)
+        with open(path + os.sep + 'caches.obj', 'wb') as f:
+            pickle.dump(start_it, f)
+            pickle.dump(self.optimizeMode, f)
         self.optimizer.save_parameters(path)
 
     # 加载模型参数
     def load_model(self, path):
         for layer in self.layers:
             layer.load_params(path)
+        with open(path + os.sep + 'caches.obj', 'rb') as f:
+            start_it = pickle.load(f)
+            self.optimizeMode = pickle.load(f)
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam(self.layers)
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum(self.layers)
+            elif self.optimizeMode == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent(self.layers)
+            else:
+                raise ValueError
+
         self.optimizer.load_parameters(path)
+        return start_it
