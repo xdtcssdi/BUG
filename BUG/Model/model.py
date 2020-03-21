@@ -1,6 +1,5 @@
 import os.path
 import pickle
-import random
 
 import goto
 import numpy as np
@@ -21,6 +20,7 @@ class Linear_model(object):
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimizer = None
+        self.optimizeMode = None
         self.evaluate = None
         self.ndim = 2
         self.optimizeMode = None
@@ -75,8 +75,7 @@ class Linear_model(object):
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
-            mode='train', filename='train_params',
-            path='data', regularization='L2', lambd=0):
+            mode='train', path='data', regularization='L2', lambd=0):
         assert not isinstance(X_train, p.float)
         assert not isinstance(X_test, p.float)
         print("X_train.shape = %s, type = %s" % (X_train.shape, type(X_train)))
@@ -84,16 +83,14 @@ class Linear_model(object):
         self.args = {'batch_size': batch_size, 'testing_percentage': testing_percentage,
                      'validation_percentage': validation_percentage, 'learning_rate': learning_rate,
                      'iterator': iterator, 'save_epoch': save_epoch, 'mode': mode,
-                     'filename': filename, 'path': path, 'regularization': regularization, 'lambd': lambd}
+                     'path': path, 'regularization': regularization, 'lambd': lambd}
         t = 0
         start_it = 0
         if not os.path.exists(path):
             os.mkdir(path)
 
-        if os.path.isfile(path + os.sep + 'caches.npz'):
-            with open(path + os.sep + 'caches.obj', 'rb+') as f:
-                start_it, t = pickle.load(f)
-            self.load_model(path, filename)
+        if os.path.isfile(path + os.sep + 'caches.obj'):
+            start_it, t = self.load_model(path)
 
         #  Normalizing inputs
         if self.is_normalizing:
@@ -118,13 +115,11 @@ class Linear_model(object):
                     test_cost, acc = self.accuracy(X_test, Y_test, self.layers)
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
                     if (self.it + 1) % save_epoch == 0:
-                        self.interrupt(path, self.it, t)
-                        self.save_model(path, filename)
+                        self.save_model(path, self.it, t)
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.interrupt(path, self.it, t)
-                self.save_model(path, filename)
+                self.save_model(path, self.it, t)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
@@ -134,11 +129,6 @@ class Linear_model(object):
             start_it = self.it
             is_continue = False
             goto.point
-
-    # 中断处理
-    def interrupt(self, path, start_it, t):
-        with open(path + os.sep + 'caches.obj', 'wb+') as f:
-            pickle.dump((start_it, t), f)
 
     def compute_reg_loss(self, m, regularization='L2', lambd=0.1):
         """
@@ -232,6 +222,7 @@ class Linear_model(object):
                 raise ValueError
 
         #  更新参数
+        self.optimizer.init_params(self.layers)
         t += 1
         self.optimizer.update(t, learning_rate)
 
@@ -281,13 +272,15 @@ class Linear_model(object):
         print('y_hat')
 
     # 保存模型参数
-    def save_model(self, path, filename):
+    def save_model(self, path, start_it, t):
         layers = []
         for layer in self.layers:
-            name = layer.save_params(path, filename)
+            name = layer.save_params(path)
             layers.append(name)
 
-        with open(path + os.sep + filename + '.obj', 'wb') as f:
+        with open(path + os.sep + 'caches.obj', 'wb') as f:
+            pickle.dump(start_it, f)
+            pickle.dump(t, f)
             pickle.dump(layers, f)
             pickle.dump(self.optimizeMode, f)
             pickle.dump(self.is_normalizing, f)
@@ -295,22 +288,26 @@ class Linear_model(object):
             pickle.dump(self.accuracy, f)
             pickle.dump(self.cost, f)
         if self.is_normalizing and self.ndim == 2:
-            p.savez_compressed(path + os.sep + filename + '_normalize.npz', u=self.u, var=self.var)
+            p.savez_compressed(path + os.sep + 'train_normalize.npz', u=self.u, var=self.var)
+        self.optimizer.save_parameters(path)
 
     #  加载模型参数
-    def load_model(self, path, filename):
+    def load_model(self, path):
         Dense.count = 0
         Convolution.count = 0
         Pooling.count = 0
         self.layers.clear()
-        with open(path + os.sep + filename + '.obj', 'rb') as f:
+
+        with open(path + os.sep + 'caches.obj', 'rb') as f:
+            start_it = pickle.load(f)
+            t = pickle.load(f)
             layers = pickle.load(f)
             for layer_name in layers:
-                with open(path + os.sep + layer_name + '_' + filename + '_struct.obj', 'rb') as ff:
+                with open(path + os.sep + layer_name + '_struct.obj', 'rb') as ff:
                     self.layers.append(generate_layer(layer_name.split('_')[0], pickle.load(ff)))
 
             for layer in self.layers:
-                layer.load_params(path, filename)
+                layer.load_params(path)
 
             self.optimizeMode = pickle.load(f)
             if self.optimizeMode == 'Adam':
@@ -321,15 +318,16 @@ class Linear_model(object):
                 self.optimizer = Optimize.BatchGradientDescent(self.layers)
             else:
                 raise ValueError
-
+            self.optimizer.load_parameters(path)
             self.is_normalizing = pickle.load(f)
             self.ndim = pickle.load(f)
             self.accuracy = pickle.load(f)
             self.cost = pickle.load(f)
         if self.is_normalizing and self.ndim == 2:
-            r = p.load(path + os.sep + filename + '_normalize.npz')
+            r = p.load(path + os.sep + 'train_normalize.npz')
             self.u = r['u']
             self.var = r['var']
+        return start_it, t
 
 
 class LSTM_model(object):
@@ -456,7 +454,6 @@ class LSTM_model(object):
         prev_c = p.zeros(prev_h.shape)
         captions[:, 0] = l1.start_code
         for i in range(1, max_length):
-
             prev_word_embed = e1.parameters['W'][prev_word_idx]
             next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
             prev_c = next_c
@@ -491,7 +488,7 @@ class LSTM_model(object):
             layer.load_params(path, filename)
 
 
-class RNN_model(object):
+class Char_RNN(object):
     def __init__(self, hidden_unit, vocab_size, char_to_ix, ix_to_char, cell='rnn'):
         self.hidden_unit = hidden_unit
         self.vocab_size = vocab_size
@@ -502,8 +499,9 @@ class RNN_model(object):
         if cell == 'rnn':
             self.rnn_layer = SimpleRNN(hidden_unit)
         elif cell == 'lstm':
-            self.rnn_layer = LSTM(char_to_ix, [1,1,1], hidden_unit)
+            self.rnn_layer = LSTM(char_to_ix, [1, 1, 1], hidden_unit)
         self.optimizer = None
+        self.layers = [self.out_layer, self.rnn_layer]
 
     def compile(self, optimize='Adam', learning_rate=0.001):
         self.optimizeMode = optimize
@@ -547,7 +545,7 @@ class RNN_model(object):
                             self.optimizer = Optimize.BatchGradientDescent(layers, theta)
                         else:
                             raise ValueError
-
+                    self.optimizer.init_params(self.layers)
                     self.optimizer.update(i + 1, self.learning_rate)
 
                 out_bar.set_postfix(loss=sum(cost) / len(cost))
@@ -576,3 +574,14 @@ class RNN_model(object):
 
         return ''.join([self.ix_to_char[i] for i in output])
 
+    # 保存模型参数
+    def save_model(self, path):
+        for layer in self.layers:
+            layer.save_params(path)
+        self.optimizer.save_parameters(path)
+
+    # 加载模型参数
+    def load_model(self, path):
+        for layer in self.layers:
+            layer.load_params(path)
+        self.optimizer.load_parameters(path)

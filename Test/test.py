@@ -8,4 +8,3 @@ if __name__ == '__main__':
     model = RNN_model(hidden_dim, vocab_size, char_to_idx, idx_to_char, cell='lstm')
     model.compile('Adam', learning_rate=0.005)
     model.fit(data, batch_size=32, num_steps=35, save_epoch=1)
-

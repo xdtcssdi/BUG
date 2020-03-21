@@ -1,5 +1,5 @@
 from BUG.Model.model import LSTM_model
-from BUG.function.util import load_coco_data, minibatch
+from BUG.function.util import load_coco_data
 from BUG.load_package import p
 
 
@@ -29,5 +29,3 @@ def predict():
 
 if __name__ == '__main__':
     coco()
-
-

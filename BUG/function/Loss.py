@@ -52,7 +52,7 @@ class SoftCategoricalCross_entropy:
             N, T = targets.shape
             targets = targets.reshape(N * T, )
             if outputs.ndim == 3:
-                outputs = outputs.reshape(N*T, -1)
+                outputs = outputs.reshape(N * T, -1)
             dx_flat = outputs.copy()
             dx_flat[p.arange(N * T), targets] -= 1
             dx = dx_flat.reshape(N, T, -1)

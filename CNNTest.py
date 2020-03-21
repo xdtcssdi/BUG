@@ -1,5 +1,6 @@
-from tensorflow import keras
 import matplotlib.pyplot as plt
+from tensorflow import keras
+
 from BUG.Layers.Layer import Convolution, Pooling, Dense
 from BUG.Model.model import Linear_model
 from BUG.function import Loss

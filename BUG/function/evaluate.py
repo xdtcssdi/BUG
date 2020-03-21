@@ -20,8 +20,8 @@ def evaluate_one(A, Y_train, layers):
 
 if __name__ == '__main__':
     A = p.array([[0, 0.4, 0.3],
-                [1, 0.4, 0.1],
-                [0, 0.2, 0.6]])
+                 [1, 0.4, 0.1],
+                 [0, 0.2, 0.6]])
     B = p.array([1, 0, 1])
 
     print((p.argmax(A, -1) == B).sum() / A.shape[0])

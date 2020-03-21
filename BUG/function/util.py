@@ -1,3 +1,4 @@
+import gzip
 import json
 import os
 import pickle
@@ -8,7 +9,6 @@ import h5py
 import numpy as np
 import requests
 from bs4 import BeautifulSoup
-from keras.datasets import mnist
 
 from BUG.function.zhtools.langconv import Converter
 from BUG.load_package import p
@@ -78,10 +78,6 @@ def one_hot(y, num_classes=None, dtype='float32'):
     output_shape = input_shape + (num_classes,)
     categorical = np.reshape(categorical, output_shape)
     return categorical
-
-
-def unhot(one_hot_labels):
-    return np.argmax(one_hot_labels, axis=1)
 
 
 def words_between_idx(doc):
@@ -225,9 +221,34 @@ def minibatch(data, batch_size=100, split='train'):
 
 
 def load_mnist():
-    (X_train, y_train), (X_test, y_test) = mnist.load_data()
-    classes = 10
-    return X_train, y_train, X_test, y_test, classes
+    files = [
+        'train-labels-idx1-ubyte.gz', 'train-images-idx3-ubyte.gz',
+        't10k-labels-idx1-ubyte.gz', 't10k-images-idx3-ubyte.gz'
+    ]
+
+    paths = []
+    for fname in files:
+        paths.append(os.path.join('/Users/oswin/Documents/BS/BUG/datasets/mnist', fname))
+
+    with gzip.open(paths[0], 'rb') as lbpath:
+        y_train = np.frombuffer(lbpath.read(), np.uint8, offset=8)
+
+    with gzip.open(paths[1], 'rb') as imgpath:
+        x_train = np.frombuffer(
+            imgpath.read(), np.uint8, offset=16).reshape(len(y_train), 28, 28)
+
+    with gzip.open(paths[2], 'rb') as lbpath:
+        y_test = np.frombuffer(lbpath.read(), np.uint8, offset=8)
+
+    with gzip.open(paths[3], 'rb') as imgpath:
+        x_test = np.frombuffer(
+            imgpath.read(), np.uint8, offset=16).reshape(len(y_test), 28, 28)
+
+    return x_train, y_train, x_test, y_test, 10
+
+
+if __name__ == '__main__':
+    load_mnist()
 
 
 def load_poetry():
