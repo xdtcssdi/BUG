@@ -282,8 +282,8 @@ class Dense(Layer):
             self.batch_normal = BatchNormal()
             self.batch_normal.load_params(path + os.sep + self.name + '_batch_normal.npz')
         r = p.load(path + os.sep + self.name + '.npz')
-        for key in r.files:
-            self.parameters[key] = r[key]
+        self.parameters['W']=r['W']
+        self.parameters['b']=r['b']
 
 
 class Pooling(Layer):
@@ -381,7 +381,12 @@ class SimpleRNN(Layer):
         dic = load_struct_params(path + os.sep + self.name + '_struct.obj')
         self.unit_number = dic['unit_number']
         r = p.load(path + os.sep + self.name + '.npz')
-        for key in r.files:
+        if isinstance(r, numpy.lib.npyio.NpzFile):
+            files = r.files
+        else:
+            files = r.npz_file.files
+
+        for key in files:
             self.parameters[key] = r[key]
 
     def rnn_step_forward(self, x, prev_h):
@@ -567,7 +572,11 @@ class LSTM(Layer):
         self.n_a = dic['n_a']
 
         r = p.load(path + os.sep + self.name + '.npz')
-        for key in r.files:
+        if isinstance(r, numpy.lib.npyio.NpzFile):
+            files = r.files
+        else:
+            files = r.npz_file.files
+        for key in files:
             self.parameters[key] = r[key]
 
 

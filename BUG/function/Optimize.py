@@ -2,7 +2,7 @@ import os
 
 from BUG.Layers.Layer import Pooling
 from BUG.load_package import p
-
+import numpy
 
 class Optimize:
     def __init__(self, layers, theta=1e-2):
@@ -47,7 +47,12 @@ class Momentum(Optimize):
 
     def load_parameters(self, path):
         v = p.load(path + os.sep + self.name + '.npz')
-        for key in v.files:
+        if isinstance(v, numpy.lib.npyio.NpzFile):
+            files = v.files
+        else:
+            files = v.npz_file.files
+
+        for key in files:
             self.v[key] = v[key]
 
     def update(self, t, learning_rate, beta=0.9):
@@ -98,10 +103,20 @@ class Adam(Optimize):
 
     def load_parameters(self, path):
         v = p.load(path + os.sep + self.name + '_v.npz')
-        for key in v.files:
+        if isinstance(v, numpy.lib.npyio.NpzFile):
+            files = v.files
+        else:
+            files = v.npz_file.files
+
+        for key in files:
             self.v[key] = v[key]
         s = p.load(path + os.sep + self.name + '_s.npz')
-        for key in s.files:
+
+        if isinstance(s, numpy.lib.npyio.NpzFile):
+            files = s.files
+        else:
+            files = s.npz_file.files
+        for key in files:
             self.s[key] = s[key]
 
     def update(self, t, learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-8):

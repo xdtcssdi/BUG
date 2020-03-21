@@ -304,7 +304,13 @@ class Sequentual(object):
             layers = pickle.load(f)
             for layer_name in layers:
                 with open(path + os.sep + layer_name + '_struct.obj', 'rb') as ff:
-                    self.layers.append(generate_layer(layer_name.split('_')[0], pickle.load(ff)))
+                    self.add(generate_layer(layer_name.split('_')[0], pickle.load(ff)))
+
+            for i in range(1, self.getLayerNumber()):
+                self.layers[i].pre_layer = self.layers[i - 1]
+                self.layers[i - 1].next_layer = self.layers[i]
+                self.layers[0].isFirst = True
+                self.layers[-1].isLast = True
 
             for layer in self.layers:
                 layer.load_params(path)

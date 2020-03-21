@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 
 from BUG.Layers.Layer import Dense
-from BUG.Model.model import Linear_model
+from BUG.Model.model import Sequentual
 from BUG.function import Loss
 from BUG.function.evaluate import evaluate_many
 from BUG.function.util import load_mnist
@@ -23,7 +23,7 @@ def mnist():
 
     accuracy = evaluate_many
     # 创建网络架构
-    net = Linear_model()
+    net = Sequentual()
     net.add(Dense(256, activation='relu', batchNormal=True))
     net.add(Dense(classes, activation="softmax"))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
@@ -58,7 +58,7 @@ def pre_pic(picName):
 def predict():
     data, img = pre_pic("/Users/oswin/Documents/BS/Test/test_data/img4.png")
 
-    net = Linear_model()
+    net = Sequentual()
     net.load_model(path='mnist_parameters')
     y_hat = net.predict(data.reshape(1, -1))
     idx = y_hat.argmax(-1)
@@ -70,5 +70,5 @@ def predict():
 
 if __name__ == '__main__':
     np.random.seed(1)
-    #mnist()
-    predict()
+    mnist()
+    #predict()
