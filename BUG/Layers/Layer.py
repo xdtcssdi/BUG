@@ -269,7 +269,7 @@ class Dense(Layer):
 
     def save_params(self, path):
         save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name, W=self.parameters['W'], b=self.parameters['b'])
+        p.savez_compressed(path + os.sep + self.name, **self.parameters)
         if self.batch_normal:
             self.batch_normal.save_params(path + os.sep + self.name + '_batch_normal')
         return self.name
@@ -282,8 +282,8 @@ class Dense(Layer):
             self.batch_normal = BatchNormal()
             self.batch_normal.load_params(path + os.sep + self.name + '_batch_normal.npz')
         r = p.load(path + os.sep + self.name + '.npz')
-        self.parameters['W'] = r['W']
-        self.parameters['b'] = r['b']
+        for key in r.files:
+            self.parameters[key] = r[key]
 
 
 class Pooling(Layer):

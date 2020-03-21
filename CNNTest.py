@@ -21,12 +21,12 @@ def LeNet5():
     net = Sequentual()
     net.add(Convolution(filter_count=32, filter_shape=(5, 5), batchNormal=True))
     net.add(Pooling(filter_shape=(2, 2), stride=2, mode='max', paddingMode='same'))
-    # net.add(Convolution(filter_count=64, filter_shape=(5, 5), batchNormal=True))
-    # net.add(Pooling(filter_shape=(2, 2), stride=2, mode='max', paddingMode='same'))
-    net.add(Dense(10, batchNormal=True, flatten=True, activation='relu', keep_prob=0.3))
+    net.add(Convolution(filter_count=16, filter_shape=(5, 5), batchNormal=True))
+    net.add(Pooling(filter_shape=(2, 2), stride=2, mode='max', paddingMode='same'))
+    net.add(Dense(10, batchNormal=True, flatten=True, activation='relu', keep_prob=1))
     net.add(Dense(10, batchNormal=False, activation="softmax"))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
-    net.fit(X_train, Y_train, X_test, Y_test, batch_size=10, iterator=1000, learning_rate=0.0075, lambd=0.1,
+    net.fit(X_train, Y_train, X_test, Y_test, batch_size=32, iterator=1000, learning_rate=0.0075, save_epoch=10,
             path='fashion_mnist_parameters')
 
 
@@ -37,7 +37,7 @@ def predict():
     X_test = p.array(p.reshape(test_images, (test_images.shape[0], 1, 28, 28)))[idx] / 255.
     Y_test = test_labels[idx]
     net = Sequentual()
-    net.load_model(path='/fashion_mnist_parameters', filename='train_params')
+    net.load_model(path='/fashion_mnist_parameters')
     y_hat = net.predict(X_test.reshape(1, 1, 28, 28))
     print('标签为%s, 识别为%s' % (label[Y_test], label[int(y_hat.argmax(-1))]))
 

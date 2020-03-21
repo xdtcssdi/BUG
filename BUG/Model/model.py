@@ -13,7 +13,7 @@ from BUG.function.util import minibatch, decode_captions, one_hot, data_iter_con
 from BUG.load_package import p
 
 
-class Linear_model(object):
+class Sequentual(object):
 
     def __init__(self):
         self.layers = []
