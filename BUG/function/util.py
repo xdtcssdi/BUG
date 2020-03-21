@@ -220,7 +220,7 @@ def minibatch(data, batch_size=100, split='train'):
     return batch
 
 
-def load_mnist():
+def load_mnist(path):
     files = [
         'train-labels-idx1-ubyte.gz', 'train-images-idx3-ubyte.gz',
         't10k-labels-idx1-ubyte.gz', 't10k-images-idx3-ubyte.gz'
@@ -228,7 +228,7 @@ def load_mnist():
 
     paths = []
     for fname in files:
-        paths.append(os.path.join('/Users/oswin/Documents/BS/BUG/datasets/mnist', fname))
+        paths.append(os.path.join(path, fname))
 
     with gzip.open(paths[0], 'rb') as lbpath:
         y_train = np.frombuffer(lbpath.read(), np.uint8, offset=8)

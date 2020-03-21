@@ -16,12 +16,19 @@
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Dense_2.npz" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Dense_2_struct.obj" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Pooling_1_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Pooling_2_struct.obj" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/caches.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Adam_s.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Adam_v.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_1.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_1_batch_normal.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_1_struct.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_2.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_2_struct.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/caches.obj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/Layers/Layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Layers/Layer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/Model/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Model/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/function/Optimize.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/Optimize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/function/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNTest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CoreTest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -66,14 +73,15 @@
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/BUG/datasets" />
     <property name="settings.editor.selected.configurable" value="tasks.servers" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
+    <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
-    <key name="MoveFile.RECENT_KEYS">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/BUG/datasets" />
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
@@ -267,7 +275,7 @@
       <workItem from="1584637296675" duration="74000" />
       <workItem from="1584670828864" duration="2048000" />
       <workItem from="1584773240870" duration="1450000" />
-      <workItem from="1584781078985" duration="1492000" />
+      <workItem from="1584781078985" duration="8257000" />
     </task>
     <task id="LOCAL-00001" summary="doc">
       <created>1584637343888</created>
@@ -283,7 +291,14 @@
       <option name="project" value="LOCAL" />
       <updated>1584774127891</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="upload test CNNTest.py 2">
+      <created>1584783690682</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1584783690682</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -309,7 +324,8 @@
     </ignored-roots>
     <MESSAGE value="doc" />
     <MESSAGE value="upload test CNNTest.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="upload test CNNTest.py" />
+    <MESSAGE value="upload test CNNTest.py 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="upload test CNNTest.py 2" />
   </component>
   <component name="WindowStateProjectService">
     <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1582362778121">
@@ -320,30 +336,30 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1582361025956" />
-    <state x="223" y="23" key="CommitChangelistDialog2" timestamp="1584774127658">
+    <state x="223" y="23" key="CommitChangelistDialog2" timestamp="1584783690198">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
-    <state x="223" y="23" key="CommitChangelistDialog2/0.23.1280.719@0.23.1280.719" timestamp="1584774127658" />
-    <state width="1238" height="196" key="GridCell.Tab.0.bottom" timestamp="1584783416071">
+    <state x="223" y="23" key="CommitChangelistDialog2/0.23.1280.719@0.23.1280.719" timestamp="1584783690198" />
+    <state width="1238" height="187" key="GridCell.Tab.0.bottom" timestamp="1584794757754">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state width="1238" height="274" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1582447169542" />
-    <state width="1238" height="196" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1584783416071" />
-    <state width="1238" height="196" key="GridCell.Tab.0.center" timestamp="1584783416070">
+    <state width="1238" height="187" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1584794757754" />
+    <state width="1238" height="187" key="GridCell.Tab.0.center" timestamp="1584794757753">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state width="1238" height="274" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1582447169541" />
-    <state width="1238" height="196" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1584783416070" />
-    <state width="1238" height="196" key="GridCell.Tab.0.left" timestamp="1584783416070">
+    <state width="1238" height="187" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1584794757753" />
+    <state width="1238" height="187" key="GridCell.Tab.0.left" timestamp="1584794757753">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state width="1238" height="274" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1582447169540" />
-    <state width="1238" height="196" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1584783416070" />
-    <state width="1238" height="196" key="GridCell.Tab.0.right" timestamp="1584783416071">
+    <state width="1238" height="187" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1584794757753" />
+    <state width="1238" height="187" key="GridCell.Tab.0.right" timestamp="1584794757754">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state width="1238" height="274" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1582447169541" />
-    <state width="1238" height="196" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1584783416071" />
+    <state width="1238" height="187" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1584794757754" />
     <state width="1238" height="222" key="GridCell.Tab.1.bottom" timestamp="1584783411248">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
@@ -364,19 +380,19 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="141" y="39" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1582362688529" />
-    <state x="240" y="149" key="Vcs.Push.Dialog.v2" timestamp="1584774129534">
+    <state x="240" y="149" key="Vcs.Push.Dialog.v2" timestamp="1584783709075">
       <screen x="0" y="23" width="1280" height="719" />
     </state>
     <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1582446155816" />
-    <state x="240" y="149" key="Vcs.Push.Dialog.v2/0.23.1280.719@0.23.1280.719" timestamp="1584774129534" />
+    <state x="240" y="149" key="Vcs.Push.Dialog.v2/0.23.1280.719@0.23.1280.719" timestamp="1584783709075" />
     <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1582448652037">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1582448652037" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1584783416058" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
-    <SUITE FILE_PATH="coverage/BS$CoreTest.coverage" NAME="CoreTest Coverage Results" MODIFIED="1584775009713" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1584794756307" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BS$CoreTest.coverage" NAME="CoreTest Coverage Results" MODIFIED="1584792979658" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$test.coverage" NAME="test Coverage Results" MODIFIED="1582434188869" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1582444069203" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$LSTM_test.coverage" NAME="LSTM_test Coverage Results" MODIFIED="1584687756837" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

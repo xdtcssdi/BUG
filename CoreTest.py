@@ -7,29 +7,9 @@ from BUG.Model.model import Sequentual
 from BUG.function import Loss
 from BUG.function.evaluate import evaluate_many
 from BUG.function.util import load_mnist
-
+from matplotlib.font_manager import FontProperties
+font = FontProperties(fname='/Users/oswin/Documents/BS/BUG/datasets/PingFang.ttc', size=16)
 np.set_printoptions(threshold=np.inf, suppress=True)
-
-
-def mnist():
-    # 数据预处理
-    X_train, y_train, X_test, y_test, classes = load_mnist()
-
-    X_train = X_train.reshape(X_train.shape[0], -1).astype(np.float32)[:60000] / 255.
-    Y_train = y_train[:60000]
-
-    X_test = X_test.reshape(X_test.shape[0], -1).astype(np.float32) / 255.
-    y_test = y_test
-
-    accuracy = evaluate_many
-    # 创建网络架构
-    net = Sequentual()
-    net.add(Dense(256, activation='relu', batchNormal=True))
-    net.add(Dense(classes, activation="softmax"))
-    net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
-    net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=10,
-            path='mnist_parameters',
-            iterator=20)
 
 
 def pre_pic(picName):
@@ -55,6 +35,25 @@ def pre_pic(picName):
     return img_ready, img
 
 
+def mnist():
+    # 数据预处理
+    X_train, y_train, X_test, y_test, classes = load_mnist('/Users/oswin/Documents/BS/BUG/datasets/mnist')
+
+    X_train = X_train.reshape(X_train.shape[0], -1).astype(np.float32) / 255.
+    Y_train = y_train
+
+    X_test = X_test.reshape(X_test.shape[0], -1).astype(np.float32) / 255.
+    y_test = y_test
+
+    # 创建网络架构
+    net = Sequentual()
+    net.add(Dense(256, activation='relu', batchNormal=True))
+    net.add(Dense(classes, activation="softmax"))
+    net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
+    net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=10,
+            path='mnist_parameters', is_print=False, iterator=20)
+
+
 def predict():
     data, img = pre_pic("/Users/oswin/Documents/BS/Test/test_data/img4.png")
 
@@ -62,13 +61,13 @@ def predict():
     net.load_model(path='mnist_parameters')
     y_hat = net.predict(data.reshape(1, -1))
     idx = y_hat.argmax(-1)
-    print('识别为： %d, 概率为%.2f%%' % (idx, y_hat[0, idx] * 100))
     plt.figure()
+    plt.title('标签为： 3, 识别为： %d, 概率为%.2f%%' % (idx, y_hat[0, idx] * 100), fontproperties=font)
     plt.imshow(img)
     plt.show()
 
 
 if __name__ == '__main__':
     np.random.seed(1)
-    mnist()
-    #predict()
+    #mnist()
+    predict()

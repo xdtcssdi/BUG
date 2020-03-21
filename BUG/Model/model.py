@@ -75,15 +75,12 @@ class Sequentual(object):
     @with_goto
     def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, testing_percentage=0.2,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
-            mode='train', path='data', regularization='L2', lambd=0):
-        assert not isinstance(X_train, p.float)
-        assert not isinstance(X_test, p.float)
-        print("X_train.shape = %s, type = %s" % (X_train.shape, type(X_train)))
-        print("Y_train.shape = %s, type = %s" % (Y_train.shape, type(Y_train)))
+            mode='train', path='data', regularization='L2', lambd=0, is_print=False):
         self.args = {'batch_size': batch_size, 'testing_percentage': testing_percentage,
                      'validation_percentage': validation_percentage, 'learning_rate': learning_rate,
                      'iterator': iterator, 'save_epoch': save_epoch, 'mode': mode,
                      'path': path, 'regularization': regularization, 'lambd': lambd}
+        print_disable = not is_print
         t = 0
         start_it = 0
         if not os.path.exists(path):
@@ -107,11 +104,11 @@ class Sequentual(object):
 
         label.point
         try:
-            with trange(start_it, iterator) as tr:
+            with trange(iterator, initial=start_it) as tr:
                 for self.it in tr:
                     tr.set_description("第%d代:" % (self.it + 1))
                     train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, t,
-                                                 regularization, lambd)
+                                                 regularization, lambd, print_disable)
                     test_cost, acc = self.accuracy(X_test, Y_test, self.layers)
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
                     if (self.it + 1) % save_epoch == 0:
@@ -229,10 +226,10 @@ class Sequentual(object):
         return loss
 
     # mini-batch
-    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, regularization, lambd):
+    def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, regularization, lambd, print_disable=False):
         in_cost = []
         num_complete = X_train.shape[0] // batch_size
-        with trange(num_complete) as tr:
+        with trange(num_complete, disable=print_disable) as tr:
             for b in tr:
                 bs = b * batch_size
                 be = (b + 1) * batch_size
@@ -353,8 +350,8 @@ class LSTM_model(object):
     # 训练
     @with_goto
     def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam',
-            save_epoch=10, filename='train_params', path='data'):
-
+            save_epoch=10, filename='train_params', path='data', is_print=False):
+        print_disable = not is_print
         if not os.path.exists(path):
             os.mkdir(path)
 
@@ -371,11 +368,11 @@ class LSTM_model(object):
         bar = tqdm()
         label.point
         try:
-            bar = tqdm(range(start_it, iterator))
+            bar = trange(iterator, initial=start_it)
 
             for it in bar:
                 cost = []
-                for captions_in, captions_out, features, urls in tqdm(minibatch(data, batch_size=batch_size)):
+                for captions_in, captions_out, features, urls in tqdm(minibatch(data, batch_size=batch_size), disable=print_disable):
 
                     permutation = np.random.permutation(captions_in.shape[0])
                     captions_in = captions_in[permutation]
@@ -420,7 +417,7 @@ class LSTM_model(object):
 
                 if (it + 1) % save_epoch == 0:
                     self.interrupt(path, it)
-                    self.save_model(path, filename)
+                    self.save_model(path)
                     self.predict(data)
 
                 bar.set_postfix(loss=sum(cost) / len(cost))
@@ -430,7 +427,7 @@ class LSTM_model(object):
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
                 self.interrupt(path, cur_it)
-                self.save_model(path, filename)
+                self.save_model(path)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
@@ -484,14 +481,14 @@ class LSTM_model(object):
                 print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
 
     # 保存模型参数
-    def save_model(self, path, filename):
+    def save_model(self, path):
         for layer in self.layers:
-            layer.save_params(path, filename)
+            layer.save_params(path)
 
     # 加载模型参数
     def load_model(self, path, filename):
         for layer in self.layers:
-            layer.load_params(path, filename)
+            layer.load_params(path)
 
 
 class Char_RNN(object):
@@ -513,15 +510,16 @@ class Char_RNN(object):
         self.optimizeMode = optimize
         self.learning_rate = learning_rate
 
-    def fit(self, data, batch_size=32, num_steps=32, iterator=2000, pred_len=50, prefix=None, save_epoch=10):
+    def fit(self, data, batch_size=32, num_steps=32, iterator=2000, pred_len=50, prefix=None, save_epoch=10, is_print=False):
+        print_disable = not is_print
         if prefix is None:
             prefix = []
         loss_obj = SoftCategoricalCross_entropy()
         theta = 1e-2
-        with tqdm(range(1, iterator + 1)) as out_bar:
+        with trange(iterator) as out_bar:
             for i in out_bar:
                 cost = []
-                for X, Y in data_iter_consecutive(data, batch_size, num_steps):
+                for X, Y in tqdm(data_iter_consecutive(data, batch_size, num_steps),disable=print_disable):
                     # 前向传播
                     state = p.zeros([batch_size, self.hidden_unit])  # a0
 
@@ -555,7 +553,7 @@ class Char_RNN(object):
                     self.optimizer.update(i + 1, self.learning_rate)
 
                 out_bar.set_postfix(loss=sum(cost) / len(cost))
-                if i % save_epoch == 0:
+                if (i+1) % save_epoch == 0:
                     print('\n -', self.predict_rnn(prefix, pred_len))
 
     def predict_rnn(self, prefix, num_chars):
