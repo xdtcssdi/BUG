@@ -6,6 +6,7 @@ import re
 import zipfile
 
 import h5py
+import jieba
 import numpy as np
 import requests
 from bs4 import BeautifulSoup
@@ -247,10 +248,6 @@ def load_mnist(path):
     return x_train, y_train, x_test, y_test, 10
 
 
-if __name__ == '__main__':
-    load_mnist()
-
-
 def load_poetry():
     with open('/Users/oswin/Documents/BS/BUG/datasets/poetry.txt', "r", encoding='utf-8') as f:
         data = f.readlines()
@@ -273,24 +270,30 @@ def load_data_jay_lyrics():
         with zin.open('jaychou_lyrics.txt') as f:
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
     corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
+    corpus_chars = list(jieba.cut(corpus_chars, cut_all=False))
+
     idx_to_char = list(set(corpus_chars))
-    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
+    char_to_idx = {ch: i for i, ch in enumerate(idx_to_char)}
     vocab_size = len(char_to_idx)
-    corpus_indices = [char_to_idx[char] for char in corpus_chars]
-    return corpus_indices, char_to_idx, idx_to_char, vocab_size
+    corpus_ix = [char_to_idx[ch] for ch in corpus_chars]
+
+    return corpus_ix, char_to_idx, idx_to_char, vocab_size
 
 
 def load_data_gem_lyrics():
     with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
         with zin.open('gem_lyrics.txt') as f:
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
-    # corpus_chars = re.sub('[0-9a-zA-Z]', '', corpus_chars)
+
     corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
+    corpus_chars = list(jieba.cut(corpus_chars, cut_all=False))
+
     idx_to_char = list(set(corpus_chars))
-    char_to_idx = dict([(char, i) for i, char in enumerate(idx_to_char)])
+    char_to_idx = {ch: i for i, ch in enumerate(idx_to_char)}
     vocab_size = len(char_to_idx)
-    corpus_indices = [char_to_idx[char] for char in corpus_chars]
-    return corpus_indices, char_to_idx, idx_to_char, vocab_size
+    corpus_ix = [char_to_idx[ch] for ch in corpus_chars]
+
+    return corpus_ix, char_to_idx, idx_to_char, vocab_size
 
 
 def data_iter_consecutive(corpus_indices, batch_size, num_steps):
