@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
+font = FontProperties(fname='/Users/oswin/Documents/BS/BUG/datasets/PingFang.ttc', size=16)
 import numpy as np
 from PIL import Image
 
@@ -7,8 +9,6 @@ from BUG.Model.model import Sequentual
 from BUG.function import Loss
 from BUG.function.evaluate import evaluate_many
 from BUG.function.util import load_mnist
-from matplotlib.font_manager import FontProperties
-font = FontProperties(fname='/Users/oswin/Documents/BS/BUG/datasets/PingFang.ttc', size=16)
 np.set_printoptions(threshold=np.inf, suppress=True)
 
 
@@ -51,7 +51,7 @@ def mnist():
     net.add(Dense(classes, activation="softmax"))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
     net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=10,
-            path='mnist_parameters11', is_print=False, iterator=20)
+            path='mnist_parameters', is_print=False, iterator=20)
 
 
 def predict():

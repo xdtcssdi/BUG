@@ -347,7 +347,7 @@ class LSTM_model(object):
     # 训练
     @with_goto
     def fit(self, data, batch_size=15, learning_rate=0.075, iterator=2000, optimize='Adam',
-            save_epoch=10, filename='train_params', path='data', is_print=False):
+            save_epoch=10, path='data', is_print=False):
         print_disable = not is_print
         if not os.path.exists(path):
             os.mkdir(path)
@@ -408,7 +408,7 @@ class LSTM_model(object):
                             self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
                         else:
                             raise ValueError
-
+                    self.optimizer.init_params(self.layers)
                     self.optimizer.update(it + 1, learning_rate)
                 if len(cost) == 0:
                     continue
@@ -490,7 +490,7 @@ class LSTM_model(object):
 
 
 class Char_RNN(object):
-    def __init__(self, hidden_unit, vocab_size, char_to_ix, ix_to_char, cell='rnn'):
+    def __init__(self, hidden_unit, vocab_size, char_to_ix, ix_to_char, word_dim, cell='rnn'):
         self.it = 0
         self.hidden_unit = hidden_unit
         self.vocab_size = vocab_size
@@ -498,12 +498,13 @@ class Char_RNN(object):
         self.ix_to_char = ix_to_char
         self.optimizeMode = None
         self.out_layer = Dense(vocab_size, activation='softmax')
+        self.X_layer = Embedding(vocab_size, word_dim)
         if cell == 'rnn':
             self.rnn_layer = SimpleRNN(hidden_unit)
         elif cell == 'lstm':
             self.rnn_layer = LSTM(char_to_ix, [1, 1, 1], hidden_unit)
         self.optimizer = None
-        self.layers = [self.rnn_layer, self.out_layer]
+        self.layers = [self.rnn_layer, self.out_layer, self.X_layer]
 
     def compile(self, optimize='Adam', learning_rate=0.001):
         self.optimizeMode = optimize
@@ -534,8 +535,8 @@ class Char_RNN(object):
                         # 前向传播
 
                         state = p.zeros([batch_size, self.hidden_unit])  # a0
-
-                        inputs = one_hot(X, self.vocab_size)
+                        inputs = self.X_layer.forward(X)
+                        # inputs = one_hot(X, self.vocab_size)
 
                         state = self.rnn_layer.forward(inputs, state)
                         outputs = self.out_layer.forward(state)  # softmax层
@@ -549,8 +550,8 @@ class Char_RNN(object):
                         dout = loss_obj.backward(target, outputs)
                         dsoft_layer = self.out_layer.backward(dout)
 
-                        self.rnn_layer.backward(dsoft_layer)
-
+                        dx, _ = self.rnn_layer.backward(dsoft_layer)
+                        self.X_layer.backward(dx)
                         if self.optimizer is None:
                             if self.optimizeMode == 'Adam':
                                 self.optimizer = Optimize.Adam(self.layers, theta)
@@ -589,10 +590,10 @@ class Char_RNN(object):
             output = []
         for t in range(num_chars + len(prefix) - 1):
             if t == 0:
-                X = p.zeros([1, 1, self.vocab_size])
+                X = p.zeros([1, 1], dtype=int)
             else:
-                X = one_hot(p.array([[output[-1]]]), self.vocab_size).reshape(1, 1, -1)
-
+                X = p.array([[output[-1]]]).reshape(1, -1)
+            X = self.X_layer.forward(X)
             state = self.rnn_layer.forward(X, state).reshape(1, -1)
             Y = self.out_layer.forward(state)
 
