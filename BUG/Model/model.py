@@ -1,3 +1,4 @@
+import math
 import os.path
 import pickle
 
@@ -17,6 +18,7 @@ class Sequentual(object):
 
     def __init__(self):
         self.layers = []
+        self.accs=[]
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimizer = None
@@ -107,10 +109,13 @@ class Sequentual(object):
             with trange(iterator, initial=start_it) as tr:
                 for self.it in tr:
                     tr.set_description("第%d代:" % (self.it + 1))
-                    train_loss = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, self.it,
+                    train_loss, train_acc = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, self.it,
                                                  regularization, lambd, print_disable)
-                    test_cost, acc = self.accuracy(X_test, Y_test, self.layers)
-                    tr.set_postfix(batch_size=batch_size, train_loss=train_loss, test_loss=test_cost, acc=acc)
+                    val_cost, val_acc = self.accuracy(X_test, Y_test, self.layers)
+                    self.costs.append([train_loss, val_cost])
+                    self.accs.append([train_acc , val_acc])
+                    tr.set_postfix(batch_size=batch_size, train_loss=train_loss, train_acc=train_acc,
+                                   val_loss=val_cost, val_acc=val_acc)
                     if (self.it + 1) % save_epoch == 0:
                         self.save_model(path, self.it)
         except KeyboardInterrupt:
@@ -190,6 +195,8 @@ class Sequentual(object):
         output = x_train
         for layer in self.layers:
             output = layer.forward(output, None, mode)
+        # 精度计算
+        train_acc = self.accuracy(output, y_train, self.layers, True)
         # 损失计算
         loss = self.cost.forward(y_train, output) + self.compute_reg_loss(batch_size, regularization, lambd)
         # -------
@@ -221,12 +228,13 @@ class Sequentual(object):
         #  更新参数
         self.optimizer.init_params(self.layers)
         self.optimizer.update(t+1, learning_rate)
-        return loss
+        return loss, train_acc
 
     # mini-batch
     def mini_batch(self, X_train, Y_train, mode, learning_rate, batch_size, t, regularization, lambd,
                    print_disable=False):
         in_cost = []
+        in_acc = []
         num_complete = X_train.shape[0] // batch_size
         with trange(num_complete, disable=print_disable) as tr:
             for b in tr:
@@ -236,21 +244,24 @@ class Sequentual(object):
                 x_train = X_train[bs:be][permutation]
                 y_train = Y_train[bs:be][permutation]
 
-                cost = self.train_step(x_train, y_train, mode, learning_rate, t, regularization, lambd)
-                tr.set_postfix(loss=cost)
+                cost, train_acc = self.train_step(x_train, y_train, mode, learning_rate, t, regularization, lambd)
+
+                tr.set_postfix(loss=cost, acc=train_acc)
                 in_cost.append(cost)
+                in_acc.append(train_acc)
 
             s = num_complete * batch_size
             if s < X_train.shape[0]:
                 permutation = np.random.permutation(X_train.shape[0] - num_complete * batch_size)
 
-                cost = self.train_step(X_train[num_complete * batch_size:][permutation],
+                cost, train_acc = self.train_step(X_train[num_complete * batch_size:][permutation],
                                        Y_train[num_complete * batch_size:][permutation],
                                        mode, learning_rate, t, regularization, lambd)
-                tr.set_postfix(loss=cost)
+                tr.set_postfix(loss=cost, acc=train_acc)
                 in_cost.append(cost)
+                in_acc.append(train_acc)
 
-        return sum(in_cost) / len(in_cost)
+        return sum(in_cost) / len(in_cost), sum(in_acc) / len(in_acc)
 
     # 网络详情
     def summary(self):
@@ -531,9 +542,9 @@ class Char_RNN(object):
             with trange(iterator, initial=start_it) as out_bar:
                 for self.it in out_bar:
                     cost = []
-                    for X, Y in tqdm(data_iter_consecutive(data, batch_size, num_steps), disable=print_disable):
+                    in_bar = tqdm(data_iter_consecutive(data, batch_size, num_steps), disable=print_disable)
+                    for X, Y in in_bar:
                         # 前向传播
-
                         state = p.zeros([batch_size, self.hidden_unit])  # a0
                         inputs = self.X_layer.forward(X)
                         # inputs = one_hot(X, self.vocab_size)
@@ -544,6 +555,7 @@ class Char_RNN(object):
                         # 计算损失
                         target = Y.reshape(None, )
                         curr_loss = loss_obj.forward(target, outputs)
+                        in_bar.set_postfix(perplexity=math.exp(curr_loss), loss=curr_loss)
                         cost.append(curr_loss)
 
                         # 反向传播
@@ -563,8 +575,9 @@ class Char_RNN(object):
                                 raise ValueError
                         self.optimizer.init_params(self.layers)
                         self.optimizer.update(self.it+1, self.learning_rate)
-
-                    out_bar.set_postfix(loss=sum(cost) / len(cost))
+                    loss = sum(cost) / len(cost)
+                    perplexity = math.exp(loss)
+                    out_bar.set_postfix(perplexity=perplexity, loss=loss)
                     if (self.it + 1) % save_epoch == 0:
                         self.save_model(path, self.it)
                         print('\n -', self.predict_rnn(prefix, pred_len))

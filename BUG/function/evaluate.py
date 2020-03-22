@@ -3,7 +3,10 @@ from BUG.load_package import p
 
 
 # 多输出评估
-def evaluate_many(A, Y_train, layers):
+def evaluate_many(A, Y_train, layers, predict=False):
+    if predict:
+        return (p.argmax(A, -1) == Y_train).sum() / A.shape[0]
+
     for layer in layers:
         A = layer.forward(A, None, mode='test')
     loss = SoftCategoricalCross_entropy().forward(Y_train, A)
@@ -11,7 +14,10 @@ def evaluate_many(A, Y_train, layers):
 
 
 # 单输出评估
-def evaluate_one(A, Y_train, layers):
+def evaluate_one(A, Y_train, layers, predict=False):
+    if predict:
+        return ((A > 0.5) == Y_train).sum() / A.shape[0]
+
     for layer in layers:
         A = layer.forward(A, None, mode='test')
     loss = CrossEntry().forward(Y_train, A)

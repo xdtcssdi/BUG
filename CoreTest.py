@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-font = FontProperties(fname='/Users/oswin/Documents/BS/BUG/datasets/PingFang.ttc', size=16)
 import numpy as np
 from PIL import Image
 
@@ -9,6 +8,8 @@ from BUG.Model.model import Sequentual
 from BUG.function import Loss
 from BUG.function.evaluate import evaluate_many
 from BUG.function.util import load_mnist
+
+font = FontProperties(fname='/Users/oswin/Documents/BS/BUG/datasets/PingFang.ttc', size=16)
 np.set_printoptions(threshold=np.inf, suppress=True)
 
 
@@ -35,6 +36,29 @@ def pre_pic(picName):
     return img_ready, img
 
 
+def show_loss(costs, accs):
+    train_cost = []
+    val_cost = []
+    train_acc = []
+    val_acc = []
+    for loss, acc in zip(costs, accs):
+        train_cost.append(loss[0])
+        val_cost.append(loss[1])
+        train_acc.append(acc[0])
+        val_acc.append(acc[1])
+    x_axis = len(costs)
+    plt.title('Result Analysis')
+    plt.plot(range(x_axis), train_cost, color='green', label='train_cost: ' + str(train_cost[-1]))
+    plt.plot(range(x_axis), val_cost, color='red', label='val_cost: ' + str(val_cost[-1]))
+    plt.plot(range(x_axis), train_acc,  color='skyblue', label='train_acc: ' + str(train_acc[-1]))
+    plt.plot(range(x_axis), val_acc, color='blue', label='val_acc: ' + str(val_acc[-1]))
+    plt.legend()  # 显示图例
+
+    plt.xlabel('iteration times')
+    plt.ylabel('rate')
+    plt.show()
+
+
 def mnist():
     # 数据预处理
     X_train, y_train, X_test, y_test, classes = load_mnist('/Users/oswin/Documents/BS/BUG/datasets/mnist')
@@ -47,11 +71,13 @@ def mnist():
 
     # 创建网络架构
     net = Sequentual()
-    net.add(Dense(256, activation='relu', batchNormal=True))
-    net.add(Dense(classes, activation="softmax"))
+    net.add(Dense(256, activation='relu', batchNormal=False))
+    net.add(Dense(64, activation='relu', batchNormal=False))
+    net.add(Dense(classes, activation="softmax", batchNormal=False))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
-    net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=10,
-            path='mnist_parameters', is_print=False, iterator=20)
+    net.fit(X_train, Y_train, X_test, y_test, batch_size=512, learning_rate=0.01, save_epoch=100,
+            path='mnist_parameters', is_print=False, iterator=50, lambd=0.15)
+    show_loss(net.costs, net.accs)
 
 
 def predict():
@@ -70,4 +96,4 @@ def predict():
 if __name__ == '__main__':
     np.random.seed(1)
     mnist()
-    #predict()
+    # predict()

@@ -1,8 +1,5 @@
 import random
-
 import matplotlib.pyplot as plt
-from tensorflow import keras
-
 from BUG.Layers.Layer import Convolution, Pooling, Dense
 from BUG.Model.model import Sequentual
 from BUG.function import Loss
@@ -27,11 +24,10 @@ def LeNet5():
     net.add(Convolution(filter_count=64, filter_shape=(3, 3), batchNormal=True))
     net.add(Pooling(filter_shape=(2, 2), stride=2, mode='max', paddingMode='same'))
     net.add(Dense(128, batchNormal=True, flatten=True, activation='relu', keep_prob=0.5))
-    net.add(Dense(classes, batchNormal=False, activation="softmax"))
+    net.add(Dense(classes, batchNormal=True, activation="softmax"))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
     net.fit(X_train, Y_train, X_test, Y_test, batch_size=128, iterator=1000, learning_rate=0.0075, is_print=False,
-            save_epoch=10,
-            path='fashion_mnist_parameters')
+            save_epoch=100000, path='fashion_mnist_parameters1')
 
 def predict():
     _, __, test_images, test_labels, classes = load_mnist('/Users/oswin/Documents/BS/'
@@ -59,5 +55,5 @@ def export_result(num):
 
 if __name__ == '__main__':
     p.random.seed(1)
-    #LeNet5()
-    predict()
+    LeNet5()
+    #predict()

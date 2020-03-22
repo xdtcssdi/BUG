@@ -106,3 +106,6 @@ venv.bak/
 /images/
 /BUG/datasets/
 /Test/test_data/
+/Test/coco_parameters/
+/Test/fashion_mnist_parameters/
+/Test/mnist_parameters/

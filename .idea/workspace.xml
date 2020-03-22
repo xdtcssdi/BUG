@@ -26,15 +26,18 @@
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Dense_2_struct.obj" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Pooling_1_struct.obj" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/caches.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Adam_s.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Adam_v.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_1.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_1_batch_normal.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_1_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_2.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/Dense_2_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Test/mnist_parameters/caches.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/Adam_s.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/Adam_v.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/Dense_1.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/Dense_1_struct.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/Embedding.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/Embedding_struct.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/SimpleRNN.npz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/SimpleRNN_struct.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gem_params/caches.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/Model/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Model/model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/cifar-10-python/batches.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/cifar-10-python/data_batch_1" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/cifar-10-python/data_batch_2" beforeDir="false" />
@@ -43,7 +46,11 @@
       <change beforePath="$PROJECT_DIR$/BUG/datasets/cifar-10-python/data_batch_5" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/cifar-10-python/readme.html" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/cifar-10-python/test_batch" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/function/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/util.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BUG/function/evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/evaluate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CoreTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/Char_rnn_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Test/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +106,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.util">
+  <component name="RunManager" selected="Python.Char_rnn_test">
     <configuration name="BUG" type="PythonConfigurationType" factoryName="Python">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -130,7 +137,7 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Test" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
@@ -144,6 +151,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="Char_rnn_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="BUG" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Char_rnn_test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="CoreTest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -188,7 +217,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="LSTM_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -196,34 +225,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Test" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/LSTM_test.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="RNNTest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="BUG" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/RNNTest.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Test/test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -256,19 +263,19 @@
     </configuration>
     <list>
       <item itemvalue="Python.BUG" />
-      <item itemvalue="Python.CNNTest" />
       <item itemvalue="Python.CoreTest" />
-      <item itemvalue="Python.LSTM_test" />
-      <item itemvalue="Python.RNNTest" />
       <item itemvalue="Python.util" />
+      <item itemvalue="Python.test" />
+      <item itemvalue="Python.Char_rnn_test" />
+      <item itemvalue="Python.CNNTest" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.util" />
-        <item itemvalue="Python.RNNTest" />
-        <item itemvalue="Python.LSTM_test" />
-        <item itemvalue="Python.CoreTest" />
+        <item itemvalue="Python.Char_rnn_test" />
         <item itemvalue="Python.CNNTest" />
+        <item itemvalue="Python.CoreTest" />
+        <item itemvalue="Python.test" />
+        <item itemvalue="Python.util" />
       </list>
     </recent_temporary>
   </component>
@@ -291,7 +298,8 @@
       <workItem from="1584773240870" duration="1450000" />
       <workItem from="1584781078985" duration="18406000" />
       <workItem from="1584835262288" duration="4372000" />
-      <workItem from="1584850914485" duration="1362000" />
+      <workItem from="1584850914485" duration="10602000" />
+      <workItem from="1584879980755" duration="7312000" />
     </task>
     <task id="LOCAL-00001" summary="doc">
       <created>1584637343888</created>
@@ -335,7 +343,14 @@
       <option name="project" value="LOCAL" />
       <updated>1584845517418</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="添加jieba 分词">
+      <created>1584853089773</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1584853089773</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -365,45 +380,46 @@
     <MESSAGE value="CNNTest finish" />
     <MESSAGE value="RNN Test" />
     <MESSAGE value="Finish" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finish" />
+    <MESSAGE value="添加jieba 分词" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加jieba 分词" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1582362778121">
+    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1584858002203">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1280.800@0.0.1280.800" timestamp="1582362778121" />
+    <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1280.800@0.0.1280.800" timestamp="1584858002203" />
     <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1582361025956">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1582361025956" />
-    <state x="223" y="0" key="CommitChangelistDialog2" timestamp="1584845516133">
+    <state x="223" y="0" key="CommitChangelistDialog2" timestamp="1584853088919">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="223" y="0" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1584845516133" />
+    <state x="223" y="0" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1584853088919" />
     <state x="223" y="23" key="CommitChangelistDialog2/0.23.1280.719@0.23.1280.719" timestamp="1584802829116" />
     <state width="1280" height="438" key="DebuggerActiveHint" timestamp="1584845222821">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state width="1280" height="438" key="DebuggerActiveHint/0.0.1280.800@0.0.1280.800" timestamp="1584845222821" />
-    <state width="1238" height="278" key="GridCell.Tab.0.bottom" timestamp="1584852374455">
+    <state width="1238" height="189" key="GridCell.Tab.0.bottom" timestamp="1584894353636">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="278" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1584852374455" />
+    <state width="1238" height="189" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1584894353636" />
     <state width="1238" height="235" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1584809951261" />
-    <state width="1238" height="278" key="GridCell.Tab.0.center" timestamp="1584852374454">
+    <state width="1238" height="189" key="GridCell.Tab.0.center" timestamp="1584894353633">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="278" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1584852374454" />
+    <state width="1238" height="189" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1584894353633" />
     <state width="1238" height="235" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1584809951260" />
-    <state width="1238" height="278" key="GridCell.Tab.0.left" timestamp="1584852374453">
+    <state width="1238" height="189" key="GridCell.Tab.0.left" timestamp="1584894353598">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="278" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1584852374453" />
+    <state width="1238" height="189" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1584894353598" />
     <state width="1238" height="235" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1584809951259" />
-    <state width="1238" height="278" key="GridCell.Tab.0.right" timestamp="1584852374455">
+    <state width="1238" height="189" key="GridCell.Tab.0.right" timestamp="1584894353635">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="278" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1584852374455" />
+    <state width="1238" height="189" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1584894353635" />
     <state width="1238" height="235" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1584809951260" />
     <state width="1238" height="247" key="GridCell.Tab.1.bottom" timestamp="1584850678882">
       <screen x="0" y="0" width="1280" height="800" />
@@ -429,10 +445,10 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="141" y="39" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1582362688529" />
-    <state x="240" y="140" key="Vcs.Push.Dialog.v2" timestamp="1584845519038">
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2" timestamp="1584853093414">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1584845519038" />
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1584853093414" />
     <state x="240" y="149" key="Vcs.Push.Dialog.v2/0.23.1280.719@0.23.1280.719" timestamp="1584802831203" />
     <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1582448652037">
       <screen x="0" y="0" width="1280" height="800" />
@@ -440,14 +456,15 @@
     <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1582448652037" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1584794756307" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$util.coverage" NAME="util Coverage Results" MODIFIED="1584851871925" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/BUG/function" />
-    <SUITE FILE_PATH="coverage/BS$CoreTest.coverage" NAME="CoreTest Coverage Results" MODIFIED="1584798200169" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
-    <SUITE FILE_PATH="coverage/BS$test.coverage" NAME="test Coverage Results" MODIFIED="1582434188869" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1584886750440" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/BS$CoreTest.coverage" NAME="CoreTest Coverage Results" MODIFIED="1584884332903" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BS$test.coverage" NAME="test Coverage Results" MODIFIED="1584854267766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1582444069203" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$LSTM_test.coverage" NAME="LSTM_test Coverage Results" MODIFIED="1584844126935" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BS$RNNTest.coverage" NAME="RNNTest Coverage Results" MODIFIED="1584845298724" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BS$CoreTest__1_.coverage" NAME="CoreTest (1) Coverage Results" MODIFIED="1582443983764" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$im2col.coverage" NAME="im2col Coverage Results" MODIFIED="1584671132071" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/BUG/Layers" />
+    <SUITE FILE_PATH="coverage/BS$Char_rnn_test.coverage" NAME="Char_rnn_test Coverage Results" MODIFIED="1584894353547" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
