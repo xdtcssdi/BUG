@@ -103,32 +103,33 @@ class Sequentual(object):
         #  -------------
 
         is_continue = False  # flag
-
+        cur_it = start_it
         label.point
         try:
             with trange(iterator, initial=start_it) as tr:
-                for self.it in tr:
-                    tr.set_description("第%d代:" % (self.it + 1))
-                    train_loss, train_acc = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, self.it,
+                for it in tr:
+                    cur_it = it
+                    tr.set_description("第%d代:" % (it + start_it))
+                    train_loss, train_acc = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, it,
                                                  regularization, lambd, print_disable)
                     val_cost, val_acc = self.accuracy(X_test, Y_test, self.layers)
                     self.costs.append([train_loss, val_cost])
-                    self.accs.append([train_acc , val_acc])
+                    self.accs.append([train_acc, val_acc])
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, train_acc=train_acc,
                                    val_loss=val_cost, val_acc=val_acc)
-                    if (self.it + 1) % save_epoch == 0:
-                        self.save_model(path, self.it)
+                    if (it + 1) % save_epoch == 0:
+                        self.save_model(path, it + start_it)
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.save_model(path, self.it)
+                self.save_model(path, cur_it + start_it)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
             else:
                 print('结束执行')
         if is_continue:
-            start_it = self.it
+            start_it = cur_it
             is_continue = False
             goto.point
 
@@ -178,9 +179,17 @@ class Sequentual(object):
         self.accuracy = accuracy
         # 优化模式 str
         self.optimizeMode = optimize
+        if self.optimizer is None:
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam()
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum()
+            elif self.optimizeMode == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent()
+            else:
+                raise ValueError
         # 初始化损失结构
         self.cost = lossMode
-
         for i in range(1, self.getLayerNumber()):
             self.layers[i].pre_layer = self.layers[i - 1]
             self.layers[i - 1].next_layer = self.layers[i]
@@ -214,16 +223,6 @@ class Sequentual(object):
             for layer in self.layers:
                 if not isinstance(layer, Pooling):
                     layer.gradients['W'] += lambd / batch_size * layer.parameters['W']
-
-        if self.optimizer is None:
-            if self.optimizeMode == 'Adam':
-                self.optimizer = Optimize.Adam(self.layers)
-            elif self.optimizeMode == 'Momentum':
-                self.optimizer = Optimize.Momentum(self.layers)
-            elif self.optimizeMode == 'BGD':
-                self.optimizer = Optimize.BatchGradientDescent(self.layers)
-            else:
-                raise ValueError
 
         #  更新参数
         self.optimizer.init_params(self.layers)
@@ -322,13 +321,14 @@ class Sequentual(object):
 
             self.optimizeMode = pickle.load(f)
             if self.optimizeMode == 'Adam':
-                self.optimizer = Optimize.Adam(self.layers)
+                self.optimizer = Optimize.Adam()
             elif self.optimizeMode == 'Momentum':
-                self.optimizer = Optimize.Momentum(self.layers)
+                self.optimizer = Optimize.Momentum()
             elif self.optimizeMode == 'BGD':
-                self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                self.optimizer = Optimize.BatchGradientDescent()
             else:
                 raise ValueError
+            self.optimizer.init_params(self.layers)
             self.optimizer.load_parameters(path)
             self.is_normalizing = pickle.load(f)
             self.ndim = pickle.load(f)
@@ -369,7 +369,16 @@ class LSTM_model(object):
             with open(path + os.sep + 'caches.obj', 'rb+') as f:
                 start_it = pickle.load(f)
             self.load_model(path)
-        theta = 1e-2
+
+        if self.optimizer is None:
+            if optimize == 'Adam':
+                self.optimizer = Optimize.Adam()
+            elif optimize == 'Momentum':
+                self.optimizer = Optimize.Momentum()
+            elif optimize == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent()
+            else:
+                raise ValueError
         is_continue = False
         cur_it = 0
         in_bar = tqdm()
@@ -409,16 +418,6 @@ class LSTM_model(object):
                     self.A0_layer.backward(da0)
 
                     #  更新参数
-
-                    if self.optimizer is None:
-                        if optimize == 'Adam':
-                            self.optimizer = Optimize.Adam(self.layers, theta)
-                        elif optimize == 'Momentum':
-                            self.optimizer = Optimize.Momentum(self.layers, theta)
-                        elif optimize == 'BGD':
-                            self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
-                        else:
-                            raise ValueError
                     self.optimizer.init_params(self.layers)
                     self.optimizer.update(it + 1, learning_rate)
                 if len(cost) == 0:
@@ -502,7 +501,8 @@ class LSTM_model(object):
 
 class Char_RNN(object):
     def __init__(self, hidden_unit, vocab_size, char_to_ix, ix_to_char, word_dim, cell='rnn'):
-        self.it = 0
+        self.costs = []
+        self.perplexity = []
         self.hidden_unit = hidden_unit
         self.vocab_size = vocab_size
         self.char_to_ix = char_to_ix
@@ -520,6 +520,15 @@ class Char_RNN(object):
     def compile(self, optimize='Adam', learning_rate=0.001):
         self.optimizeMode = optimize
         self.learning_rate = learning_rate
+        if self.optimizer is None:
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam()
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum()
+            elif self.optimizeMode == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent()
+            else:
+                raise ValueError
 
     @with_goto
     def fit(self, data, batch_size=32, path='data', num_steps=32, iterator=2000, pred_len=50, prefix=None,
@@ -530,24 +539,25 @@ class Char_RNN(object):
             os.mkdir(path)
         if os.path.isfile(path + os.sep + 'caches.obj'):
             start_it = self.load_model(path)
-
+            self.rnn_layer, self.out_layer, self.X_layer = self.layers
+        print(start_it)
         print_disable = not is_print
         if prefix is None:
             prefix = []
         loss_obj = SoftCategoricalCross_entropy()
-        theta = 1e-2
         is_continue = False
+        cur_it = start_it
         label.point
         try:
             with trange(iterator, initial=start_it) as out_bar:
-                for self.it in out_bar:
+                for it in out_bar:
+                    cur_it = it
                     cost = []
                     in_bar = tqdm(data_iter_consecutive(data, batch_size, num_steps), disable=print_disable)
                     for X, Y in in_bar:
                         # 前向传播
                         state = p.zeros([batch_size, self.hidden_unit])  # a0
                         inputs = self.X_layer.forward(X)
-                        # inputs = one_hot(X, self.vocab_size)
 
                         state = self.rnn_layer.forward(inputs, state)
                         outputs = self.out_layer.forward(state)  # softmax层
@@ -564,34 +574,28 @@ class Char_RNN(object):
 
                         dx, _ = self.rnn_layer.backward(dsoft_layer)
                         self.X_layer.backward(dx)
-                        if self.optimizer is None:
-                            if self.optimizeMode == 'Adam':
-                                self.optimizer = Optimize.Adam(self.layers, theta)
-                            elif self.optimizeMode == 'Momentum':
-                                self.optimizer = Optimize.Momentum(self.layers, theta)
-                            elif self.optimizeMode == 'BGD':
-                                self.optimizer = Optimize.BatchGradientDescent(self.layers, theta)
-                            else:
-                                raise ValueError
+
                         self.optimizer.init_params(self.layers)
-                        self.optimizer.update(self.it+1, self.learning_rate)
+                        self.optimizer.update(it+1, self.learning_rate)
                     loss = sum(cost) / len(cost)
+                    self.costs.append(loss)
                     perplexity = math.exp(loss)
+                    self.perplexity.append(perplexity)
                     out_bar.set_postfix(perplexity=perplexity, loss=loss)
-                    if (self.it + 1) % save_epoch == 0:
-                        self.save_model(path, self.it)
+                    if (it + 1) % save_epoch == 0:
+                        self.save_model(path, it + start_it)
                         print('\n -', self.predict_rnn(prefix, pred_len))
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.save_model(path, self.it)
+                self.save_model(path, cur_it + start_it)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
             else:
                 print('结束执行')
         if is_continue:
-            start_it = self.it
+            start_it = cur_it
             is_continue = False
             goto.point
 
@@ -619,28 +623,41 @@ class Char_RNN(object):
 
     # 保存模型参数
     def save_model(self, path, start_it):
+        names = []
         for layer in self.layers:
-            layer.save_params(path)
+            names.append(layer.save_params(path))
+        self.optimizer.save_parameters(path)
         with open(path + os.sep + 'caches.obj', 'wb') as f:
+            pickle.dump(names, f)
             pickle.dump(start_it, f)
             pickle.dump(self.optimizeMode, f)
-        self.optimizer.save_parameters(path)
+            pickle.dump(self.costs, f)
 
     # 加载模型参数
     def load_model(self, path):
-        for layer in self.layers:
-            layer.load_params(path)
+        Dense.count = 0
+        self.layers.clear()
         with open(path + os.sep + 'caches.obj', 'rb') as f:
+            layers = pickle.load(f)
+
+            for layer_name in layers:
+                with open(path + os.sep + layer_name + '_struct.obj', 'rb') as ff:
+                    layer = generate_layer(layer_name.split('_')[0], pickle.load(ff))
+                    layer.load_params(path)
+                    self.layers.append(layer)
+
             start_it = pickle.load(f)
             self.optimizeMode = pickle.load(f)
             if self.optimizeMode == 'Adam':
-                self.optimizer = Optimize.Adam(self.layers)
+                self.optimizer = Optimize.Adam()
             elif self.optimizeMode == 'Momentum':
-                self.optimizer = Optimize.Momentum(self.layers)
+                self.optimizer = Optimize.Momentum()
             elif self.optimizeMode == 'BGD':
-                self.optimizer = Optimize.BatchGradientDescent(self.layers)
+                self.optimizer = Optimize.BatchGradientDescent()
             else:
                 raise ValueError
-
+            self.costs = pickle.load(f)
+        self.perplexity = [math.exp(cost) for cost in self.costs]
+        self.optimizer.init_params(self.layers)
         self.optimizer.load_parameters(path)
         return start_it

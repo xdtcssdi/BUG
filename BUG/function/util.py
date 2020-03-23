@@ -271,7 +271,7 @@ def load_data_jay_lyrics():
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
     corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
     corpus_chars = list(jieba.cut(corpus_chars, cut_all=False))
-
+    corpus_chars.sort()
     idx_to_char = list(set(corpus_chars))
     char_to_idx = {ch: i for i, ch in enumerate(idx_to_char)}
     vocab_size = len(char_to_idx)
@@ -280,15 +280,28 @@ def load_data_jay_lyrics():
     return corpus_ix, char_to_idx, idx_to_char, vocab_size
 
 
+def load_data_ana():
+    with open('/Users/oswin/Documents/BS/BUG/datasets/anna.txt', 'r') as f:
+        text = f.read()
+    vocab = set(text)
+    vocab_to_int = {c: i for i, c in enumerate(vocab)}
+    int_to_vocab = dict(enumerate(vocab))
+    encoded = np.array([vocab_to_int[c] for c in text], dtype=np.int32)
+    return encoded, vocab_to_int, int_to_vocab, len(vocab)
+
+
 def load_data_gem_lyrics():
-    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/gem_lyrics.zip') as zin:
+    path = '/Users/oswin/Documents/BS/BUG/datasets/'
+    with zipfile.ZipFile(os.path.join(path, 'gem_lyrics.zip')) as zin:
         with zin.open('gem_lyrics.txt') as f:
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
-
     corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
-    corpus_chars = list(jieba.cut(corpus_chars, cut_all=False))
 
+    # corpus_chars = list(jieba.cut(corpus_chars, cut_all=False))
+
+    # corpus_chars.sort()
     idx_to_char = list(set(corpus_chars))
+    idx_to_char.sort()
     char_to_idx = {ch: i for i, ch in enumerate(idx_to_char)}
     vocab_size = len(char_to_idx)
     corpus_ix = [char_to_idx[ch] for ch in corpus_chars]

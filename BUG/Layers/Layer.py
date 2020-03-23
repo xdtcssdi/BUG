@@ -349,10 +349,10 @@ class Pooling(Layer):
 
 
 class SimpleRNN(Layer):
-    def __init__(self, num_hiddens):
+    def __init__(self, unit_number):
         super(SimpleRNN, self).__init__()
-        self.unit_number = num_hiddens
-        self.args = {'unit_number': num_hiddens}
+        self.unit_number = unit_number
+        self.args = {'unit_number': unit_number}
         self.name = 'SimpleRNN'
 
     def init_params(self, nx):
@@ -464,9 +464,16 @@ class LSTM(Layer):
 
     def init_params(self, n_x):
         if 'Wx' not in self.parameters:
-            self.parameters['Wx'] = p.random.randn(n_x, 4 * self.n_a) / p.sqrt(n_x)
-            self.parameters['Wa'] = p.random.randn(self.n_a, 4 * self.n_a) / p.sqrt(self.n_a)
-            self.parameters['b'] = p.zeros(4 * self.n_a)
+            self.parameters['Wx'] = self.orthogonal([n_x, 4 * self.n_a])
+            self.parameters['Wa'] = self.orthogonal([self.n_a, 4 * self.n_a])
+            self.parameters['b'] = p.ones(4 * self.n_a)
+
+    def orthogonal(self, shape):
+        flat_shape = (shape[0], numpy.prod(shape[1:]))
+        a = numpy.random.normal(0.0, 1.0, flat_shape)
+        u, _, v = numpy.linalg.svd(a, full_matrices=False)
+        q = u if u.shape == flat_shape else v
+        return p.array(q.reshape(shape))
 
     def forward(self, x, a0=None, mode='train'):
         """
@@ -586,7 +593,7 @@ class Embedding(Layer):
         self.args = {'vocab_size': vocab_size, 'word_dim': word_dim}
 
     def init_params(self, dim):
-        self.parameters['W'] = p.random.randn(*dim) / 100
+        self.parameters['W'] = p.random.randn(*dim)
 
     def forward(self, x, Y=None, mode='train'):
         self.x = x
@@ -610,7 +617,7 @@ class Embedding(Layer):
         if not os.path.exists(path):
             os.mkdir(path)
         save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name, W=self.parameters['W'])
+        p.savez_compressed(path + os.sep + self.name, **self.parameters)
         return self.name
 
     def load_params(self, path):

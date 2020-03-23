@@ -4,10 +4,11 @@ from BUG.Layers.Layer import Pooling
 from BUG.load_package import p
 import numpy
 
+
 class Optimize:
-    def __init__(self, layers, theta=1e-2):
-        self.layers = layers
+    def __init__(self, theta=1e-2):
         self.theta = theta
+        self.layers = None
 
     def update(self, *arg):
         raise NotImplementedError
@@ -23,13 +24,13 @@ class Optimize:
 
 
 class Momentum(Optimize):
-    def __init__(self, layers, theta=1e-2):
-        super(Momentum, self).__init__(layers, theta)
+    def __init__(self, theta=1e-2):
+        super(Momentum, self).__init__(theta)
         self.name = 'Momentum'
         self.v = {}
 
     def init_params(self, layers):
-        if self.v:
+        if self.layers is not None:
             return
         self.layers = layers
         for i in range(len(layers)):
@@ -75,14 +76,14 @@ class Momentum(Optimize):
 
 
 class Adam(Optimize):
-    def __init__(self, layers, theta=1e-2):
-        super(Adam, self).__init__(layers, theta=1e-2)
+    def __init__(self, theta=1e-2):
+        super(Adam, self).__init__(theta)
         self.name = 'Adam'
         self.v = {}
         self.s = {}
 
     def init_params(self, layers):
-        if self.v:
+        if self.layers is not None:
             return
         self.layers = layers
         for i in range(len(layers)):
@@ -148,8 +149,8 @@ class Adam(Optimize):
 
 class BatchGradientDescent(Optimize):
 
-    def __init__(self, layers, theta=1e-2):
-        super(BatchGradientDescent, self).__init__(layers, theta)
+    def __init__(self, theta=1e-2):
+        super(BatchGradientDescent, self).__init__(theta)
 
     def save_parameters(self, path):
         pass
@@ -158,7 +159,8 @@ class BatchGradientDescent(Optimize):
         pass
 
     def init_params(self, layers):
-        self.layers = layers
+        if self.layers is None:
+            self.layers = layers
 
     def update(self, t, learning_rate):
         for layer in self.layers:
