@@ -211,6 +211,7 @@ class Dense(Layer):
                      'batchNormal': batchNormal, 'flatten': flatten, 'keep_prob': keep_prob}
 
     def forward(self, x, Y=None, mode='train'):
+        self.mode = mode
         self.x_shape = x.shape
         if self.flatten:
             x = x.reshape(x.shape[0], -1)
@@ -226,14 +227,14 @@ class Dense(Layer):
         if self.batch_normal:
             self.Z = self.batch_normal.forward(self.Z, mode)
         A = ac_get(self.Z, self.activation)
-        if self.keep_prob < 1.:
+        if self.keep_prob < 1. and mode == 'train':
             self.drop_mask = p.random.rand(*self.Z.shape)
             return A * self.drop_mask / self.keep_prob
         else:
             return A
 
     def backward(self, dout):
-        if self.keep_prob < 1.:
+        if self.keep_prob < 1. and self.mode == 'train':
             dout = dout * self.drop_mask / self.keep_prob
         dout = ac_get_grad(dout, self.Z, self.activation)
         if self.batch_normal:

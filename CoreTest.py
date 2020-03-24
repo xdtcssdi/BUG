@@ -47,7 +47,7 @@ def show_loss(costs, accs):
         train_acc.append(acc[0])
         val_acc.append(acc[1])
     x_axis = len(costs)
-    plt.title('Result Analysis')
+    plt.title('batch size 1')
     plt.plot(range(x_axis), train_cost, color='green', label='train_cost: ' + str(train_cost[-1]))
     plt.plot(range(x_axis), val_cost, color='red', label='val_cost: ' + str(val_cost[-1]))
     plt.plot(range(x_axis), train_acc,  color='skyblue', label='train_acc: ' + str(train_acc[-1]))
@@ -73,10 +73,10 @@ def mnist():
     net = Sequentual()
     net.add(Dense(256, activation='relu', batchNormal=False))
     net.add(Dense(64, activation='relu', batchNormal=False))
-    net.add(Dense(classes, activation="softmax", batchNormal=False))
+    net.add(Dense(classes, activation="softmax", batchNormal=True))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
-    net.fit(X_train, Y_train, X_test, y_test, batch_size=512, learning_rate=0.01, save_epoch=100,
-            path='mnist_parameters', is_print=False, iterator=50, lambd=0.15)
+    net.fit(X_train, Y_train, X_test, y_test, batch_size=1, learning_rate=0.001, save_epoch=100,
+            path='mnist_parameters', is_print=False, iterator=30)
     show_loss(net.costs, net.accs)
 
 

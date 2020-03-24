@@ -459,7 +459,7 @@ class LSTM_model(object):
         captions = l1.null_code * p.ones((N, max_length), dtype=p.int32)
 
         N, D = features.shape
-        affine_out = d1.forward(features)
+        affine_out = d1.forward(features, mode='test')
         prev_word_idx = [l1.start_code] * N
         prev_h = affine_out
         prev_c = p.zeros(prev_h.shape)
@@ -468,7 +468,7 @@ class LSTM_model(object):
             prev_word_embed = e1.parameters['W'][prev_word_idx]
             next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
             prev_c = next_c
-            vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512))
+            vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512), mode='test')
             captions[:, i] = p.array(p.argmax(vocab_affine_out, axis=1))
             prev_word_idx = captions[:, i]
             prev_h = next_h
@@ -610,9 +610,9 @@ class Char_RNN(object):
                 X = p.zeros([1, 1], dtype=int)
             else:
                 X = p.array([[output[-1]]]).reshape(1, -1)
-            X = self.X_layer.forward(X)
+            X = self.X_layer.forward(X, mode='test')
             state = self.rnn_layer.forward(X, state).reshape(1, -1)
-            Y = self.out_layer.forward(state)
+            Y = self.out_layer.forward(state, mode='test')
 
             if t < len(prefix) - 1:
                 output.append(self.char_to_ix[prefix[t + 1]])

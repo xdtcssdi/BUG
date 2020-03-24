@@ -109,3 +109,4 @@ venv.bak/
 /Test/coco_parameters/
 /Test/fashion_mnist_parameters/
 /Test/mnist_parameters/
+/Test/
