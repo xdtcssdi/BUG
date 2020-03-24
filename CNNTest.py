@@ -15,9 +15,9 @@ label = ['T恤', '裤子', '套衫', '裙子', '外套', '凉鞋', '汗衫', '�
 def LeNet5():
     train_images, train_labels, test_images, test_labels, classes = load_mnist('/Users/oswin/Documents/BS/'
                                                                           'BUG/datasets/fashion_mnist')
-    X_train = p.array(p.reshape(train_images, (train_images.shape[0], 1, 28, 28))) / 255.
+    X_train = p.array(p.reshape(train_images, (train_images.shape[0], 1, 28, 28)))[:1000] / 255.
     X_test = p.array(p.reshape(test_images, (test_images.shape[0], 1, 28, 28)))[:1000] / 255.
-    Y_train = p.array(train_labels)
+    Y_train = p.array(train_labels)[:1000]
     Y_test = p.array(test_labels)[:1000]
     net = Sequentual()
     net.add(Convolution(filter_count=32, filter_shape=(3, 3), batchNormal=True))

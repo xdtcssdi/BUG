@@ -6,6 +6,7 @@ import numpy
 
 from BUG.Layers.Normalization import BatchNormal
 from BUG.Layers.im2col import im2col_indices, col2im_indices_cpu, col2im_indices_gpu
+from BUG.function import init
 from BUG.function.Activation import ac_get_grad, ac_get
 from BUG.load_package import p
 
@@ -23,7 +24,7 @@ def load_struct_params(path):
 
 class Layer(object):
 
-    def __init__(self, unit_number=0, activation=None):
+    def __init__(self, unit_number=0, activation=None, init_option='normal'):
         self.unit_number = unit_number
         self.activation = activation
         self.parameters = {}
@@ -37,6 +38,7 @@ class Layer(object):
         self.x = None
         self.Z = None
         self.name = 'layer'
+        self.init_option = init_option
 
     def init_params(self, nx):
         """
@@ -84,7 +86,7 @@ class Convolution(Layer):
     count = 0
 
     def __init__(self, filter_count, filter_shape,
-                 stride=1, padding=0, activation='relu', batchNormal=False):
+                 stride=1, padding=0, activation='relu', batchNormal=False, init_option='normal'):
         """
         :param filter_count: 卷积核数量
         :param filter_shape: 卷积核形状
@@ -93,7 +95,7 @@ class Convolution(Layer):
         :param activation: 激活函数名字
         :param batchNormal: 是否归一化输出
         """
-        super(Convolution, self).__init__(activation=activation)
+        super(Convolution, self).__init__(activation=activation, init_option=init_option)
         Convolution.count += 1
         self.name = 'Convolution_' + str(Convolution.count)
         self.filter_count = filter_count  # 卷积核数量
@@ -106,29 +108,18 @@ class Convolution(Layer):
                      'stride': stride, 'padding': padding, 'activation': activation,
                      'batchNormal': batchNormal}
 
-    def init_params(self, A_pre):  # pre_nc 前一个通道数
+    def init_params(self, A_pre):
         if 'W' not in self.parameters:
-            pre_nc = A_pre.shape[1]
-            W_shape = (self.filter_count, pre_nc, self.filter_shape[0], self.filter_shape[1])
-            n_l = self.filter_shape[0] * self.filter_shape[1] * self.filter_count
-            if self.activation == 'relu':  # 'kaiming'
-                self.parameters['W'] = p.random.normal(loc=0.0, scale=math.sqrt(2. / n_l), size=W_shape)
-            elif self.activation == 'leak_relu':  # 'kaiming'
-                self.parameters['W'] = p.random.normal(loc=0.0, scale=math.sqrt(2. / (1.0001 * n_l)), size=W_shape)
-            else:
-                n_x, d_x, h_x, w_x = A_pre.shape  # 'xavier'
-                self.parameters['W'] = p.random.normal(loc=0.0, scale=math.sqrt(2. / (pre_nc + d_x)), size=W_shape)
-
-            self.gradients['W'] = p.zeros_like(self.parameters['W'])
+            W_shape = (self.filter_count, A_pre.shape[1], self.filter_shape[0], self.filter_shape[1])
+            self.parameters['W'] = init.get_init(self.activation, W_shape, self.init_option)
         if 'b' not in self.parameters:
             self.parameters['b'] = p.zeros(self.filter_count)
-            self.gradients['b'] = p.zeros_like(self.parameters['W'])
 
     def save_params(self, path):
         if not os.path.exists(path):
             os.mkdir(path)
         save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
-        p.savez_compressed(path + os.sep + self.name, W=self.parameters['W'], b=self.parameters['b'])
+        p.savez_compressed(path + os.sep + self.name, **self.parameters)
         if self.batch_normal:
             self.batch_normal.save_params(path + os.sep + self.name + '_batch_normal')
         return self.name
@@ -199,8 +190,8 @@ class Convolution(Layer):
 class Dense(Layer):
     count = 0
 
-    def __init__(self, unit_number, activation=None, batchNormal=False, flatten=False, keep_prob=1.):
-        super(Dense, self).__init__(unit_number, activation)
+    def __init__(self, unit_number, activation=None, batchNormal=False, flatten=False, keep_prob=1., init_option='normal'):
+        super(Dense, self).__init__(unit_number, activation, init_option=init_option)
         Dense.count += 1
         self.name = 'Dense_' + str(Dense.count)
         self.flatten = flatten
@@ -255,16 +246,8 @@ class Dense(Layer):
 
     def init_params(self, dim):
         if 'W' not in self.parameters:
-            if self.activation == 'relu' or self.activation == 'leak_relu':  # 'Xavier'
-                self.parameters['W'] = p.random.uniform(-math.sqrt(6. / (dim + self.unit_number)),
-                                                        math.sqrt(6. / (dim + self.unit_number)),
-                                                        (dim, self.unit_number))
-            elif self.activation == 'tanh' or self.activation == 'sigmoid':
-                self.parameters['W'] = p.random.uniform(-1., 1., (dim, self.unit_number)) \
-                                       * p.sqrt(6. / (dim + self.unit_number))
-            else:  # 'MSRA'
-                self.parameters['W'] = p.random.normal(0, math.sqrt(2. / dim), size=(dim, self.unit_number))
-            # self.parameters['W'] = p.random.randn(pre_unit, self.unit_number) * 0.01
+            shape = (dim, self.unit_number)
+            self.parameters['W'] = init.get_init(self.activation, shape, self.init_option)
         if 'b' not in self.parameters:
             self.parameters['b'] = p.zeros(self.unit_number)
 
@@ -290,8 +273,8 @@ class Dense(Layer):
 class Pooling(Layer):
     count = 0
 
-    def __init__(self, filter_shape, paddingMode='same', stride=1, mode='max'):
-        super(Pooling, self).__init__()
+    def __init__(self, filter_shape, paddingMode='same', stride=1, mode='max', init_option='normal'):
+        super(Pooling, self).__init__(init_option=init_option)
         Pooling.count += 1
         self.filter_shape = filter_shape
         self.name = 'Pooling_' + str(Pooling.count)
@@ -350,24 +333,17 @@ class Pooling(Layer):
 
 
 class SimpleRNN(Layer):
-    def __init__(self, unit_number):
-        super(SimpleRNN, self).__init__()
+    def __init__(self, unit_number, init_option='normal'):
+        super(SimpleRNN, self).__init__(init_option=init_option)
         self.unit_number = unit_number
         self.args = {'unit_number': unit_number}
         self.name = 'SimpleRNN'
 
     def init_params(self, nx):
         if 'Wxa' not in self.parameters:
-            self.parameters['Wxa'] = self.orthogonal([nx, self.unit_number])
-            self.parameters['Waa'] = self.orthogonal([self.unit_number, self.unit_number])
+            self.parameters['Wxa'] = init.orthogonal([nx, self.unit_number])
+            self.parameters['Waa'] = init.orthogonal([self.unit_number, self.unit_number])
             self.parameters['ba'] = p.ones(self.unit_number)
-
-    def orthogonal(self, shape):
-        flat_shape = (shape[0], numpy.prod(shape[1:]))
-        a = numpy.random.normal(0.0, 1.0, flat_shape)
-        u, _, v = numpy.linalg.svd(a, full_matrices=False)
-        q = u if u.shape == flat_shape else v
-        return p.array(q.reshape(shape))
 
     def save_params(self, path):
         save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)
@@ -453,8 +429,8 @@ class SimpleRNN(Layer):
 
 
 class LSTM(Layer):
-    def __init__(self, word_to_idx, point, n_a=50):
-        super(LSTM, self).__init__()
+    def __init__(self, word_to_idx, point, n_a=50, init_option='normal'):
+        super(LSTM, self).__init__(init_option=init_option)
         self.cache = {}
         self.name = 'LSTM'
         self.word_to_idx = word_to_idx
@@ -465,16 +441,9 @@ class LSTM(Layer):
 
     def init_params(self, n_x):
         if 'Wx' not in self.parameters:
-            self.parameters['Wx'] = self.orthogonal([n_x, 4 * self.n_a])
-            self.parameters['Wa'] = self.orthogonal([self.n_a, 4 * self.n_a])
+            self.parameters['Wx'] = init.orthogonal([n_x, 4 * self.n_a])
+            self.parameters['Wa'] = init.orthogonal([self.n_a, 4 * self.n_a])
             self.parameters['b'] = p.ones(4 * self.n_a)
-
-    def orthogonal(self, shape):
-        flat_shape = (shape[0], numpy.prod(shape[1:]))
-        a = numpy.random.normal(0.0, 1.0, flat_shape)
-        u, _, v = numpy.linalg.svd(a, full_matrices=False)
-        q = u if u.shape == flat_shape else v
-        return p.array(q.reshape(shape))
 
     def forward(self, x, a0=None, mode='train'):
         """
@@ -585,8 +554,8 @@ class LSTM(Layer):
 
 
 class Embedding(Layer):
-    def __init__(self, vocab_size, word_dim):
-        super(Embedding, self).__init__()
+    def __init__(self, vocab_size, word_dim, init_option='normal'):
+        super(Embedding, self).__init__(init_option=init_option)
         self.vocab_size = vocab_size
         self.word_dim = word_dim
         self.init_params([self.vocab_size, self.word_dim])
@@ -594,7 +563,7 @@ class Embedding(Layer):
         self.args = {'vocab_size': vocab_size, 'word_dim': word_dim}
 
     def init_params(self, dim):
-        self.parameters['W'] = p.random.randn(*dim)
+        self.parameters['W'] = init.normal(dim)
 
     def forward(self, x, Y=None, mode='train'):
         self.x = x

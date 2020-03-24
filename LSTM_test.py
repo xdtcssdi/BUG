@@ -1,13 +1,14 @@
-from BUG.Model.model import LSTM_model
-from BUG.function.util import load_coco_data, minibatch, decode_captions
-from BUG.load_package import p
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-font = FontProperties(fname='/Users/oswin/Documents/BS/BUG/datasets/PingFang.ttc', size=8)
-
 import requests as req
 from PIL import Image
 from io import BytesIO
+from BUG.Model.model import LSTM_model
+from BUG.function.util import load_coco_data, minibatch, decode_captions
+from BUG.load_package import p
+
+font = FontProperties(fname='/Users/oswin/Documents/BS/BUG/datasets/PingFang.ttc', size=8)
+
 
 def coco():
     p.random.seed(1)
@@ -17,7 +18,8 @@ def coco():
     hidden_dim = 512
     net = LSTM_model(hidden_dim=hidden_dim, word_to_idx=word_to_idx,
                      point=[word_to_idx['<START>'], word_to_idx['<END>'], word_to_idx['<NULL>']])
-    net.fit(data, learning_rate=5e-3, batch_size=1024, iterator=100, save_epoch=1,path='a')
+    net.fit(data, learning_rate=5e-3, batch_size=1024, iterator=100, save_epoch=1, path='a', is_print=False)
+
 
 def predict():
     p.random.seed(1)
@@ -51,4 +53,4 @@ def predict():
 
 if __name__ == '__main__':
     coco()
-    #predict()
+    # predict()

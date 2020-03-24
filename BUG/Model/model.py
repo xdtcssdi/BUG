@@ -540,7 +540,7 @@ class Char_RNN(object):
         if os.path.isfile(path + os.sep + 'caches.obj'):
             start_it = self.load_model(path)
             self.rnn_layer, self.out_layer, self.X_layer = self.layers
-        print(start_it)
+
         print_disable = not is_print
         if prefix is None:
             prefix = []
