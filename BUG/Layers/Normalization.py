@@ -33,6 +33,8 @@ class BatchNormal:
             return self.fourDims_batchnorm_forward(A_pre, mode, momentum)
         elif A_pre.ndim == 2:
             return self.twoDims_batchnormal_forward(A_pre, mode, momentum)
+        elif A_pre.ndim == 3:
+            return self.threeDims_batchnorm_forward(A_pre, mode, momentum)
         else:
             raise ValueError
 
@@ -41,6 +43,8 @@ class BatchNormal:
             return self.fourDims_batchnorm_backward(pre_grad)
         elif pre_grad.ndim == 2:
             return self.twoDims_batchnormal_backward(pre_grad)
+        elif pre_grad.ndim == 3:
+            return self.threeDims_batchnorm_backward(pre_grad)
         else:
             raise ValueError
 
@@ -54,6 +58,20 @@ class BatchNormal:
     def fourDims_batchnorm_backward(self, dout):
         N, C, H, W = dout.shape
         dout_flat = dout.reshape(N * H * W, C)
+        dx_flat = self.twoDims_batchnormal_backward(dout_flat)
+        dx = dx_flat.reshape(dout.shape)
+        return dx
+
+    def threeDims_batchnorm_forward(self, A_pre, mode='train', momentum=0.9):
+        N, T, D = A_pre.shape
+        x_flat = A_pre.reshape(N * T, D)
+        out_flat = self.twoDims_batchnormal_forward(x_flat, mode, momentum)
+        out = out_flat.reshape(A_pre.shape)
+        return out
+
+    def threeDims_batchnorm_backward(self, dout):
+        N, T, D = dout.shape
+        dout_flat = dout.reshape(N * T, D)
         dx_flat = self.twoDims_batchnormal_backward(dout_flat)
         dx = dx_flat.reshape(dout.shape)
         return dx

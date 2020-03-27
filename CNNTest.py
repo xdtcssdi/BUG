@@ -23,7 +23,8 @@ def LeNet5():
     net.add(Convolution(filter_count=32, filter_shape=(3, 3), batchNormal=True))
     net.add(Convolution(filter_count=64, filter_shape=(3, 3), batchNormal=True))
     net.add(Pooling(filter_shape=(2, 2), stride=2, mode='max', paddingMode='same'))
-    net.add(Dense(128, batchNormal=True, flatten=True, activation='relu', keep_prob=0.5))
+    net.add(Convolution(filter_count=64, filter_shape=(1, 1), batchNormal=True))
+    net.add(Dense(128, batchNormal=True, flatten=True, activation='relu'))
     net.add(Dense(classes, batchNormal=True, activation="softmax"))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
     net.fit(X_train, Y_train, X_test, Y_test, batch_size=128, iterator=1000, learning_rate=0.0075, is_print=False,

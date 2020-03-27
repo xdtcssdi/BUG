@@ -2,6 +2,7 @@ import gzip
 import json
 import os
 import pickle
+import random
 import re
 import zipfile
 
@@ -265,14 +266,14 @@ def load_poetry():
     return corpus_indices, char_to_idx, idx_to_char, vocab_size
 
 
-def load_data_jay_lyrics():
-    with zipfile.ZipFile('/Users/oswin/Documents/BS/BUG/datasets/jaychou_lyrics.zip') as zin:
+def load_data_jay_lyrics(path):
+    with zipfile.ZipFile(os.path.join(path, 'jaychou_lyrics.zip')) as zin:
         with zin.open('jaychou_lyrics.txt') as f:
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
     corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
-    corpus_chars = list(jieba.cut(corpus_chars, cut_all=False))
-    corpus_chars.sort()
+    corpus_chars = get_jieba_list(path, corpus_chars)
     idx_to_char = list(set(corpus_chars))
+    idx_to_char.sort()
     char_to_idx = {ch: i for i, ch in enumerate(idx_to_char)}
     vocab_size = len(char_to_idx)
     corpus_ix = [char_to_idx[ch] for ch in corpus_chars]
@@ -290,16 +291,14 @@ def load_data_ana():
     return encoded, vocab_to_int, int_to_vocab, len(vocab)
 
 
-def load_data_gem_lyrics():
-    path = '/Users/oswin/Documents/BS/BUG/datasets/'
+def load_data_gem_lyrics(path):
     with zipfile.ZipFile(os.path.join(path, 'gem_lyrics.zip')) as zin:
         with zin.open('gem_lyrics.txt') as f:
             corpus_chars = Converter('zh-hans').convert(f.read().decode('utf-8'))
     corpus_chars = corpus_chars.replace('\n', ' ').replace('\r', ' ')
 
-    # corpus_chars = list(jieba.cut(corpus_chars, cut_all=False))
+    corpus_chars = get_jieba_list(path, corpus_chars)
 
-    # corpus_chars.sort()
     idx_to_char = list(set(corpus_chars))
     idx_to_char.sort()
     char_to_idx = {ch: i for i, ch in enumerate(idx_to_char)}
@@ -309,14 +308,38 @@ def load_data_gem_lyrics():
     return corpus_ix, char_to_idx, idx_to_char, vocab_size
 
 
-def data_iter_consecutive(corpus_indices, batch_size, num_steps):
-    corpus_indices = np.array(corpus_indices)
-    data_len = len(corpus_indices)
-    batch_len = data_len // batch_size
-    indices = corpus_indices[0: batch_size * batch_len].reshape((batch_size, batch_len))
-    epoch_size = (batch_len - 1) // num_steps
+def data_iter_random(corpus_indices, batch_size, num_steps):
+    # 减1是因为输出的索引是相应输入的索引加1
+    num_examples = (len(corpus_indices) - 1) // num_steps
+    epoch_size = num_examples // batch_size
+    example_indices = list(range(num_examples))
+    random.shuffle(example_indices)
+
+    # 返回从pos开始的长为num_steps的序列
+    def _data(pos):
+        return corpus_indices[pos: pos + num_steps]
+
     for i in range(epoch_size):
-        i = i * num_steps
-        X = indices[:, i: i + num_steps]
-        Y = indices[:, i + 1: i + num_steps + 1]
-        yield X, Y
+        # 每次读取batch_size个随机样本
+        i = i * batch_size
+        batch_indices = example_indices[i: i + batch_size]
+        X = [_data(j * num_steps) for j in batch_indices]
+        Y = [_data(j * num_steps + 1) for j in batch_indices]
+        yield p.array(np.array(X)), np.array(Y)
+
+
+def get_jieba_list(path, text):
+    file = os.path.join(path, 'jieba.cache')
+    if os.path.exists(file):
+        with open(file, 'rb+') as f:
+            return pickle.load(f)
+
+    with open(file, 'wb+') as f:
+        l = list(jieba.cut(text, cut_all=False))
+        pickle.dump(l, f)
+        return l
+
+
+if __name__ == '__main__':
+    a = load_data_jay_lyrics('/Users/oswin/Documents/BS/BUG/datasets')[0]
+    pwrint(a)

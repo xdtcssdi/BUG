@@ -1,4 +1,3 @@
-import math
 import os
 import pickle
 
@@ -190,7 +189,8 @@ class Convolution(Layer):
 class Dense(Layer):
     count = 0
 
-    def __init__(self, unit_number, activation=None, batchNormal=False, flatten=False, keep_prob=1., init_option='normal'):
+    def __init__(self, unit_number, activation=None, batchNormal=False, flatten=False, keep_prob=1.,
+                 init_option='normal'):
         super(Dense, self).__init__(unit_number, activation, init_option=init_option)
         Dense.count += 1
         self.name = 'Dense_' + str(Dense.count)
@@ -533,6 +533,7 @@ class LSTM(Layer):
         da_prev = da.dot(self.parameters['Wa'].T)
 
         return dx, da_prev, dc_prev, dWx, dWa, db
+
 
     def save_params(self, path):
         save_struct_params(path + os.sep + self.name + '_struct.obj', self.args)

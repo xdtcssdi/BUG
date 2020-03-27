@@ -20,9 +20,9 @@ if __name__ == '__main__':
     p.random.seed(1)
     data, char_to_idx, idx_to_char, vocab_size = load_data_gem_lyrics()
 
-    hidden_dim = 20
-    model = Char_RNN(hidden_dim, vocab_size, char_to_idx, idx_to_char, 300, cell='rnn')
-    model.compile(optimize='Adam', learning_rate=0.005)
-    model.fit(data, batch_size=64, num_steps=35, save_epoch=10, path='gem_params')
+    hidden_dim = 128
+    model = Char_RNN(hidden_dim, vocab_size, char_to_idx, idx_to_char, 300, cell='lstm')
+    model.compile(optimize='Adam', learning_rate=0.001)
+    model.fit(data, batch_size=64, num_steps=35, save_epoch=1, path='gem_params', is_print=True)
     show_loss(model.costs, model.perplexity)
 

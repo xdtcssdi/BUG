@@ -1,16 +1,15 @@
-import math
 import os.path
-import pickle
 
 import goto
+import math
 import numpy as np
 from goto import with_goto
-from tqdm import trange, tqdm
+from tqdm.autonotebook import trange, tqdm
 
-from BUG.Layers.Layer import Layer, Dense, Convolution, LSTM, Embedding, Pooling, generate_layer, SimpleRNN
+from BUG.Layers.Layer import *
 from BUG.function import Optimize
 from BUG.function.Loss import SoftCategoricalCross_entropy
-from BUG.function.util import minibatch, decode_captions, one_hot, data_iter_consecutive
+from BUG.function.util import minibatch, decode_captions, data_iter_random
 from BUG.load_package import p
 
 
@@ -18,7 +17,7 @@ class Sequentual(object):
 
     def __init__(self):
         self.layers = []
-        self.accs=[]
+        self.accs = []
         self.costs = []  # every batch cost
         self.cost = None  # 损失函数类
         self.optimizer = None
@@ -111,7 +110,7 @@ class Sequentual(object):
                     cur_it = it
                     tr.set_description("第%d代:" % (it + start_it))
                     train_loss, train_acc = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, it,
-                                                 regularization, lambd, print_disable)
+                                                            regularization, lambd, print_disable)
                     val_cost, val_acc = self.accuracy(X_test, Y_test, self.layers)
                     self.costs.append([train_loss, val_cost])
                     self.accs.append([train_acc, val_acc])
@@ -226,7 +225,7 @@ class Sequentual(object):
 
         #  更新参数
         self.optimizer.init_params(self.layers)
-        self.optimizer.update(t+1, learning_rate)
+        self.optimizer.update(t + 1, learning_rate)
         return loss, train_acc
 
     # mini-batch
@@ -254,8 +253,8 @@ class Sequentual(object):
                 permutation = np.random.permutation(X_train.shape[0] - num_complete * batch_size)
 
                 cost, train_acc = self.train_step(X_train[num_complete * batch_size:][permutation],
-                                       Y_train[num_complete * batch_size:][permutation],
-                                       mode, learning_rate, t, regularization, lambd)
+                                                  Y_train[num_complete * batch_size:][permutation],
+                                                  mode, learning_rate, t, regularization, lambd)
                 tr.set_postfix(loss=cost, acc=train_acc)
                 in_cost.append(cost)
                 in_acc.append(train_acc)
@@ -348,6 +347,7 @@ class LSTM_model(object):
         self.cost = None  # 损失函数类
         self.optimizer = None
         self.optimizeMode = None
+        self.hidden_dim = hidden_dim
 
         self.A0_layer = Dense(unit_number=hidden_dim, activation='relu')  # a0输入
         self.X_layer = Embedding(vocab_size=len(word_to_idx), word_dim=256)  # 词向量
@@ -362,13 +362,12 @@ class LSTM_model(object):
         print_disable = not is_print
         if not os.path.exists(path):
             os.mkdir(path)
-
+        self.optimizeMode = optimize
         self.cost = SoftCategoricalCross_entropy()
         start_it = 0
         if os.path.isfile(path + os.sep + 'caches.obj'):
-            with open(path + os.sep + 'caches.obj', 'rb+') as f:
-                start_it = pickle.load(f)
-            self.load_model(path)
+            start_it = self.load_model(path)
+            self.A0_layer, self.X_layer, self.lstm_layer, self.output_layer = self.layers
 
         if self.optimizer is None:
             if optimize == 'Adam':
@@ -381,61 +380,56 @@ class LSTM_model(object):
                 raise ValueError
         is_continue = False
         cur_it = 0
-        in_bar = tqdm()
-        bar = tqdm()
         label.point
         try:
-            bar = trange(iterator, initial=start_it)
+            with trange(iterator, initial=start_it) as bar:
+                for it in bar:
+                    cur_it = it
+                    cost = []
+                    with tqdm(minibatch(data, batch_size=batch_size), disable=print_disable) as in_bar:
+                        for captions_in, captions_out, features, urls in in_bar:
+                            permutation = np.random.permutation(captions_in.shape[0])
+                            captions_in = captions_in[permutation]
+                            captions_out = captions_out[permutation]
+                            features = features[permutation]
 
-            for it in bar:
-                cost = []
-                for captions_in, captions_out, features, urls in tqdm(minibatch(data, batch_size=batch_size),
-                                                                      disable=print_disable):
+                            a0 = self.A0_layer.forward(features)
 
-                    permutation = np.random.permutation(captions_in.shape[0])
-                    captions_in = captions_in[permutation]
-                    captions_out = captions_out[permutation]
-                    features = features[permutation]
+                            embedding_out = self.X_layer.forward(captions_in)
 
-                    a0 = self.A0_layer.forward(features)
+                            lstm_out = self.lstm_layer.forward(embedding_out, a0)
 
-                    embedding_out = self.X_layer.forward(captions_in)
+                            y_hat = self.output_layer.forward(lstm_out)
 
-                    lstm_out = self.lstm_layer.forward(embedding_out, a0)
+                            loss = self.cost.forward(captions_out, y_hat)
+                            in_bar.set_postfix(loss=loss)
+                            cost.append(loss)
 
-                    y_hat = self.output_layer.forward(lstm_out)
+                            dout = self.cost.backward(captions_out, y_hat)
 
-                    loss = self.cost.forward(captions_out, y_hat)
-                    cost.append(loss)
+                            dlstm = self.output_layer.backward(dout)
 
-                    dout = self.cost.backward(captions_out, y_hat)
+                            dembedding_out, da0 = self.lstm_layer.backward(dlstm)
 
-                    dlstm = self.output_layer.backward(dout)
+                            self.X_layer.backward(dembedding_out)
+                            self.A0_layer.backward(da0)
 
-                    dembedding_out, da0 = self.lstm_layer.backward(dlstm)
+                            #  更新参数
+                            self.optimizer.init_params(self.layers)
+                            self.optimizer.update(it + 1, learning_rate)
+                            del a0, captions_in, captions_out, da0, dembedding_out, dlstm, dout, embedding_out, features, lstm_out, permutation, y_hat, urls,
 
-                    self.X_layer.backward(dembedding_out)
-                    self.A0_layer.backward(da0)
+                    if (it + 1) % save_epoch == 0:
+                        self.save_model(path, it)
 
-                    #  更新参数
-                    self.optimizer.init_params(self.layers)
-                    self.optimizer.update(it + 1, learning_rate)
-                if len(cost) == 0:
-                    continue
-
-                if (it + 1) % save_epoch == 0:
-                    self.interrupt(path, it)
-                    self.save_model(path)
-                    self.predict(data)
-
-                bar.set_postfix(loss=sum(cost) / len(cost))
-                cur_it = it
+                    loss = sum(cost) / len(cost)
+                    self.costs.append(loss)
+                    bar.set_postfix(loss)
 
         except KeyboardInterrupt:
             c = input('请输入(Y)保存模型以便继续训练,(C) 继续执行 :')
             if c == 'Y' or c == 'y':
-                self.interrupt(path, cur_it)
-                self.save_model(path)
+                self.save_model(path, cur_it)
                 print('已经中断训练。\n再次执行程序，继续从当前开始执行。')
             elif c == 'C' or c == 'c':
                 is_continue = True
@@ -445,13 +439,7 @@ class LSTM_model(object):
             start_it = cur_it
             is_continue = False
             goto.point
-        bar.close()
         in_bar.close()
-
-    # 中断处理
-    def interrupt(self, path, start_it):
-        with open(path + os.sep + 'caches.obj', 'wb+') as f:
-            pickle.dump(start_it, f)
 
     def sample(self, features, layers, max_length=50):
         d1, e1, l1, d2 = layers
@@ -468,7 +456,7 @@ class LSTM_model(object):
             prev_word_embed = e1.parameters['W'][prev_word_idx]
             next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
             prev_c = next_c
-            vocab_affine_out = d2.forward(next_h.reshape(-1, 1, 512), mode='test')
+            vocab_affine_out = d2.forward(next_h.reshape(1, -1, self.hidden_dim), mode='test')
             captions[:, i] = p.array(p.argmax(vocab_affine_out, axis=1))
             prev_word_idx = captions[:, i]
             prev_h = next_h
@@ -489,14 +477,39 @@ class LSTM_model(object):
                 print('%s\n%s\nGT:%s' % (split, sample_caption, gt_caption))
 
     # 保存模型参数
-    def save_model(self, path):
+    def save_model(self, path, start_it):
+        names = []
         for layer in self.layers:
-            layer.save_params(path)
+            names.append(layer.save_params(path))
+        self.optimizer.save_parameters(path)
+        with open(path + os.sep + 'caches.obj', 'wb') as f:
+            pickle.dump(names, f)
+            pickle.dump(start_it, f)
+            pickle.dump(self.optimizeMode, f)
+            pickle.dump(self.costs, f)
 
     # 加载模型参数
     def load_model(self, path):
-        for layer in self.layers:
-            layer.load_params(path)
+        Dense.count = 0
+        self.layers.clear()
+        with open(path + os.sep + 'caches.obj', 'rb') as f:
+            for layer in self.layers:
+                layer.load_params(path)
+            layers = pickle.load(f)
+            start_it = pickle.load(f)
+            self.optimizeMode = pickle.load(f)
+            if self.optimizeMode == 'Adam':
+                self.optimizer = Optimize.Adam()
+            elif self.optimizeMode == 'Momentum':
+                self.optimizer = Optimize.Momentum()
+            elif self.optimizeMode == 'BGD':
+                self.optimizer = Optimize.BatchGradientDescent()
+            else:
+                raise ValueError
+            self.costs = pickle.load(f)
+        self.optimizer.init_params(self.layers)
+        self.optimizer.load_parameters(path)
+        return start_it
 
 
 class Char_RNN(object):
@@ -553,7 +566,8 @@ class Char_RNN(object):
                 for it in out_bar:
                     cur_it = it
                     cost = []
-                    in_bar = tqdm(data_iter_consecutive(data, batch_size, num_steps), disable=print_disable)
+                    in_bar = tqdm(data_iter_random(data, batch_size, num_steps), disable=print_disable,
+                                  total=(len(data) - 1) // num_steps // batch_size)
                     for X, Y in in_bar:
                         # 前向传播
                         state = p.zeros([batch_size, self.hidden_unit])  # a0
@@ -576,7 +590,7 @@ class Char_RNN(object):
                         self.X_layer.backward(dx)
 
                         self.optimizer.init_params(self.layers)
-                        self.optimizer.update(it+1, self.learning_rate)
+                        self.optimizer.update(it + 1, self.learning_rate)
                     loss = sum(cost) / len(cost)
                     self.costs.append(loss)
                     perplexity = math.exp(loss)
@@ -617,7 +631,8 @@ class Char_RNN(object):
             if t < len(prefix) - 1:
                 output.append(self.char_to_ix[prefix[t + 1]])
             else:
-                output.append(int(Y[0].argmax(axis=-1)))
+                idx = np.random.choice(range(Y.shape[-1]), p=Y.tolist()[0])
+                output.append(idx)
 
         return ''.join([self.ix_to_char[i] for i in output])
 

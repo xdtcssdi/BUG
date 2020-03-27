@@ -15,10 +15,10 @@ def coco():
     data = load_coco_data(base_dir='/Users/oswin/datasets/coco2014', max_train=10000)
     word_to_idx = data['word_to_idx']
 
-    hidden_dim = 512
+    hidden_dim = 256
     net = LSTM_model(hidden_dim=hidden_dim, word_to_idx=word_to_idx,
                      point=[word_to_idx['<START>'], word_to_idx['<END>'], word_to_idx['<NULL>']])
-    net.fit(data, learning_rate=5e-3, batch_size=1024, iterator=100, save_epoch=1, path='a', is_print=False)
+    net.fit(data, learning_rate=5e-3, batch_size=1024, iterator=100, save_epoch=1, path='a', is_print=True)
 
 
 def predict():
@@ -27,7 +27,7 @@ def predict():
 
     word_to_idx = data['word_to_idx']
 
-    hidden_dim = 512
+    hidden_dim = 256
     net = LSTM_model(hidden_dim=hidden_dim, word_to_idx=word_to_idx,
                      point=[word_to_idx['<START>'], word_to_idx['<END>'], word_to_idx['<NULL>']])
     net.load_model(path='/Users/oswin/Documents/BS/Test/coco_parameters')
