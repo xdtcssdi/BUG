@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="04fab398-9740-49c7-b523-6c13644078ee" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/BUG/归档.zip" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/coco_parameters/Dense_1.npz" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/coco_parameters/Dense_1_struct.obj" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/coco_parameters/Dense_2.npz" afterDir="false" />
@@ -27,40 +26,14 @@
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Dense_2_struct.obj" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/Pooling_1_struct.obj" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/Test/fashion_mnist_parameters/caches.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Adam_s.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Adam_v.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Dense_1.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Dense_1_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Dense_2.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Dense_2_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Dense_3.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Dense_3_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Embedding.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/Embedding_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/LSTM.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/LSTM_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/a/caches.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/Adam_s.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/Adam_v.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/Dense_1.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/Dense_1_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/Embedding.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/Embedding_struct.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/LSTM.npz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gem_params/LSTM_struct.obj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/Layers/Layer.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Layers/Layer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/Layers/Normalization.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Layers/Normalization.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/Model/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/Model/model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/test_catvnoncat.h5" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/test_signs.h5" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/train_catvnoncat.h5" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/BUG/datasets/train_signs.h5" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUG/function/util.py" beforeDir="false" afterPath="$PROJECT_DIR$/BUG/function/util.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CNNTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CNNTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Char_rnn_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Char_rnn_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CoreTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/CoreTest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LSTM_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/LSTM_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +96,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.CoreTest">
+  <component name="RunManager" selected="Python.CNNTest">
     <configuration name="BUG" type="PythonConfigurationType" factoryName="Python">
       <module name="BUG" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -280,16 +253,16 @@
     </configuration>
     <list>
       <item itemvalue="Python.BUG" />
-      <item itemvalue="Python.CoreTest" />
-      <item itemvalue="Python.util" />
-      <item itemvalue="Python.Char_rnn_test" />
       <item itemvalue="Python.CNNTest" />
+      <item itemvalue="Python.Char_rnn_test" />
+      <item itemvalue="Python.CoreTest" />
       <item itemvalue="Python.LSTM_test" />
+      <item itemvalue="Python.util" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.CoreTest" />
         <item itemvalue="Python.CNNTest" />
+        <item itemvalue="Python.CoreTest" />
         <item itemvalue="Python.LSTM_test" />
         <item itemvalue="Python.util" />
         <item itemvalue="Python.Char_rnn_test" />
@@ -323,7 +296,9 @@
       <workItem from="1585040584536" duration="88000" />
       <workItem from="1585049463530" duration="5972000" />
       <workItem from="1585150192914" duration="2458000" />
-      <workItem from="1585179073110" duration="16986000" />
+      <workItem from="1585179073110" duration="17159000" />
+      <workItem from="1585670346445" duration="82000" />
+      <workItem from="1585792173723" duration="2261000" />
     </task>
     <task id="LOCAL-00001" summary="doc">
       <created>1584637343888</created>
@@ -402,7 +377,21 @@
       <option name="project" value="LOCAL" />
       <updated>1585058818156</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="fix model +700">
+      <created>1585319408747</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1585319408747</updated>
+    </task>
+    <task id="LOCAL-00013" summary="ign">
+      <created>1585319474897</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1585319474897</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -437,7 +426,9 @@
     <MESSAGE value="rnn save params" />
     <MESSAGE value="fix dropout" />
     <MESSAGE value="add init" />
-    <option name="LAST_COMMIT_MESSAGE" value="add init" />
+    <MESSAGE value="fix model +700" />
+    <MESSAGE value="ign" />
+    <option name="LAST_COMMIT_MESSAGE" value="ign" />
   </component>
   <component name="WindowStateProjectService">
     <state x="104" y="62" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1584858002203">
@@ -448,84 +439,73 @@
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="378" y="154" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1280.800@0.0.1280.800" timestamp="1582361025956" />
-    <state x="223" y="23" width="833" height="719" key="CommitChangelistDialog2" timestamp="1585058817453">
-      <screen x="0" y="23" width="1280" height="719" />
+    <state x="223" y="23" width="833" height="719" key="CommitChangelistDialog2" timestamp="1585319474455">
+      <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="223" y="23" width="833" height="719" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1584894963305" />
+    <state x="223" y="23" width="833" height="719" key="CommitChangelistDialog2/0.0.1280.800@0.0.1280.800" timestamp="1585319474455" />
     <state x="223" y="23" key="CommitChangelistDialog2/0.23.1280.719@0.23.1280.719" timestamp="1585058817453" />
     <state width="1280" height="438" key="DebuggerActiveHint" timestamp="1584845222821">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state width="1280" height="438" key="DebuggerActiveHint/0.0.1280.800@0.0.1280.800" timestamp="1584845222821" />
-    <state width="1238" height="189" key="GridCell.Tab.0.bottom" timestamp="1585311611271">
+    <state width="1238" height="158" key="GridCell.Tab.0.bottom" timestamp="1585794879283">
+      <screen x="0" y="23" width="1280" height="719" />
+    </state>
+    <state width="1238" height="324" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1585319518199" />
+    <state width="1238" height="158" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1585794879283" />
+    <state width="1238" height="158" key="GridCell.Tab.0.center" timestamp="1585794879282">
+      <screen x="0" y="23" width="1280" height="719" />
+    </state>
+    <state width="1238" height="324" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1585319518198" />
+    <state width="1238" height="158" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1585794879282" />
+    <state width="1238" height="158" key="GridCell.Tab.0.left" timestamp="1585794879282">
+      <screen x="0" y="23" width="1280" height="719" />
+    </state>
+    <state width="1238" height="324" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1585319518198" />
+    <state width="1238" height="158" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1585794879282" />
+    <state width="1238" height="158" key="GridCell.Tab.0.right" timestamp="1585794879283">
+      <screen x="0" y="23" width="1280" height="719" />
+    </state>
+    <state width="1238" height="324" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1585319518199" />
+    <state width="1238" height="158" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1585794879283" />
+    <state width="1238" height="324" key="GridCell.Tab.1.bottom" timestamp="1585319518201">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="189" key="GridCell.Tab.0.bottom/0.0.1280.800@0.0.1280.800" timestamp="1585311611271" />
-    <state width="1238" height="275" key="GridCell.Tab.0.bottom/0.23.1280.719@0.23.1280.719" timestamp="1585267483556" />
-    <state width="1238" height="189" key="GridCell.Tab.0.center" timestamp="1585311611270">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="189" key="GridCell.Tab.0.center/0.0.1280.800@0.0.1280.800" timestamp="1585311611270" />
-    <state width="1238" height="275" key="GridCell.Tab.0.center/0.23.1280.719@0.23.1280.719" timestamp="1585267483556" />
-    <state width="1238" height="189" key="GridCell.Tab.0.left" timestamp="1585311611269">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="189" key="GridCell.Tab.0.left/0.0.1280.800@0.0.1280.800" timestamp="1585311611269" />
-    <state width="1238" height="275" key="GridCell.Tab.0.left/0.23.1280.719@0.23.1280.719" timestamp="1585267483555" />
-    <state width="1238" height="189" key="GridCell.Tab.0.right" timestamp="1585311611271">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="189" key="GridCell.Tab.0.right/0.0.1280.800@0.0.1280.800" timestamp="1585311611271" />
-    <state width="1238" height="275" key="GridCell.Tab.0.right/0.23.1280.719@0.23.1280.719" timestamp="1585267483556" />
-    <state width="1238" height="324" key="GridCell.Tab.1.bottom" timestamp="1585289374378">
-      <screen x="0" y="0" width="1280" height="800" />
-    </state>
-    <state width="1238" height="324" key="GridCell.Tab.1.bottom/0.0.1280.800@0.0.1280.800" timestamp="1585289374378" />
+    <state width="1238" height="324" key="GridCell.Tab.1.bottom/0.0.1280.800@0.0.1280.800" timestamp="1585319518201" />
     <state width="1238" height="275" key="GridCell.Tab.1.bottom/0.23.1280.719@0.23.1280.719" timestamp="1585267483558" />
-    <state width="1238" height="324" key="GridCell.Tab.1.center" timestamp="1585289374376">
+    <state width="1238" height="324" key="GridCell.Tab.1.center" timestamp="1585319518200">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="324" key="GridCell.Tab.1.center/0.0.1280.800@0.0.1280.800" timestamp="1585289374376" />
+    <state width="1238" height="324" key="GridCell.Tab.1.center/0.0.1280.800@0.0.1280.800" timestamp="1585319518200" />
     <state width="1238" height="275" key="GridCell.Tab.1.center/0.23.1280.719@0.23.1280.719" timestamp="1585267483557" />
-    <state width="1238" height="324" key="GridCell.Tab.1.left" timestamp="1585289374376">
+    <state width="1238" height="324" key="GridCell.Tab.1.left" timestamp="1585319518200">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="324" key="GridCell.Tab.1.left/0.0.1280.800@0.0.1280.800" timestamp="1585289374376" />
+    <state width="1238" height="324" key="GridCell.Tab.1.left/0.0.1280.800@0.0.1280.800" timestamp="1585319518200" />
     <state width="1238" height="275" key="GridCell.Tab.1.left/0.23.1280.719@0.23.1280.719" timestamp="1585267483557" />
-    <state width="1238" height="324" key="GridCell.Tab.1.right" timestamp="1585289374377">
+    <state width="1238" height="324" key="GridCell.Tab.1.right" timestamp="1585319518201">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state width="1238" height="324" key="GridCell.Tab.1.right/0.0.1280.800@0.0.1280.800" timestamp="1585289374377" />
+    <state width="1238" height="324" key="GridCell.Tab.1.right/0.0.1280.800@0.0.1280.800" timestamp="1585319518201" />
     <state width="1238" height="275" key="GridCell.Tab.1.right/0.23.1280.719@0.23.1280.719" timestamp="1585267483557" />
     <state x="141" y="39" key="SettingsEditor" timestamp="1582362688529">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="141" y="39" key="SettingsEditor/0.0.1280.800@0.0.1280.800" timestamp="1582362688529" />
-    <state x="240" y="140" key="Vcs.Push.Dialog.v2" timestamp="1585058819605">
-      <screen x="0" y="23" width="1280" height="719" />
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2" timestamp="1585319476353">
+      <screen x="0" y="0" width="1280" height="800" />
     </state>
-    <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1584853093414" />
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1585319476353" />
     <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.23.1280.719@0.23.1280.719" timestamp="1585058819605" />
     <state x="298" y="157" width="683" height="486" key="find.popup" timestamp="1582448652037">
       <screen x="0" y="0" width="1280" height="800" />
     </state>
     <state x="298" y="157" width="683" height="486" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1582448652037" />
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/BUG/function/evaluate.py</url>
-          <line>6</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
-  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/BS$util.coverage" NAME="util Coverage Results" MODIFIED="1585218902664" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/BUG/function" />
-    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1585289728381" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BS$CoreTest.coverage" NAME="CoreTest Coverage Results" MODIFIED="1585311611258" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
+    <SUITE FILE_PATH="coverage/BS$CNNTest.coverage" NAME="CNNTest Coverage Results" MODIFIED="1585794571451" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/BS$CoreTest.coverage" NAME="CoreTest Coverage Results" MODIFIED="1585792955818" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$test.coverage" NAME="test Coverage Results" MODIFIED="1584854267766" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$BUG.coverage" NAME="BUG Coverage Results" MODIFIED="1582444069203" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Test" />
     <SUITE FILE_PATH="coverage/BS$LSTM_test.coverage" NAME="LSTM_test Coverage Results" MODIFIED="1585268175619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

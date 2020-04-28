@@ -25,7 +25,6 @@ class Sequentual(object):
         self.evaluate = None
         self.ndim = 2
         self.optimizeMode = None
-        self.accuracy = None
         self.permutation = None
 
     def add(self, layer):
@@ -36,25 +35,21 @@ class Sequentual(object):
         return len(self.layers)
 
     # 划分数据
-    def partitionDataset(self, X, Y, testing_percentage, validation_percentage):
+    def partitionDataset(self, X, Y, validation_percentage):
         total_m = X.shape[0]
-        test_m = int(total_m * testing_percentage)
         vaild_m = int(total_m * validation_percentage)
-        train_m = total_m - test_m - vaild_m
+        train_m = total_m - vaild_m
 
         X_train = X[:train_m]
         Y_train = Y[:train_m]
 
-        X_test = X[train_m:train_m + test_m]
-        Y_test = Y[train_m:train_m + test_m]
+        X_valid = X[train_m:]
+        Y_valid = Y[train_m:]
 
-        X_valid = X[-vaild_m:]
-        Y_valid = Y[-vaild_m:]
-
-        return X_train, Y_train, X_test, Y_test, X_valid, Y_valid
+        return X_train, Y_train, X_valid, Y_valid
 
     # 归一化输入
-    def normalizing_inputs(self, X_train, X_test, ep=1e-11):
+    def normalizing_inputs(self, X_train, ep=1e-11):
         if X_train.ndim == 2:
             self.ndim = 2
             self.u = p.mean(X_train, axis=0) + ep
@@ -62,25 +57,20 @@ class Sequentual(object):
 
             X_train -= self.u
             X_train /= self.var
-            X_test -= self.u
-            X_test /= self.var
         elif X_train.ndim > 2:
             self.ndim = X_train.ndim
             p.divide(X_train, 255.0, out=X_train, casting="unsafe")
-            p.divide(X_test, 255.0, out=X_test, casting="unsafe")
         else:
             raise ValueError
-        return X_train, X_test
+        return X_train
 
     # 训练
     @with_goto
-    def fit(self, X_train, Y_train, X_test=None, Y_test=None, batch_size=15, testing_percentage=0.2,
+    def fit(self, X_train, Y_train, batch_size=15,
             validation_percentage=0.2, learning_rate=0.075, iterator=2000, save_epoch=10,
             mode='train', path='data', regularization='L2', lambd=0, is_print=False):
-        self.args = {'batch_size': batch_size, 'testing_percentage': testing_percentage,
-                     'validation_percentage': validation_percentage, 'learning_rate': learning_rate,
-                     'iterator': iterator, 'save_epoch': save_epoch, 'mode': mode,
-                     'path': path, 'regularization': regularization, 'lambd': lambd}
+        self.args = {'batch_size': batch_size, 'validation_percentage': validation_percentage, 'learning_rate': learning_rate,
+                     'iterator': iterator, 'save_epoch': save_epoch, 'mode': mode, 'path': path, 'regularization': regularization, 'lambd': lambd}
         print_disable = not is_print
 
         start_it = 0
@@ -92,13 +82,11 @@ class Sequentual(object):
 
         #  Normalizing inputs
         if self.is_normalizing:
-            X_train, X_test = self.normalizing_inputs(X_train, X_test)
+            X_train = self.normalizing_inputs(X_train)
         #  Normalizing inputs
 
-        #  划分数据
-        if X_test is None and Y_test is None:
-            X_train, Y_train, X_test, Y_test, X_valid, Y_valid = \
-                self.partitionDataset(X_train, Y_train, testing_percentage, validation_percentage)
+        X_train, Y_train, X_valid, Y_valid = \
+            self.partitionDataset(X_train, Y_train, validation_percentage)
         #  -------------
 
         is_continue = False  # flag
@@ -111,7 +99,7 @@ class Sequentual(object):
                     tr.set_description("第%d代:" % (it + start_it))
                     train_loss, train_acc = self.mini_batch(X_train, Y_train, mode, learning_rate, batch_size, it,
                                                             regularization, lambd, print_disable)
-                    val_cost, val_acc = self.accuracy(X_test, Y_test, self.layers)
+                    val_cost, val_acc = self.evaluate(X_valid, Y_valid, self.layers)
                     self.costs.append([train_loss, val_cost])
                     self.accs.append([train_acc, val_acc])
                     tr.set_postfix(batch_size=batch_size, train_loss=train_loss, train_acc=train_acc,
@@ -173,9 +161,9 @@ class Sequentual(object):
         return x
 
     # 组合层级关系
-    def compile(self, lossMode, optimize, accuracy, is_normalizing=False):
+    def compile(self, lossMode, optimize, evaluate, is_normalizing=False):
         self.is_normalizing = is_normalizing
-        self.accuracy = accuracy
+        self.evaluate = evaluate
         # 优化模式 str
         self.optimizeMode = optimize
         if self.optimizer is None:
@@ -204,7 +192,7 @@ class Sequentual(object):
         for layer in self.layers:
             output = layer.forward(output, None, mode)
         # 精度计算
-        train_acc = self.accuracy(output, y_train, self.layers, True)
+        train_acc = self.evaluate(output, y_train, self.layers, True)
         # 损失计算
         loss = self.cost.forward(y_train, output) + self.compute_reg_loss(batch_size, regularization, lambd)
         # -------
@@ -289,7 +277,7 @@ class Sequentual(object):
             pickle.dump(self.optimizeMode, f)
             pickle.dump(self.is_normalizing, f)
             pickle.dump(self.ndim, f)
-            pickle.dump(self.accuracy, f)
+            pickle.dump(self.evaluate, f)
             pickle.dump(self.cost, f)
         if self.is_normalizing and self.ndim == 2:
             p.savez_compressed(path + os.sep + 'train_normalize.npz', u=self.u, var=self.var)
@@ -331,7 +319,7 @@ class Sequentual(object):
             self.optimizer.load_parameters(path)
             self.is_normalizing = pickle.load(f)
             self.ndim = pickle.load(f)
-            self.accuracy = pickle.load(f)
+            self.evaluate = pickle.load(f)
             self.cost = pickle.load(f)
         if self.is_normalizing and self.ndim == 2:
             r = p.load(path + os.sep + 'train_normalize.npz')
@@ -449,17 +437,17 @@ class LSTM_model(object):
         N, D = features.shape
         affine_out = d1.forward(features, mode='test')
         prev_word_idx = [l1.start_code] * N
-        prev_h = affine_out
-        prev_c = p.zeros(prev_h.shape)
+        a_prev = affine_out
+        c_prev = p.zeros(a_prev.shape)
         captions[:, 0] = l1.start_code
         for i in range(1, max_length):
             prev_word_embed = e1.parameters['W'][prev_word_idx]
-            next_h, next_c, cache = l1.lstm_step_forward(prev_word_embed, prev_h, prev_c)
-            prev_c = next_c
-            vocab_affine_out = d2.forward(next_h.reshape(1, -1, self.hidden_dim), mode='test')
+            a_next, next_c, cache = l1.lstm_step_forward(prev_word_embed, a_prev, c_prev)
+            c_prev = next_c
+            vocab_affine_out = d2.forward(a_next.reshape(1, -1, self.hidden_dim), mode='test')
             captions[:, i] = p.array(p.argmax(vocab_affine_out, axis=1))
             prev_word_idx = captions[:, i]
-            prev_h = next_h
+            a_prev = a_next
 
         return captions
 

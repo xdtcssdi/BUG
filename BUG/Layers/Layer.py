@@ -362,20 +362,20 @@ class SimpleRNN(Layer):
         for key in files:
             self.parameters[key] = r[key]
 
-    def rnn_step_forward(self, x, prev_h):
-        a = prev_h.dot(self.parameters['Waa']) + x.dot(self.parameters['Wxa']) + self.parameters['ba']
-        next_h = p.tanh(a)
-        return next_h
+    def rnn_step_forward(self, x, a_prev):
+        a = a_prev.dot(self.parameters['Waa']) + x.dot(self.parameters['Wxa']) + self.parameters['ba']
+        a_next = p.tanh(a)
+        return a_next
 
-    def rnn_step_backward(self, dnext_h, cache):
-        x, prev_h, next_h = cache
-        da = dnext_h * (1 - next_h * next_h)
+    def rnn_step_backward(self, da_next, cache):
+        x, a_prev, a_next = cache
+        da = da_next * (1 - a_next * a_next)
         dx = da.dot(self.parameters['Wxa'].T)
-        dprev_h = da.dot(self.parameters['Waa'].T)
+        da_prev = da.dot(self.parameters['Waa'].T)
         dWx = x.T.dot(da)
-        dWh = prev_h.T.dot(da)
+        dWh = a_prev.T.dot(da)
         db = p.sum(da, axis=0)
-        return dx, dprev_h, dWx, dWh, db
+        return dx, da_prev, dWx, dWh, db
 
     def forward(self, x, h0=None, mode='train'):
         self.x = x
@@ -383,24 +383,24 @@ class SimpleRNN(Layer):
         self.init_params(D)
 
         self.h = p.zeros((N, T, self.unit_number))
-        prev_h = h0
+        a_prev = h0
         self.h0 = h0
         for t in range(T):
             xt = x[:, t, :]
-            next_h = self.rnn_step_forward(xt, prev_h)
-            prev_h = next_h
-            if prev_h.ndim == 3:
-                prev_h = prev_h.reshape(1, -1)
-            self.h[:, t, :] = prev_h
+            a_next = self.rnn_step_forward(xt, a_prev)
+            a_prev = a_next
+            if a_prev.ndim == 3:
+                a_prev = a_prev.reshape(1, -1)
+            self.h[:, t, :] = a_prev
         return self.h
 
     def backward(self, dh):
         N, T, H = dh.shape
         _, _, D = self.x.shape
 
-        next_h = self.h[:, T - 1, :]
+        a_next = self.h[:, T - 1, :]
 
-        dprev_h = p.zeros((N, H))
+        da_prev = p.zeros((N, H))
         dx = p.zeros((N, T, D))
         dh0 = p.zeros((N, H))
         dWx = p.zeros((D, H))
@@ -412,19 +412,19 @@ class SimpleRNN(Layer):
             xt = self.x[:, t, :]
 
             if t == 0:
-                prev_h = self.h0
+                a_prev = self.h0
             else:
-                prev_h = self.h[:, t - 1, :]
+                a_prev = self.h[:, t - 1, :]
 
-            step_cache = (xt, prev_h, next_h)
-            next_h = prev_h
-            dnext_h = dh[:, t, :] + dprev_h
-            dx[:, t, :], dprev_h, dWxt, dWht, dbt = self.rnn_step_backward(dnext_h, step_cache)
+            step_cache = (xt, a_prev, a_next)
+            a_next = a_prev
+            da_next = dh[:, t, :] + da_prev
+            dx[:, t, :], da_prev, dWxt, dWht, dbt = self.rnn_step_backward(da_next, step_cache)
             dWx, dWh, db = dWx + dWxt, dWh + dWht, db + dbt
         self.gradients['Wxa'] = 1. / N * dWx
         self.gradients['Waa'] = 1. / N * dWh
         self.gradients['ba'] = 1. / N * db
-        dh0 = dprev_h
+        dh0 = da_prev
         return dx, dh0
 
 
@@ -469,7 +469,7 @@ class LSTM(Layer):
 
     def backward(self, dout):
         m, time_steps, n_a = dout.shape
-        z_i, z_f, z_o, z_g, z_t, prev_c, prev_a, x = self.cache[time_steps - 1]
+        z_i, z_f, z_o, z_g, z_t, c_prev, a_prev, x = self.cache[time_steps - 1]
         n_x = x.shape[1]
 
         da_prev = p.zeros((m, n_a))

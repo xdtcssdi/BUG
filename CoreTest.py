@@ -74,7 +74,7 @@ def mnist():
     net.add(Dense(256, activation='relu', batchNormal=True))
     net.add(Dense(classes, activation="softmax", batchNormal=True))
     net.compile(lossMode=Loss.SoftCategoricalCross_entropy(), optimize='Adam', accuracy=evaluate_many)
-    net.fit(X_train, Y_train, X_test, y_test, batch_size=1024, learning_rate=0.001, save_epoch=100,
+    net.fit(X_train, Y_train, batch_size=1024, learning_rate=0.001, save_epoch=100,
             path='mnist_parameters', is_print=True, iterator=30)
     show_loss(net.costs, net.accs)
 
