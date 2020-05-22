@@ -219,7 +219,7 @@ class Dense(Layer):
             self.Z = self.batch_normal.forward(self.Z, mode)
         A = ac_get(self.Z, self.activation)
         if self.keep_prob < 1. and mode == 'train':
-            self.drop_mask = p.random.rand(*self.Z.shape)
+            self.drop_mask = p.random.binomial(n=1, p=keep_prob,size=self.Z.shape)
             return A * self.drop_mask / self.keep_prob
         else:
             return A
@@ -579,7 +579,7 @@ class Embedding(Layer):
     def backward(self, dout):
         dW = p.zeros_like(self.parameters['W'])
         if isinstance(dW, numpy.ndarray):
-            p.add.at(dW, self.x, dout)
+            p.add.at(dW, self.x, dout) # 以x为坐标，dW[x] += dout
         else:
             p.scatter_add(dW, self.x, dout)
         self.gradients['W'] = dW
